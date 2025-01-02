@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Modules\Inventory\Models\MasterBarang;
 use Modules\Inventory\Models\Pengajuan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class PengajuanController extends Controller
 {
@@ -250,6 +252,46 @@ class PengajuanController extends Controller
             DB::rollBack();
             return redirect()->route('inventory.pengajuan.index')
                 ->with('error', 'Gagal memproses pengajuan: ' . $e->getMessage());
+        }
+    }
+
+    public function importFromExcel(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Invalid file format'], 422);
+        }
+
+        try {
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray();
+
+            // Remove header row
+            array_shift($rows);
+
+            $importedData = [];
+            foreach ($rows as $row) {
+                if (!empty($row[0])) { // Check if id_barang is not empty
+                    $importedData[] = [
+                        'id_barang' => $row[0],
+                        'jumlah' => $row[1] ?? 0,
+                        'harga' => $row[2] ?? 0,
+                        'keterangan' => $row[3] ?? ''
+                    ];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $importedData
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error processing file: ' . $e->getMessage()], 500);
         }
     }
 }

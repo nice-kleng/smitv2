@@ -26,6 +26,7 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
         Route::get('/master-barang/{id}/edit', 'edit')->name('master_barang.edit');
         Route::put('/master-barang/{id}', 'update')->name('master_barang.update');
         Route::delete('/master-barang/{id}', 'destroy')->name('master_barang.destroy');
+        Route::get('/master-barang/export', 'export')->name('master_barang.export');
     });
 
     Route::controller(PengajuanController::class)->group(function () {
@@ -38,6 +39,7 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
         Route::delete('/pengajuan/{prefix}', 'destroy')->name('pengajuan.destroy');
         Route::get('/pengajuan/{prefix}/approve', 'approve')->name('pengajuan.approve');
         Route::post('/pengajuan/{kode}/process-approval', 'processApproval')->name('pengajuan.process-approval');
+        Route::post('/pengajuan/import', 'importFromExcel')->name('pengajuan.import');
     });
 
     Route::controller(PermintaanController::class)->group(function () {

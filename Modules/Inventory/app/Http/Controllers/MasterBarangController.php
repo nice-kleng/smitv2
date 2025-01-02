@@ -2,12 +2,14 @@
 
 namespace Modules\Inventory\Http\Controllers;
 
+use App\Exports\MasterBarangExport;
 use App\Http\Controllers\Controller;
 use App\Models\KategoriBarang;
 use App\Models\Satuan;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use Modules\Inventory\Models\MasterBarang;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -201,5 +203,10 @@ class MasterBarangController extends Controller
     {
         $stok = MasterBarang::find($id)->stoks;
         return response()->json($stok);
+    }
+
+    public function export()
+    {
+        return Excel::download(new MasterBarangExport, 'master_barang.xlsx');
     }
 }

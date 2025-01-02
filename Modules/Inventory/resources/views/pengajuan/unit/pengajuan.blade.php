@@ -1,8 +1,10 @@
 @extends('inventory::layouts.master', ['title' => 'Data Pengajuan'])
 
 @section('button-header')
-    <a href="{{ route('inventory.pengajuan.create') }}" class="btn btn-primary" title="Buat Pengajuan"><i
-            class="fas fa-plus"></i></a>
+    @if (auth()->user()->hasRole('admin'))
+        <a href="{{ route('inventory.pengajuan.create') }}" class="btn btn-primary btn-sm" title="Buat Pengajuan"><i
+                class="fas fa-plus"></i></a>
+    @endif
 @endsection
 
 @section('content')

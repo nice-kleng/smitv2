@@ -2,8 +2,10 @@
 
 @section('content')
     <div class="card">
-        <div class="card-header">
+        <div class="card-header justify-content-between d-sm-flex">
             <a href="{{ route('inventory.master_barang.create') }}" class="btn btn-primary">Tambah Barang</a>
+            <a href="{{ route('inventory.master_barang.export') }}" class="btn btn-success" title="Export Data Barang"><i
+                    class="fa fa-file-excel"></i> Export</a>
         </div>
         <div class="card-body">
             <div class="table-responsive">
