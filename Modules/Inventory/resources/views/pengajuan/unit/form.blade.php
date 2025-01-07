@@ -14,9 +14,11 @@
             @endif
             <div class="card">
                 <div class="card-header">
-                    <a href="javascript:void(0)" class="btn btn-success" data-toggle="modal" data-target="#modalImport"
-                        title="Import Pengajuan"> <i class="fas fa-file-excel"></i>
-                        Import</a>
+                    @if (!isset($pengajuan) && !count($pengajuan) > 0)
+                        <a href="javascript:void(0)" class="btn btn-success" data-toggle="modal" data-target="#modalImport"
+                            title="Import Pengajuan"> <i class="fas fa-file-excel"></i>
+                            Import</a>
+                    @endif
                 </div>
                 <form
                     action="{{ isset($pengajuan) && count($pengajuan) > 0 ? route('inventory.pengajuan.update', substr($pengajuan[0]->kode_pengajuan, 0, 11)) : route('inventory.pengajuan.store') }}"
@@ -84,11 +86,23 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            @if (isset($pengajuan) && count($pengajuan) > 0)
+                var existingData = {!! $pengajuan->map(function ($p) {
+                    return [
+                        'barang_id' => $p->barang_id,
+                        'jumlah' => $p->jumlah,
+                        'harga' => $p->harga,
+                        'keterangan' => $p->keterangan,
+                    ];
+                }) !!};
+            @else
+                var existingData = [];
+            @endif
+
             // Initialize DataTable
             var table = $('#formTable').DataTable({
                 processing: true,
-                pageLength: 10,
-                data: [],
+                data: existingData,
                 columns: [{
                         data: 'barang_id',
                         render: function(data, type, row) {
@@ -199,6 +213,23 @@
                     error: function(xhr) {
                         alert('Error: ' + xhr.responseJSON.message);
                     }
+                });
+            });
+
+            // Collect all rows before form submission
+            $('form').on('submit', function() {
+                let allData = table.rows().data().toArray();
+                // console.log(allData);
+                $('#formTable tbody').empty();
+                allData.forEach(function(row) {
+                    $('#formTable tbody').append(`
+                        <tr>
+                            <td><input type="hidden" name="barang_id[]" value="${row.barang_id}"></td>
+                            <td><input type="hidden" name="jumlah[]" value="${row.jumlah}"></td>
+                            <td><input type="hidden" name="harga[]" value="${row.harga}"></td>
+                            <td><input type="hidden" name="keterangan[]" value="${row.keterangan}"></td>
+                        </tr>
+                    `);
                 });
             });
         });

@@ -74,7 +74,7 @@ class PengajuanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'jumlah.*' => 'required|numeric',
+            'jumlah.*' => 'required',
             'barang_id' => 'required|exists:master_barangs,id',
         ]);
 
@@ -114,7 +114,7 @@ class PengajuanController extends Controller
      */
     public function show($id)
     {
-        $pengajuan = Pengajuan::with(['barang', 'unit'])->where('kode_pengajuan', 'like', "%$id%")->get();
+        $pengajuan = Pengajuan::with(['barang.satuan', 'unit'])->where('kode_pengajuan', 'like', "%$id%")->get();
 
         return response()->json($pengajuan);
     }
@@ -138,7 +138,7 @@ class PengajuanController extends Controller
     public function update(Request $request, $kode)
     {
         $request->validate([
-            'jumlah.*' => 'required|numeric',
+            'jumlah.*' => 'required',
             'barang_id' => 'required|exists:master_barangs,id',
         ]);
 
@@ -217,6 +217,8 @@ class PengajuanController extends Controller
             'jumlah_approve.*' => 'required|numeric|min:0',
         ]);
 
+        dd($request->all());
+
         DB::beginTransaction();
         try {
             $pengajuans = Pengajuan::where('kode_pengajuan', 'like', "%$kode%")
@@ -230,14 +232,16 @@ class PengajuanController extends Controller
             foreach ($pengajuans as $pengajuan) {
                 // $isApproved = isset($request->approve[$pengajuan->id]);
                 $isApproved = in_array($pengajuan->id, $request->approve ?? []);
+                // dd($isApproved);
 
                 // Update with approval data
                 $pengajuan->update([
                     'status' => $isApproved ? '2' : '1', // 2 = approved, 1 = rejected
-                    'harga_approve' => $isApproved ? ($request->harga_approve[$pengajuan->id] ?? 0) : 0,
+                    'harga_approved' => $isApproved ? $request->harga_approved[$pengajuan->id] : 0,
                     // 'harga_approve' => $request->harga_apparove[$pengajuan->id] ?? 0,
-                    'jumlah_approve' => $isApproved ? ($request->jumlah_approve[$pengajuan->id] ?? 0) : 0,
+                    'jumlah_approved' => $isApproved ? $request->jumlah_approved[$pengajuan->id] : 0,
                     // 'jumlah_approve' => $request->jumlah_approve[$pengajuan->id] ?? 0,
+                    'tanggal_approved' => now(),
                     'updated_id' => Auth::user()->id,
                     'approved_at' => now(),
                     'approved_by' => Auth::user()->id,

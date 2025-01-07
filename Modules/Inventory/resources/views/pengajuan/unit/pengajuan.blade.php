@@ -98,6 +98,7 @@
                                     <th>No</th>
                                     <th>Kode Pengajuan</th>
                                     <th>Barang</th>
+                                    <th>Satuan</th>
                                     <th>Jumlah Permintaan</th>
                                     <th>Jumlah Approve</th>
                                     <th>Harga</th>
@@ -129,9 +130,9 @@
                 searching: true,
                 ordering: true,
                 paging: true,
-                language: {
-                    url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json"
-                },
+                // language: {
+                //     url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json"
+                // },
                 columnDefs: [{
                     targets: '_all',
                     defaultContent: '-'
@@ -195,6 +196,7 @@
                                 index + 1,
                                 item.kode_pengajuan,
                                 item.barang.nama_barang,
+                                item.barang.satuan.nama_satuan,
                                 item.jumlah,
                                 item.jumlah_approved ?? 0,
                                 harga,

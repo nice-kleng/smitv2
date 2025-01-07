@@ -18,7 +18,7 @@ class MenuSeeder extends Seeder
                 'icon' => 'fas fa-cog',
                 'route' => 'settings.index',
                 'module' => 'admin',
-                'permission_name' => 'manage-menu',
+                'permission_name' => 'manage-settings',
                 'parent_id' => null,
                 'order' => 2,
                 'is_active' => true,

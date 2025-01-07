@@ -15,7 +15,7 @@
                 <div class="card-header">
                     <h4 class="card-title">Form Approval Pengajuan {{ $kode }}</h4>
                 </div>
-                <form action="{{ route('inventory.pengajuan.process-approval', $kode) }}" method="POST">
+                <form action="{{ route('inventory.pengajuan.process-approval', $kode) }}" method="POST" id="form-approval">
                     @csrf
                     @method('POST')
                     <div class="card-body">
@@ -37,7 +37,7 @@
                                         <th>Barang</th>
                                         <th style="width: 130px">Jumlah</th>
                                         <th style="width: 130px">Satuan</th>
-                                        <th style="min-width: 130px">Harga</th>
+                                        <th style="min-width: 130px">Harga Satuan</th>
                                         <th style="min-width: 130px">Total</th>
                                         <th style="width: 150px">Harga Disetujui</th>
                                         <th style="width: 150px">Jumlah Disetujui</th>
@@ -63,13 +63,13 @@
                                             <td class="text-end">Rp. {{ number_format($item->harga) }}</td>
                                             <td class="text-end">Rp. {{ number_format($item->harga * $item->jumlah) }}</td>
                                             <td>
-                                                <input type="number" name="harga_approve[{{ $item->id }}]"
+                                                <input type="number" name="harga_approved[{{ $item->id }}]"
                                                     class="form-control text-end harga-approve"
                                                     value="{{ old('harga_approve.' . $item->id, $item->harga) }}"
                                                     data-row="{{ $item->id }}">
                                             </td>
                                             <td>
-                                                <input type="number" name="jumlah_approve[{{ $item->id }}]"
+                                                <input type="number" name="jumlah_approved[{{ $item->id }}]"
                                                     class="form-control text-center jumlah-approve"
                                                     value="{{ old('jumlah_approve.' . $item->id, $item->jumlah) }}"
                                                     data-row="{{ $item->id }}">
@@ -80,13 +80,13 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <input type="text" name="keterangan_approve[{{ $item->id }}]"
+                                                <input type="text" name="keterangan_approved[{{ $item->id }}]"
                                                     class="form-control" placeholder="Keterangan">
                                             </td>
                                             <td class="text-center">
                                                 <div class="form-check">
                                                     <input class="form-check-input approve-check" type="checkbox"
-                                                        name="approve[{{ $item->id }}]" value="2">
+                                                        name="approve[{{ $item->id }}]" value="{{ $item->id }}">
                                                 </div>
                                             </td>
                                         </tr>
@@ -94,6 +94,9 @@
                                 </tbody>
                             </table>
                         </div>
+                        <table id="formTable" style="display:none;">
+                            <tbody></tbody>
+                        </table>
                     </div>
                     <div class="card-footer text-end">
                         <button type="submit" class="btn btn-primary">Proses Approval</button>
@@ -200,6 +203,36 @@
             $('#approval-table').on('draw.dt', function() {
                 const mainCheck = $('#checkAll').prop('checked');
                 $('.approve-check').prop('checked', mainCheck);
+            });
+
+            // Handle check all - modified for DataTables
+            $(document).on('change', '.approve-check', function() {
+                const totalCheckboxes = $('.approve-check').length;
+                const totalChecked = $('.approve-check:checked').length;
+                $('#checkAll').prop('checked', totalCheckboxes === totalChecked);
+            });
+
+            // Handle form submission
+            $('#form-approval').on('submit', function(e) {
+                let allData = table.rows().data().toArray();
+                $('#formTable tbody').empty();
+                allData.forEach((data) => {
+                    const id = data[0];
+                    const harga = $(`input[name="harga_approve[${id}]"]`).val() || 0;
+                    const jumlah = $(`input[name="jumlah_approve[${id}]"]`).val() || 0;
+                    const keterangan = $(`input[name="keterangan_approve[${id}]"]`).val() || '';
+                    const isApproved = $(`input[name="approve[${id}]"]`).prop('checked');
+                    if (isApproved) {
+                        $('#formTable tbody').append(`
+                            <tr>
+                                <td><input type="hidden" name="barang_id[]" value="${id}"></td>
+                                <td><input type="hidden" name="jumlah[]" value="${jumlah}"></td>
+                                <td><input type="hidden" name="harga[]" value="${harga}"></td>
+                                <td><input type="hidden" name="keterangan[]" value="${keterangan}"></td>
+                            </tr>
+                        `);
+                    }
+                });
             });
         });
     </script>

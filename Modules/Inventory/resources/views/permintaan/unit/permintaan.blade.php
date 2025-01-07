@@ -74,7 +74,7 @@
                                         </a>
                                     @endif
 
-                                    @if (auth()->user()->hasRole('admin'))
+                                    @if (auth()->user()->hasRole('admin') && auth()->user()->can('approve-permintaan'))
                                         @if ($permintaan->status == '0')
                                             <a href="{{ route('inventory.permintaan.approve', $permintaan->kode_prefix) }}"
                                                 class="btn btn-warning btn-sm" title="Proses Approval">
