@@ -181,8 +181,6 @@
                     url: `{{ route('inventory.permintaan.show', ':id') }}`.replace(':id', id),
                     dataType: "json",
                     success: function(response) {
-                        console.log(response);
-
                         let data = response.data;
                         let html = '';
                         data.forEach((item, index) => {
@@ -234,7 +232,7 @@
 
             $('#detailModal').on('hidden.bs.modal', function() {
                 $('#tbldetail tbody').html('');
-                $('#detailModalLabel').html('DAta Barang Permintaan');
+                $('#detailModalLabel').html('Data Barang Permintaan');
             });
 
             $('.btnAmbil').on('click', function() {

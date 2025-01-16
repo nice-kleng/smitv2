@@ -5,8 +5,8 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title">Hostory Permintaan
-                        {{ auth()->user()->hasRole('unit') ? auth()->user()->unit->nama_unit : '' }}</h4>
+                    <a href="javascript:void(0)" class="btn btn-info" title="Filter" data-toggle="modal"
+                        data-target="#filterModal">Filter</a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -22,42 +22,6 @@
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @foreach ($history as $item)
-                                    <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $item->kode_prefix }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($item->tanggal_permintaan)->locale('id')->isoFormat('DD MMMM YYYY') }}
-                                        </td>
-                                        <td>{{ $item->ruangan->unit->nama_unit }}</td>
-                                        <td>{{ $item->ruangan->nama_ruangan }}</td>
-                                        <td>
-                                            @php
-                                                $statusMap = [
-                                                    '0' => ['badge' => 'warning', 'text' => 'Menunggu Approval'],
-                                                    '1' => ['badge' => 'danger', 'text' => 'Ditolak'],
-                                                    '2' => ['badge' => 'primary', 'text' => 'Disetujui'],
-                                                    '3' => ['badge' => 'success', 'text' => 'Barang Sudah Diambil'],
-                                                ];
-                                                $badge = $statusMap[$item->status]['badge'];
-                                                $text = $statusMap[$item->status]['text'];
-                                            @endphp
-                                            <span class="badge badge-{{ $badge }}">{{ Str::ucfirst($text) }}</span>
-                                        </td>
-                                        <td>
-                                            <a href="javascript:void(0)" class="btn btn-info btn-sm btndetail"
-                                                title="Detail Permintaan" data-id="{{ $item->kode_prefix }}">
-                                                Detail
-                                            </a>
-                                            <a href="{{ route('inventory.permintaan.unduh-form-permintaan', $item->kode_prefix) }}"
-                                                class="btn btn-success btn-sm" target="_blank"
-                                                title="Cetak Form Permintaan">
-                                                <i class="fas fa-file-pdf"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -102,20 +66,118 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="filterModal" data-backdrop="static" data-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Filter Data Permintaan</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ route('inventory.permintaan.history') }}" method="GET" class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="s_date">Tanggal Awal</label>
+                            <input type="date" name="s_date" id="s_date" class="form-control"
+                                value="{{ request('s_date') }}">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="e_date">Tanggal Akhir</label>
+                            <input type="date" name="e_date" id="e_date" class="form-control"
+                                value="{{ request('e_date') }}" {{ !request('s_date') ? 'disabled' : '' }}>
+                        </div>
+                        <div class="form-group col-md-12">
+                            <label for="unit">Unit</label>
+                            <select name="unit" id="unit" class="form-control">
+                                <option value="">-- Pilih Unit --</option>
+                                @foreach ($units as $unit)
+                                    <option value="{{ $unit->id }}"
+                                        {{ request('unit') == $unit->id ? 'selected' : '' }}>
+                                        {{ $unit->nama_unit }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group col-md-12">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            {{-- @if (request()->hasAny(['s_date', 'e_date', 'unit'])) --}}
+                            <a href="{{ route('inventory.permintaan.history') }}" class="btn btn-secondary">Reset
+                                Filter</a>
+                            {{-- @endif --}}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
     <script>
         $(document).ready(function() {
-            $('.btndetail').on('click', function() {
+            let table = $('#tblhistory').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "{{ route('inventory.permintaan.history.data') }}",
+                    data: function(d) {
+                        d.s_date = $('#s_date').val();
+                        d.e_date = $('#e_date').val();
+                        d.unit = $('#unit').val();
+                    }
+                },
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'kode_prefix',
+                        name: 'kode_prefix'
+                    },
+                    {
+                        data: 'tanggal_permintaan_format',
+                        name: 'tanggal_permintaan'
+                    },
+                    {
+                        data: 'ruangan.unit.nama_unit',
+                        name: 'ruangan.unit.nama_unit'
+                    },
+                    {
+                        data: 'ruangan.nama_ruangan',
+                        name: 'ruangan.nama_ruangan'
+                    },
+                    {
+                        data: 'status_format',
+                        name: 'status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    }
+                ]
+            });
+
+            // Refilter the table
+            $('#s_date, #e_date, #unit').on('change', function() {
+                table.draw();
+            });
+
+            // Ganti event handler .btndetail dengan delegasi event
+            $(document).on('click', '.btndetail', function() {
                 let id = $(this).data('id');
+                console.log(id);
 
                 $.ajax({
                     type: "get",
                     url: `{{ route('inventory.permintaan.show', ':id') }}`.replace(':id', id),
                     dataType: "json",
                     success: function(response) {
-                        console.log(response);
 
                         let data = response.data;
                         let html = '';
@@ -169,6 +231,27 @@
             $('#detailModal').on('hidden.bs.modal', function() {
                 $('#tbldetail tbody').html('');
                 $('#detailModalLabel').html('DAta Barang Permintaan');
+            });
+
+            // Enable/disable end date based on start date
+            $('#s_date').on('change', function() {
+                if ($(this).val()) {
+                    $('#e_date').prop('disabled', false);
+                } else {
+                    $('#e_date').prop('disabled', true);
+                    $('#e_date').val('');
+                }
+            });
+
+            // Prevent end date being before start date
+            $('#e_date').on('change', function() {
+                var startDate = $('#s_date').val();
+                var endDate = $(this).val();
+
+                if (startDate && endDate && endDate < startDate) {
+                    alert('Tanggal akhir tidak boleh lebih kecil dari tanggal awal');
+                    $(this).val('');
+                }
             });
         });
     </script>

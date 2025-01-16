@@ -4,6 +4,7 @@ namespace Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ruangan;
+use App\Models\Unit;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,7 @@ use Modules\Inventory\Models\Inventory;
 use Modules\Inventory\Models\MasterBarang;
 use Modules\Inventory\Models\Permintaan;
 use Modules\Inventory\Models\Transaksi;
+use Yajra\DataTables\Facades\DataTables;
 
 class PermintaanController extends Controller
 {
@@ -28,10 +30,8 @@ class PermintaanController extends Controller
             DB::raw('MAX(tanggal_permintaan) as tanggal_permintaan'),
             DB::raw('MAX(status) as status'),
             DB::raw('MAX(created_id) as created_id'),
-            DB::raw('MAX(ruangan_id) as ruangan_id')
-        )
-            ->groupBy('kode_prefix')
-            ->orderBy('tanggal_permintaan', 'desc');
+            DB::raw('MAX(ruangan_id) as ruangan_id'),
+        );
 
         if (Auth::user()->hasRole('unit')) {
             $permintaans->where('created_id', auth()->id())
@@ -45,9 +45,12 @@ class PermintaanController extends Controller
                 ->orWhere('status', '2');
         }
 
-        if (Auth::user()->hasRole('superadmin')) {
-            $permintaans->where('status', '3');
-        }
+        // if (Auth::user()->hasRole('superadmin')) {
+        //     $permintaans->where('status', '3');
+        // }
+
+        $permintaans->groupBy('kode_prefix')
+            ->orderBy('tanggal_permintaan', 'desc');
 
         return view('inventory::permintaan.unit.permintaan', ['permintaans' => $permintaans->get()]);
     }
@@ -89,6 +92,7 @@ class PermintaanController extends Controller
                 $permintaan->tanggal_permintaan = date('Y-m-d');
                 $permintaan->status = '0';
                 $permintaan->keterangan = $request->keperluan[$key];
+                $permintaan->unit_id = Auth::user()->unit_id;
                 $permintaan->ruangan_id = Auth::user()->ruangan_id;
                 $permintaan->created_id = Auth::user()->id;
                 $permintaan->updated_id = Auth::user()->id;
@@ -164,6 +168,7 @@ class PermintaanController extends Controller
                 $permintaan->tanggal_permintaan = date('Y-m-d');
                 $permintaan->status = '0';
                 $permintaan->keterangan = $request->keperluan[$key];
+                $permintaan->unit_id = Auth::user()->unit_id;
                 $permintaan->ruangan_id = Auth::user()->ruangan_id;
                 $permintaan->created_id = Auth::user()->id;
                 $permintaan->updated_id = Auth::user()->id;
@@ -247,12 +252,12 @@ class PermintaanController extends Controller
 
                     // Update permintaan and trigger approved observer
                     $permintaan->status = '2';
+                    $permintaan->keterangan = $request->keterangan[$key] ?? '';
                     $permintaan->jumlah_approve = $request->jumlah_approve[$key];
                     $permintaan->tanggal_approve = date('Y-m-d');
                     $permintaan->approve_id = Auth::user()->id;
                     $permintaan->save();
 
-                    // This will trigger the approved observer
                     event('eloquent.approved: ' . get_class($permintaan), [$permintaan]);
 
                     Transaksi::create([
@@ -268,7 +273,8 @@ class PermintaanController extends Controller
                     $permintaan->update([
                         'status' => '1',
                         'tanggal_approve' => date('Y-m-d'),
-                        'approve_id' => Auth::user()->id
+                        'approve_id' => Auth::user()->id,
+                        'keterangan' => $request->keterangan[$key] ?? ''
                     ]);
                 }
             }
@@ -346,6 +352,7 @@ class PermintaanController extends Controller
                         $inventory->serial_number = $request->serial_number[$i] ?? '';
                         $inventory->spesifikasi = $request->spesifikasi[$i] ?? '';
                         $inventory->kepemilikan = 'Rs';
+                        $inventory->tahun_pengadaan = $tahun_pengadaan;
                         $inventory->save();
 
                         HistoryInventaris::create([
@@ -375,17 +382,38 @@ class PermintaanController extends Controller
      * Riwayat permintaan
      */
 
-    public function history()
+    public function history(Request $request)
     {
-        $history = Permintaan::with(['barang', 'ruangan'])->select(
+        $units = Unit::orderBy('nama_unit', 'asc')->get();
+        return view('inventory::permintaan.unit.history', ['units' => $units]);
+    }
+
+    public function historyData(Request $request)
+    {
+        $history = Permintaan::with(['barang', 'ruangan.unit'])->select(
             DB::raw('substr(kode_permintaan, 1, 16) as kode_prefix'),
             DB::raw('MAX(tanggal_permintaan) as tanggal_permintaan'),
             DB::raw('MAX(status) as status'),
             DB::raw('MAX(created_id) as created_id'),
-            DB::raw('MAX(ruangan_id) as ruangan_id')
+            DB::raw('MAX(unit_id) as unit_id'),
+            DB::raw('MAX(ruangan_id) as ruangan_id'),
         )
-            ->groupBy('kode_prefix')
-            ->orderBy('tanggal_permintaan', 'desc');
+            ->groupBy('kode_prefix');
+
+        // Filter by start date
+        if ($request->filled('s_date')) {
+            $history->whereDate('tanggal_permintaan', '>=', $request->s_date);
+        }
+
+        // Filter by end date (only if start date is provided)
+        if ($request->filled('s_date') && $request->filled('e_date')) {
+            $history->whereDate('tanggal_permintaan', '<=', $request->e_date);
+        }
+
+        // Filter by unit
+        if ($request->filled('unit')) {
+            $history->where('unit_id', $request->unit);
+        }
 
         if (Auth::user()->hasRole('unit')) {
             $history->where('created_id', auth()->id())
@@ -402,7 +430,29 @@ class PermintaanController extends Controller
             $history->where('status', '!=', '0');
         }
 
-        return view('inventory::permintaan.unit.history', ['history' => $history->get()]);
+        return DataTables::of($history)
+            ->addIndexColumn()
+            ->addColumn('tanggal_permintaan_format', function ($row) {
+                return \Carbon\Carbon::parse($row->tanggal_permintaan)->locale('id')->isoFormat('DD MMMM YYYY');
+            })
+            ->addColumn('status_format', function ($row) {
+                $statusMap = [
+                    '0' => ['badge' => 'warning', 'text' => 'Menunggu Approval'],
+                    '1' => ['badge' => 'danger', 'text' => 'Ditolak'],
+                    '2' => ['badge' => 'primary', 'text' => 'Disetujui'],
+                    '3' => ['badge' => 'success', 'text' => 'Barang Sudah Diambil'],
+                ];
+                $badge = $statusMap[$row->status]['badge'];
+                $text = $statusMap[$row->status]['text'];
+                return '<span class="badge badge-' . $badge . '">' . Str::ucfirst($text) . '</span>';
+            })
+            ->addColumn('action', function ($row) {
+                $btn = '<a href="javascript:void(0)" class="btn btn-info btn-sm btndetail" title="Detail Permintaan" data-id="' . $row->kode_prefix . '">Detail</a> ';
+                $btn .= '<a href="' . route('inventory.permintaan.unduh-form-permintaan', $row->kode_prefix) . '" class="btn btn-success btn-sm" target="_blank" title="Cetak Form Permintaan"><i class="fas fa-file-pdf"></i></a>';
+                return $btn;
+            })
+            ->rawColumns(['status_format', 'action'])
+            ->make(true);
     }
 
     public function unduhFormPermintaan(string $kode)

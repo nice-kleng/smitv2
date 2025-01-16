@@ -108,8 +108,8 @@
 @endsection
 
 @push('scripts')
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    {{-- <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script> --}}
     <script>
         $(document).ready(function() {
             // Format Rupiah function
@@ -125,63 +125,66 @@
             // Initialize DataTable
             const table = $('#approval-table').DataTable({
                 pageLength: 10,
+                autoWidth: true,
+                paging: false,
+                scrollCollapse: true,
                 scrollX: true,
-                autoWidth: false,
-                columnDefs: [{
-                        orderable: false,
-                        targets: [5, 6, 7, 8, 9]
-                    },
-                    {
-                        width: '50px',
-                        targets: 0
-                    }, // No
-                    {
-                        width: '200px',
-                        targets: 1
-                    }, // Barang
-                    {
-                        width: '100px',
-                        targets: 2
-                    }, // Jumlah
-                    {
-                        width: '100px',
-                        targets: 3
-                    }, // Satuan
-                    {
-                        width: '130px',
-                        targets: 4
-                    }, // Harga
-                    {
-                        width: '130px',
-                        targets: 5
-                    }, // Total
-                    {
-                        width: '130px',
-                        targets: 6
-                    }, // Harga Disetujui
-                    {
-                        width: '130px',
-                        targets: 7
-                    }, // Jumlah Disetujui
-                    {
-                        width: '130px',
-                        targets: 8
-                    }, // Total Disetujui
-                    {
-                        width: '200px',
-                        targets: 9
-                    }, // Keterangan
-                    {
-                        width: '80px',
-                        targets: 10
-                    } // Checkbox
-                ],
-                order: [
-                    [0, 'asc']
-                ],
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/id.json'
-                }
+                scrollY: 300,
+                // columnDefs: [{
+                //         orderable: false,
+                //         targets: [5, 6, 7, 8, 9]
+                //     },
+                //     {
+                //         width: '50px',
+                //         targets: 0
+                //     }, // No
+                //     {
+                //         width: '200px',
+                //         targets: 1
+                //     }, // Barang
+                //     {
+                //         width: '100px',
+                //         targets: 2
+                //     }, // Jumlah
+                //     {
+                //         width: '100px',
+                //         targets: 3
+                //     }, // Satuan
+                //     {
+                //         width: '130px',
+                //         targets: 4
+                //     }, // Harga
+                //     {
+                //         width: '130px',
+                //         targets: 5
+                //     }, // Total
+                //     {
+                //         width: '130px',
+                //         targets: 6
+                //     }, // Harga Disetujui
+                //     {
+                //         width: '130px',
+                //         targets: 7
+                //     }, // Jumlah Disetujui
+                //     {
+                //         width: '130px',
+                //         targets: 8
+                //     }, // Total Disetujui
+                //     {
+                //         width: '200px',
+                //         targets: 9
+                //     }, // Keterangan
+                //     {
+                //         width: '80px',
+                //         targets: 10
+                //     } // Checkbox
+                // ],
+                // order: [
+                //     [0, 'asc']
+                // ],
+                // language: {
+                //     url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/id.json'
+                // }
             });
 
             // Handle check all - modified for DataTables
@@ -199,41 +202,61 @@
                 $(`#total-${row}`).text(formatRupiah(total));
             });
 
-            // Re-bind events after page change
-            $('#approval-table').on('draw.dt', function() {
-                const mainCheck = $('#checkAll').prop('checked');
-                $('.approve-check').prop('checked', mainCheck);
+            // Perbaikan event handler untuk input
+            function updateTotal(row) {
+                const harga = $(`input[name="harga_approved[${row}]"]`).val() || 0;
+                const jumlah = $(`input[name="jumlah_approved[${row}]"]`).val() || 0;
+                const total = parseFloat(harga) * parseFloat(jumlah);
+                $(`#total-${row}`).text(formatRupiah(total));
+            }
+
+            // Gunakan event delegation untuk menangani perubahan input
+            $(document).on('input', '.harga-approve', function() {
+                const row = $(this).data('row');
+                updateTotal(row);
             });
 
-            // Handle check all - modified for DataTables
-            $(document).on('change', '.approve-check', function() {
-                const totalCheckboxes = $('.approve-check').length;
-                const totalChecked = $('.approve-check:checked').length;
-                $('#checkAll').prop('checked', totalCheckboxes === totalChecked);
+            $(document).on('input', '.jumlah-approve', function() {
+                const row = $(this).data('row');
+                updateTotal(row);
             });
 
-            // Handle form submission
-            $('#form-approval').on('submit', function(e) {
-                let allData = table.rows().data().toArray();
-                $('#formTable tbody').empty();
-                allData.forEach((data) => {
-                    const id = data[0];
-                    const harga = $(`input[name="harga_approve[${id}]"]`).val() || 0;
-                    const jumlah = $(`input[name="jumlah_approve[${id}]"]`).val() || 0;
-                    const keterangan = $(`input[name="keterangan_approve[${id}]"]`).val() || '';
-                    const isApproved = $(`input[name="approve[${id}]"]`).prop('checked');
-                    if (isApproved) {
-                        $('#formTable tbody').append(`
-                            <tr>
-                                <td><input type="hidden" name="barang_id[]" value="${id}"></td>
-                                <td><input type="hidden" name="jumlah[]" value="${jumlah}"></td>
-                                <td><input type="hidden" name="harga[]" value="${harga}"></td>
-                                <td><input type="hidden" name="keterangan[]" value="${keterangan}"></td>
-                            </tr>
-                        `);
-                    }
-                });
-            });
+            // // Re-bind events after page change
+            // $('#approval-table').on('draw.dt', function() {
+            //     const mainCheck = $('#checkAll').prop('checked');
+            //     $('.approve-check').prop('checked', mainCheck);
+            // });
+
+            // // Handle check all - modified for DataTables
+            // $(document).on('change', '.approve-check', function() {
+            //     const totalCheckboxes = $('.approve-check').length;
+            //     const totalChecked = $('.approve-check:checked').length;
+            //     $('#checkAll').prop('checked', totalCheckboxes === totalChecked);
+            // });
+
+            // // Handle form submission
+            // $('#form-approval').on('submit', function(e) {
+            //     e.preventDefault();
+            //     let allData = table.rows().data().toArray();
+            //     $('#approval-table tbody').empty();
+            //     allData.forEach((data) => {
+            //         const id = data[0];
+            //         const harga = $(`input[name="harga_approve[${id}]"]`).val() || 0;
+            //         const jumlah = $(`input[name="jumlah_approve[${id}]"]`).val() || 0;
+            //         const keterangan = $(`input[name="keterangan_approve[${id}]"]`).val() || '';
+            //         const isApproved = $(`input[name="approve[${id}]"]`).prop('checked');
+            //         if (isApproved) {
+            //             $('#approval-table tbody').append(`
+        //                 <tr>
+        //                     <td><input type="hidden" name="barang_id[]" value="${id}"></td>
+        //                     <td><input type="hidden" name="jumlah[]" value="${jumlah}"></td>
+        //                     <td><input type="hidden" name="harga[]" value="${harga}"></td>
+        //                     <td><input type="hidden" name="keterangan[]" value="${keterangan}"></td>
+        //                 </tr>
+        //             `);
+            //         }
+            //     });
+            // });
         });
     </script>
 @endpush

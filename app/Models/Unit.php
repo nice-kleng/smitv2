@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Inventory\Models\MasterBarang;
 use Modules\Inventory\Models\Pengajuan;
+use Modules\Inventory\Models\Permintaan;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
@@ -34,5 +35,10 @@ class Unit extends Model
     public function user()
     {
         return $this->hasMany(User::class);
+    }
+
+    public function permintaan()
+    {
+        return $this->hasMany(Permintaan::class);
     }
 }

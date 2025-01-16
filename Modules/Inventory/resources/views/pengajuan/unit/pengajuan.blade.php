@@ -53,13 +53,19 @@
                                             <a href="javascript:void(0)" class="btn btn-info btn-sm btn-detail"
                                                 title="Lihat Detail Pengajuan" data-id="{{ $item->kode_prefix }}"><i
                                                     class="fas fa-eye"></i></a>
-                                            @if (auth()->user()->hasRole('admin') && $item->status == 0)
-                                                <a href="{{ route('inventory.pengajuan.edit', ['prefix' => $item->kode_prefix]) }}"
-                                                    class="btn btn-warning btn-sm" title="Edit Pengajuan"><i
-                                                        class="fas fa-edit"></i></a>
-                                                <button type="button" class="btn btn-danger btn-sm" title="Hapus Pengajuan"
-                                                    onclick="deleteData({{ $item->id }})"><i
-                                                        class="fas fa-trash"></i></button>
+                                            @if (auth()->user()->hasRole('admin'))
+                                                @if ($item->status == 0)
+                                                    <a href="{{ route('inventory.pengajuan.edit', ['prefix' => $item->kode_prefix]) }}"
+                                                        class="btn btn-warning btn-sm" title="Edit Pengajuan"><i
+                                                            class="fas fa-edit"></i></a>
+                                                    <button type="button" class="btn btn-danger btn-sm"
+                                                        title="Hapus Pengajuan" onclick="deleteData({{ $item->id }})"><i
+                                                            class="fas fa-trash"></i></button>
+                                                @else
+                                                    <a href="{{ route('inventory.pengajuan.barang-datang', $item->kode_prefix) }}"
+                                                        class="btn btn-success btn-sm" title="Barang Datang"><i
+                                                            class="fas fa-arrow-down"></i></a>
+                                                @endif
                                             @endif
 
                                             @if (auth()->user()->hasRole('keuangan'))
@@ -106,6 +112,7 @@
                                     <th>Tanggal Pengajuan</th>
                                     <th>Tanggal Approved</th>
                                     <th>Status</th>
+                                    <th>Keterangan</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -165,7 +172,7 @@
                                 },
                                 '3': {
                                     badge: 'success',
-                                    text: 'Barang Sudah Diambil'
+                                    text: 'Barang Sudah Datang'
                                 },
                             };
                             let badge = statusMap[item.status].badge;
@@ -203,7 +210,8 @@
                                 hargaApproved,
                                 tanggalPengajuan,
                                 tanggalApproved,
-                                `<span class="badge badge-${badge}">${text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()}</span>`
+                                `<span class="badge badge-${badge}">${text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()}</span>`,
+                                item.keterangan_peninjauan ?? '-',
                             ]);
                         });
 

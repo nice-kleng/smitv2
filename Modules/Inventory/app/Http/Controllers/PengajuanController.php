@@ -11,6 +11,7 @@ use Modules\Inventory\Models\MasterBarang;
 use Modules\Inventory\Models\Pengajuan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Modules\Inventory\Models\Stok;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class PengajuanController extends Controller
@@ -39,8 +40,8 @@ class PengajuanController extends Controller
         if (Auth::user()->hasRole('admin')) {
             $data->where('pengajuans.unit_id', Auth::user()->unit_id)
                 ->whereNotNull('pengajuans.created_id')
-                // ->havingRaw("GROUP_CONCAT(pengajuans.status) LIKE '%2%'");
-                ->whereIn('pengajuans.status', ['0', '2']);
+                ->havingRaw("GROUP_CONCAT(pengajuans.status) LIKE '%2%'");
+                // ->whereIn('pengajuans.status', ['0', '2']);
         }
 
         if (Auth::user()->hasRole('keuangan')) {
@@ -217,8 +218,6 @@ class PengajuanController extends Controller
             'jumlah_approve.*' => 'required|numeric|min:0',
         ]);
 
-        dd($request->all());
-
         DB::beginTransaction();
         try {
             $pengajuans = Pengajuan::where('kode_pengajuan', 'like', "%$kode%")
@@ -245,7 +244,7 @@ class PengajuanController extends Controller
                     'updated_id' => Auth::user()->id,
                     'approved_at' => now(),
                     'approved_by' => Auth::user()->id,
-                    'keterangan_peninjauan' => $request->keterangan_approve[$pengajuan->id] ?? null
+                    'keterangan_peninjauan' => $request->keterangan_approved[$pengajuan->id] ?? ''
                 ]);
             }
 
@@ -296,6 +295,68 @@ class PengajuanController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error processing file: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function barangDatang(string $kode)
+    {
+        $pengajuans = Pengajuan::with(['barang.stoks'])
+            ->where('kode_pengajuan', 'like', "%$kode%")
+            ->where('status', '2') // Only allow approval for pending submissions
+            ->get();
+
+        if ($pengajuans->isEmpty()) {
+            return redirect()->route('inventory.pengajuan.index')
+                ->with('error', 'Data pengajuan tidak ditemukan atau sudah diproses');
+        }
+
+        return view('inventory::pengajuan.unit.form_barang_masuk', [
+            'pengajuans' => $pengajuans,
+        ]);
+    }
+
+    public function prosesBarangDatang(Request $request)
+    {
+        $request->validate([
+            'stok_id.*' => 'nullable|exists:stoks,id',
+        ]);
+
+        if (collect($request->stok_id)->filter()->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada stok yang dipilih!');
+        }
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->stok_id as $key => $stok_id) {
+                if (!$stok_id) {
+                    continue;
+                }
+
+                $pengajuan = Pengajuan::find($request->id[$key]);
+                $stok = Stok::find($stok_id);
+                if (!$stok) {
+                    DB::rollBack();
+                    return redirect()->back()->with('error', 'Stok ID ' . $stok_id . ' tidak ditemukan!');
+                }
+
+                $pengajuan->update([
+                    'status' => '3',
+                    'tanggal_realisasi' => now(),
+                    'updated_id' => Auth::user()->id,
+                ]);
+
+                $stok->update([
+                    'stok' => $stok->stok + $request->jumlah[$key],
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('inventory.pengajuan.index')
+                ->with('success', 'Barang berhasil diterima');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return redirect()->route('inventory.pengajuan.index')
+                ->with('error', 'Gagal memproses pengajuan: ' . $th->getMessage());
         }
     }
 }

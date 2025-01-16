@@ -209,7 +209,7 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $item->barang->nama_barang }}</td>
                     <td>{{ $item->status_label }}</td>
-                    <td>{{ $item->transaksi->keterangan ?? '' }}</td>
+                    <td>{{ $item->keterangan ? $item->keterangan : ($item->keterangan_peninjauan ?? '')  }}</td>
                     <td>{{ $item->jumlah_approve ?? '-' }}</td>
                     <td>@currency($item->transaksi ? $item->transaksi->stok->harga : 0)</td>
                     <td>@currency($item->transaksi ? $item->jumlah_approve * $item->transaksi->stok->harga : 0)</td>

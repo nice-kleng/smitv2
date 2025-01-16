@@ -6,6 +6,7 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use App\Models\Unit;
+use Spatie\Permission\Models\Permission;
 
 class UserManagementController extends Controller
 {
@@ -123,9 +124,28 @@ class UserManagementController extends Controller
     }
 
     // Method tambahan untuk melihat permissions user
-    public function permissions(User $user)
+    // public function permissions(User $user)
+    // {
+    //     $permissions = $user->getAllPermissions();
+    //     return view('settings.user.permissions', compact('user', 'permissions'));
+    // }
+
+    public function getPermissions(User $user)
     {
-        $permissions = $user->getAllPermissions();
-        return view('settings.user.permissions', compact('user', 'permissions'));
+        $permissions = Permission::all()->groupBy('modules');
+        return view('settings.users.permissions', compact('user', 'permissions'));
+    }
+
+    public function updatePermissions(Request $request, User $user)
+    {
+        $request->validate([
+            'permissions' => 'required|array'
+        ]);
+
+        $user->syncPermissions($request->permissions);
+
+        return redirect()
+            ->route('settings.users.index')
+            ->with('success', 'Permissions user berhasil diupdate');
     }
 }

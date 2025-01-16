@@ -14,7 +14,7 @@
             @endif
             <div class="card">
                 <div class="card-header">
-                    @if (!isset($pengajuan) && !count($pengajuan) > 0)
+                    @if (!isset($pengajuan) || count($pengajuan) === 0)
                         <a href="javascript:void(0)" class="btn btn-success" data-toggle="modal" data-target="#modalImport"
                             title="Import Pengajuan"> <i class="fas fa-file-excel"></i>
                             Import</a>
@@ -101,8 +101,12 @@
 
             // Initialize DataTable
             var table = $('#formTable').DataTable({
-                processing: true,
+                // processing: true,
                 data: existingData,
+                paging: false,
+                scrollCollapse: true,
+                scrollX: true,
+                scrollY: 300,
                 columns: [{
                         data: 'barang_id',
                         render: function(data, type, row) {
@@ -150,14 +154,14 @@
                     });
                 },
                 // Add these options to maintain pagination position
-                pageResetOnReload: false,
-                stateSave: true,
-                stateDuration: -1 // -1 for session storage
+                // pageResetOnReload: false,
+                // stateSave: true,
+                // stateDuration: -1 // -1 for session storage
             });
 
             // Modified Add row functionality
             $('.addRow').click(function() {
-                var currentPage = table.page();
+                // var currentPage = table.page();
                 var newRowData = {
                     barang_id: '',
                     jumlah: '',
@@ -168,19 +172,39 @@
                 // Add row and maintain current page
                 table.row.add(newRowData).draw(false);
 
-                // Go to last page if the new row isn't visible
-                if (table.page.info().pages === currentPage + 1) {
-                    table.page('last').draw(false);
-                }
+                // Dapatkan index dan node dari baris baru
+                var newRowIndex = table.rows().count() - 1;
+                var rowNode = table.row(newRowIndex).node();
+
+                // Fokus ke elemen pertama di baris baru
+                $(rowNode).find('input, select').first().focus();
+
+                // Scroll ke baris baru
+                $('#formTable_wrapper .dataTables_scrollBody').animate({
+                    scrollTop: rowNode.offsetTop
+                }, 500);
             });
 
             // Remove row functionality
             $('#formTable tbody').on('click', '.removeRow', function() {
                 if (table.data().count() > 1) {
-                    var currentPage = table.page();
+                    var rowIndex = table.row($(this).closest('tr')).index();
                     table.row($(this).closest('tr')).remove().draw();
-                    if (table.page.info().pages === currentPage + 1) {
-                        table.page('last').draw(false);
+
+                    // Fokus dan scroll ke baris berikutnya, atau baris terakhir jika baris dihapus adalah baris terakhir
+                    if (table.rows().count() > rowIndex) {
+                        var rowNode = table.row(rowIndex).node();
+                        $(rowNode).find('input, select').first().focus();
+                        $('#formTable_wrapper .dataTables_scrollBody').animate({
+                            scrollTop: rowNode.offsetTop
+                        }, 500);
+                    } else if (table.rows().count() > 0) {
+                        var lastIndex = table.rows().count() - 1;
+                        var lastRowNode = table.row(lastIndex).node();
+                        $(lastRowNode).find('input, select').first().focus();
+                        $('#formTable_wrapper .dataTables_scrollBody').animate({
+                            scrollTop: lastRowNode.offsetTop
+                        }, 500);
                     }
                 }
             });
@@ -217,21 +241,21 @@
             });
 
             // Collect all rows before form submission
-            $('form').on('submit', function() {
-                let allData = table.rows().data().toArray();
-                // console.log(allData);
-                $('#formTable tbody').empty();
-                allData.forEach(function(row) {
-                    $('#formTable tbody').append(`
-                        <tr>
-                            <td><input type="hidden" name="barang_id[]" value="${row.barang_id}"></td>
-                            <td><input type="hidden" name="jumlah[]" value="${row.jumlah}"></td>
-                            <td><input type="hidden" name="harga[]" value="${row.harga}"></td>
-                            <td><input type="hidden" name="keterangan[]" value="${row.keterangan}"></td>
-                        </tr>
-                    `);
-                });
-            });
+            // $('form').on('submit', function() {
+            //     let allData = table.rows().data().toArray();
+            //     // console.log(allData);
+            //     $('#formTable tbody').empty();
+            //     allData.forEach(function(row) {
+            //         $('#formTable tbody').append(`
+        //             <tr>
+        //                 <td><input type="hidden" name="barang_id[]" value="${row.barang_id}"></td>
+        //                 <td><input type="hidden" name="jumlah[]" value="${row.jumlah}"></td>
+        //                 <td><input type="hidden" name="harga[]" value="${row.harga}"></td>
+        //                 <td><input type="hidden" name="keterangan[]" value="${row.keterangan}"></td>
+        //             </tr>
+        //         `);
+            //     });
+            // });
         });
     </script>
 @endpush

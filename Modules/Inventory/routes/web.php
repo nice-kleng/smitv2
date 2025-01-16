@@ -2,9 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Inventory\Http\Controllers\InventoryController;
+use Modules\Inventory\Http\Controllers\JenisAduanController;
 use Modules\Inventory\Http\Controllers\MasterBarangController;
 use Modules\Inventory\Http\Controllers\PengajuanController;
 use Modules\Inventory\Http\Controllers\PermintaanController;
+use Modules\Inventory\Http\Controllers\TicketController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,7 +20,16 @@ use Modules\Inventory\Http\Controllers\PermintaanController;
 */
 
 Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'inventory.'], function () {
-    // Route::resource('inventory', InventoryController::class)->names('inventory');
+    Route::controller(InventoryController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+
+        // History Mutasi
+        Route::get('/history-mutasi/{id}', 'historyMutasi')->name('history-mutasi');
+        Route::post('/history-mutasi', 'storeHistoryMutasi')->name('store-mutasi');
+        Route::get('/get-ruangan', 'getRuanganByUnit')->name('getRuangan');
+        Route::delete('/history-mutasi/{id}', 'deleteHistoryMutasi')->name('deleteMutasi');
+    });
+
     Route::controller(MasterBarangController::class)->group(function () {
         Route::get('/master-barang', 'index')->name('master_barang.index');
         Route::get('/master-barang/create', 'create')->name('master_barang.create');
@@ -40,6 +51,8 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
         Route::get('/pengajuan/{prefix}/approve', 'approve')->name('pengajuan.approve');
         Route::post('/pengajuan/{kode}/process-approval', 'processApproval')->name('pengajuan.process-approval');
         Route::post('/pengajuan/import', 'importFromExcel')->name('pengajuan.import');
+        Route::get('/pengajuan/barang-datang/{prefix}', 'barangDatang')->name('pengajuan.barang-datang');
+        Route::post('/pengajuan/proses-barang-datang', 'prosesBarangDatang')->name('pengajuan.proses-barang-datang');
     });
 
     Route::controller(PermintaanController::class)->group(function () {
@@ -57,5 +70,20 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
         Route::post('/proses-pengambilan/{prefix}', 'prosesPengambilan')->name('permintaan.proses-pengambilan');
         Route::get('/unduh-form-permintaan/{prefix}', 'unduhFormPermintaan')->name('permintaan.unduh-form-permintaan');
         Route::get('/history-permintaan', 'history')->name('permintaan.history');
+        Route::get('permintaan/history/data', 'historyData')->name('permintaan.history.data');
+    });
+
+    Route::group(['prefix' => 'helpdesk', 'as' => 'helpdesk.'], function () {
+        Route::resource('/jenis-aduan', JenisAduanController::class)->names('jenis-aduan');
+        Route::controller(TicketController::class)->prefix('pengaduan')->group(function () {
+            Route::get('/', 'listTicket')->name('ticket.index');
+            Route::get('/getTindakan/{id}', 'getTindakan')->name('ticket.get-tindakan');
+            Route::put('/tindakan/{id}', 'tindakan')->name('ticket.tindakan');
+            Route::get('/rekap-service-luar', 'rekapServiceLuar')->name('ticket.rekapService');
+            Route::get('/riwayat-service-teknisi', 'historyServiceTeknisi')->name('ticket.riwayat-service-teknisi');
+        });
     });
 });
+
+Route::get('/helpdesk', [TicketController::class, 'index'])->name('helpdesk.index');
+Route::post('/helpdesk', [TicketController::class, 'store'])->name('helpdesk.store-ticket');

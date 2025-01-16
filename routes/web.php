@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthenticateController;
 use App\Http\Controllers\KategoriBarangController;
+use App\Http\Controllers\LogBookController;
 use App\Http\Controllers\MenuManagementController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
@@ -50,6 +51,8 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{user}', 'destroy')->name('users.destroy');
             Route::get('/getRole/{user}', 'getRoles')->name('users.roles');
             Route::put('/getRole/{user}', 'updateRoles')->name('users.roles');
+            Route::get('/getPermission/{user}', 'getPermissions')->name('users.permissions');
+            Route::put('/getPermission/{user}', 'updatePermissions')->name('users.permissions');
         });
 
         Route::controller(RoleController::class)->prefix('/roles')->group(function () {
@@ -103,4 +106,6 @@ Route::middleware(['auth'])->group(function () {
 
         Route::resource('/kategoriBarang', KategoriBarangController::class);
     });
+
+    Route::resource('log-book', LogBookController::class);
 });

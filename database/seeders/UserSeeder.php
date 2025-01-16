@@ -69,7 +69,7 @@ class UserSeeder extends Seeder
             'email' => 'pemasaran@gmail.com',
             'password' => Hash::make('pemasaran'),
             'unit_id' => 5,
-            'ruangan_id' => 5,
+            'ruangan_id' => 6,
             'pu_kd' => '0',
         ]);
 

@@ -15,7 +15,7 @@
 
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped" id="userTable">
+                        <table class="table table-bordered table-striped text-nowrap" id="userTable">
                             <thead>
                                 <tr>
                                     <th>No</th>
@@ -43,6 +43,11 @@
                                                 onclick="manageRoles({{ $item->id }})">
                                                 <i class="fas fa-user-tag"></i>
                                             </button>
+                                            <a href="{{ route('settings.users.permissions', $item->id) }}"
+                                                class="btn btn-sm btn-primary"
+                                                {{ auth()->user()->hasRole('superadmin') ?? 'disabled' }}>
+                                                <i class="fas fa-key"></i>
+                                            </a>
                                             <button type="button" class="btn btn-sm btn-danger"
                                                 onclick="deleteUser({{ $item->id }})">
                                                 <i class="fas fa-trash"></i>

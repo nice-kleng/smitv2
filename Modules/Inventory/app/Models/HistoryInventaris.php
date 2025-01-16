@@ -2,6 +2,8 @@
 
 namespace Modules\Inventory\Models;
 
+use App\Models\Ruangan;
+use App\Models\Unit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 // use Modules\Inventory\Database\Factories\HistoryInventarisFactory;
@@ -23,7 +25,7 @@ class HistoryInventaris extends Model
             '2' => 'Baik'
         ];
 
-        return $kondisi[$value];
+        return $kondisi[$value] ?? 'Tidak Diketahui';
     }
 
     // protected static function newFactory(): HistoryInventarisFactory
@@ -34,5 +36,15 @@ class HistoryInventaris extends Model
     public function inventory()
     {
         return $this->belongsTo(Inventory::class, 'inventory_id');
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
+    }
+
+    public function ruangan()
+    {
+        return $this->belongsTo(Ruangan::class, 'ruangan_id');
     }
 }

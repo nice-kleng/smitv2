@@ -23,6 +23,7 @@ return new class extends Migration
             $table->enum('status', ['0', '1', '2', '3'])->default('0');
             $table->text('keterangan')->nullable();
             $table->string('penerima')->nullable();
+            $table->foreignId('unit_id')->constrained('units');
             $table->foreignId('ruangan_id')->constrained('ruangans');
             $table->foreignId('approve_id')->nullable()->constrained('users');
             $table->foreignId('created_id')->constrained('users');

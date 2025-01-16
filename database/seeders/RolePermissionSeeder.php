@@ -18,7 +18,7 @@ class RolePermissionSeeder extends Seeder
         Role::create(['name' => 'direktur']);
         Role::create(['name' => 'keuangan']);
         $admin = Role::create(['name' => 'admin']);
-        Role::create(['name' => 'staff']);
+        $teknisi = Role::create(['name' => 'teknisi']);
         $unit = Role::create(['name' => 'unit']);
 
         $data = [
@@ -87,7 +87,37 @@ class RolePermissionSeeder extends Seeder
                 'modules' => 'Inventory',
                 'group_name' => 'Permintaan',
                 'description' => 'History permintaan barang (untuk unit dan admin)',
-            ]
+            ],
+            [
+                'name' => 'manage-inventory',
+                'modules' => 'Inventory',
+                'group_name' => 'Inventory',
+                'description' => 'Manage inventory',
+            ],
+            [
+                'name' => 'manage-jenis-pengaduan',
+                'modules' => 'Helpdesk',
+                'group_name' => 'Ticket',
+                'description' => 'Manage Jenis Pengaduan',
+            ],
+            [
+                'name' => 'manage-data-pengaduan',
+                'modules' => 'Helpdesk',
+                'group_name' => 'Ticket',
+                'description' => 'Manage Data Pengaduan',
+            ],
+            [
+                'name' => 'manage-rekap-service',
+                'modules' => 'Helpdesk',
+                'group_name' => 'Ticket',
+                'description' => 'Manage Rekap Service',
+            ],
+            [
+                'name' => 'riwayat-service-teknisi',
+                'modules' => 'Helpdesk',
+                'group_name' => 'Ticket',
+                'description' => 'Riwayat Service Teknisi',
+            ],
         ];
 
         foreach ($data as $item) {
@@ -95,6 +125,7 @@ class RolePermissionSeeder extends Seeder
         }
 
         $unit->givePermissionTo(['manage-pengajuan', 'manage-permintaan', 'history-permintaan']);
-        $admin->givePermissionTo(['manage-data-master', 'manage-master-barang', 'manage-pengajuan', 'manage-permintaan', 'approve-permintaan', 'history-permintaan', 'manage-kategori-barang', 'manage-satuan']);
+        $teknisi->givePermissionTo(['manage-jenis-pengaduan', 'manage-data-pengaduan', 'manage-rekap-service', 'riwayat-service-teknisi']);
+        $admin->givePermissionTo(['manage-data-master', 'manage-master-barang', 'manage-pengajuan', 'manage-permintaan', 'approve-permintaan', 'history-permintaan', 'manage-kategori-barang', 'manage-satuan', 'manage-inventory']);
     }
 }

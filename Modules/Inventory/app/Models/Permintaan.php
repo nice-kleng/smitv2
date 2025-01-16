@@ -3,6 +3,7 @@
 namespace Modules\Inventory\Models;
 
 use App\Models\Ruangan;
+use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,7 +20,7 @@ class Permintaan extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['kode_permintaan', 'pu', 'barang_id', 'jumlah', 'jumlah_approve', 'tanggal_permintaan', 'tanggal_approve', 'status', 'keterangan', 'penerima', 'ruangan_id', 'approve_id', 'created_id', 'updated_id'];
+    protected $fillable = ['kode_permintaan', 'pu', 'barang_id', 'jumlah', 'jumlah_approve', 'tanggal_permintaan', 'tanggal_approve', 'status', 'keterangan', 'penerima', 'unit_id', 'ruangan_id', 'approve_id', 'created_id', 'updated_id'];
 
     // protected static function newFactory(): PermintaanFactory
     // {
@@ -34,7 +35,7 @@ class Permintaan extends Model
             ->dontSubmitEmptyLogs();
     }
 
-    public function getStatusAttributeLabel()
+    public function getStatusLabelAttribute()
     {
         $status = [
             '0' => 'Proses',
@@ -49,6 +50,11 @@ class Permintaan extends Model
     public function barang()
     {
         return $this->belongsTo(MasterBarang::class, 'barang_id');
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
     }
 
     public function ruangan()
