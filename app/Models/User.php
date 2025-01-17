@@ -66,4 +66,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Unit::class);
     }
+
+    public function logBook()
+    {
+        return $this->hasMany(LogBook::class, 'user_id');
+    }
 }

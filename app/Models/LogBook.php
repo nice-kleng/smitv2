@@ -12,11 +12,11 @@ class LogBook extends Model
 
     public function staf()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function service()
     {
-        return $this->belongsTo(Ticket::class);
+        return $this->belongsTo(Ticket::class, 'service_id');
     }
 }
