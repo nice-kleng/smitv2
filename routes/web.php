@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthenticateController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KategoriBarangController;
 use App\Http\Controllers\LogBookController;
 use App\Http\Controllers\MenuManagementController;
@@ -23,9 +24,9 @@ Route::controller(AuthenticateController::class)->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::controller(DashboardController::class)->group(function () {
+        Route::get('/dashboard', 'index')->name('dashboard');
+    });
 
     Route::prefix('/settings')->name('settings.')->group(function () {
         Route::get('/', function () {
