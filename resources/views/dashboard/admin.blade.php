@@ -49,3 +49,65 @@
         </div>
     </div>
 </div>
+
+<!-- Tambahkan Chart.js jika belum ada -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Canvas untuk grafik -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Grafik Permintaan Per Bulan {{ date('Y') }}</h6>
+    </div>
+    <div class="card-body">
+        <canvas id="grafikPermintaan"></canvas>
+    </div>
+</div>
+
+<script>
+    // Data dari controller
+    const grafikData = @json($data['grafikPermintaan']);
+
+    // Persiapkan data untuk Chart.js
+    const labels = grafikData.map(item => item.bulan);
+    const values = grafikData.map(item => item.total);
+
+    // Buat grafik
+    const ctx = document.getElementById('grafikPermintaan').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Jumlah Permintaan',
+                data: values,
+                backgroundColor: 'rgba(78, 115, 223, 0.5)',
+                borderColor: 'rgba(78, 115, 223, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Jumlah Permintaan: ${context.raw}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>

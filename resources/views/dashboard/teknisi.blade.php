@@ -49,7 +49,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($data['pendingMaintenance'] as $maintenance)
+                            @foreach ($data['pendingMaintenance'] as $maintenance)
                             <tr>
                                 <td>{{ $maintenance->asset->name }}</td>
                                 <td>{{ $maintenance->asset->location }}</td>
@@ -72,3 +72,52 @@
         </div>
     </div>
 </div> --}}
+
+<!-- Tambahkan Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Canvas untuk grafik -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Grafik Kerusakan Per Bulan {{ date('Y') }}</h6>
+    </div>
+    <div class="card-body">
+        <canvas id="grafikKerusakan"></canvas>
+    </div>
+</div>
+
+<script>
+    // Data dari controller
+    const grafikKerusakan = @json($data['grafikKerusakan']);
+
+    // Persiapkan data untuk Chart.js
+    const label = grafikKerusakan.map(item => item.bulan);
+    const value = grafikKerusakan.map(item => item.total);
+
+    // Buat grafik
+    const chrtx = document.getElementById('grafikKerusakan').getContext('2d');
+    new Chart(chrtx, {
+        type: 'bar',
+        data: {
+            labels: label,
+            datasets: [{
+                label: 'Jumlah Kerusakan',
+                data: value,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+</script>

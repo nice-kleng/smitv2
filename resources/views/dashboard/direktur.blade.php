@@ -64,18 +64,18 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($data['recentLogBooks'] as $log)
-                            <tr>
-                                <td>{{ $log->created_at->format('d M Y') }}</td>
-                                <td>{{ $log->user->name }}</td>
-                                <td>{{ $log->activity }}</td>
-                                <td>
-                                    <span class="badge bg-{{ $log->status === 'approved' ? 'success' :
-                                        ($log->status === 'pending' ? 'warning' : 'danger') }}">
-                                        {{ ucfirst($log->status) }}
-                                    </span>
-                                </td>
-                            </tr>
+                            @foreach ($data['recentLogBooks'] as $log)
+                                <tr>
+                                    <td>{{ $log->created_at->format('d M Y') }}</td>
+                                    <td>{{ $log->user->name }}</td>
+                                    <td>{{ $log->activity }}</td>
+                                    <td>
+                                        <span
+                                            class="badge bg-{{ $log->status === 'approved' ? 'success' : ($log->status === 'pending' ? 'warning' : 'danger') }}">
+                                            {{ ucfirst($log->status) }}
+                                        </span>
+                                    </td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>
