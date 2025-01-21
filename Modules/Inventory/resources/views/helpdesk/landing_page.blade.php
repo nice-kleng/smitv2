@@ -28,34 +28,59 @@
         .navbar {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
-            padding: 20px 0;
-            position: absolute;
+            padding: 15px 0;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            z-index: 10;
+            z-index: 1030;
+            transition: all 0.3s ease;
         }
 
         .navbar-brand {
             color: white !important;
             font-weight: 600;
             font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .login-btn {
+        .navbar-brand i {
+            font-size: 1.4rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
             background: rgba(255, 255, 255, 0.9);
             color: #667eea;
             border-radius: 50px;
             padding: 8px 24px;
             font-weight: 500;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .login-btn:hover {
+        .nav-btn:hover {
             background: white;
             transform: translateY(-2px);
             color: #764ba2;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar.scrolled {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar.scrolled .navbar-brand {
+            color: #667eea !important;
         }
 
         .container {
@@ -154,13 +179,22 @@
 <body>
     <nav class="navbar">
         <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-headset me-2"></i>
-                Helpdesk RSI Jombang
-            </a>
-            <a href="{{ route('login') }}" class="login-btn text-decoration-none">
-                <i class="fas fa-sign-in-alt me-2"></i>Login
-            </a>
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <a class="navbar-brand" href="#">
+                    <i class="fas fa-headset"></i>
+                    Helpdesk RSI Jombang
+                </a>
+                <div class="nav-buttons">
+                    <a href="{{ route('helpdesk.antrean') }}" class="nav-btn text-decoration-none">
+                        <i class="fas fa-list-ol"></i>
+                        On Progress
+                    </a>
+                    <a href="{{ route('login') }}" class="nav-btn text-decoration-none">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Login
+                    </a>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -240,13 +274,22 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
-        @if (session('success'))
-            Swal.fire({
-                title: 'Success',
-                text: '{{ session('success') }}',
-                icon: 'success'
-            });
-        @endif
+        // Add scroll event listener for navbar
+        $(window).scroll(function() {
+            if ($(window).scrollTop() > 50) {
+                $('.navbar').addClass('scrolled');
+            } else {
+                $('.navbar').removeClass('scrolled');
+            }
+        });
+
+        // @if (session('success'))
+        //     Swal.fire({
+        //         title: 'Success',
+        //         text: '{{ session('success') }}',
+        //         icon: 'success'
+        //     });
+        // @endif
 
         $(document).ready(function() {
             // $('#unit_id').on('change', function() {

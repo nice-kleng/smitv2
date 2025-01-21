@@ -49,7 +49,7 @@ class TicketController extends Controller
 
         $ticket = Ticket::create($request->all());
 
-        return redirect()->route('helpdesk.index')
+        return redirect()->route('helpdesk.antrean')
             ->with('success', 'Laporan berhasil dikirimkan.');
     }
 
@@ -208,5 +208,11 @@ class TicketController extends Controller
         }
 
         return view('inventory::helpdesk.history_service_teknisi', ['data' => $historyService->get()]);
+    }
+
+    public function antrean()
+    {
+        $tickets = Ticket::with('ruangan.unit')->where('status', '0')->orderBy('kd_ticket', 'asc')->get();
+        return view('inventory::helpdesk.listGuest', ['tickets' => $tickets]);
     }
 }

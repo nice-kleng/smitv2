@@ -87,3 +87,4 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
 
 Route::get('/helpdesk', [TicketController::class, 'index'])->name('helpdesk.index');
 Route::post('/helpdesk', [TicketController::class, 'store'])->name('helpdesk.store-ticket');
+Route::get('/helpdesk/antrean', [TicketController::class, 'antrean'])->name('helpdesk.antrean');
