@@ -7,17 +7,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles;
 
-    const USER_PU = [
-        '0',
-        'it',
-        'log',
-        'ipsrs'
+    /**
+     * Constants for user PU codes
+     */
+    public const USER_PU = [
+        '0' => 'Tidak Ada',
+        'it' => 'IT & PDE',
+        'log' => 'Logistik',
+        'ipsrs' => 'IPRS'
     ];
 
     /**
@@ -57,18 +62,35 @@ class User extends Authenticatable
         ];
     }
 
-    public function ruangan()
+    /**
+     * Get the ruangan that owns the user.
+     */
+    public function ruangan(): BelongsTo
     {
         return $this->belongsTo(Ruangan::class);
     }
 
-    public function unit()
+    /**
+     * Get the unit that owns the user.
+     */
+    public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
     }
 
-    public function logBook()
+    /**
+     * Get the logbooks for the user.
+     */
+    public function logBook(): HasMany
     {
         return $this->hasMany(LogBook::class, 'user_id');
+    }
+
+    /**
+     * Get the PU code label.
+     */
+    public function getPuKdLabelAttribute(): string
+    {
+        return self::USER_PU[$this->pu_kd] ?? 'Tidak Ada';
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Ruangan;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
+use Illuminate\Http\JsonResponse;
 
 class UnitController extends Controller
 {
@@ -109,9 +110,8 @@ class UnitController extends Controller
         }
     }
 
-    public function getRuangan(string $unit)
+    public function getRuangan(Unit $unit): JsonResponse
     {
-        $ruangan = Ruangan::where('unit_id', $unit)->orderBy('nama_ruangan', 'asc')->get();
-        return response()->json($ruangan);
+        return response()->json($unit->ruangan);
     }
 }

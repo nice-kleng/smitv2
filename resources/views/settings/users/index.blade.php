@@ -1,11 +1,29 @@
 @extends('layouts.app', ['title' => 'User Management'])
 
 @section('content')
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title">
+                    <h5 class="card-title mb-0">
                         <i class="fas fa-users"></i> User Management
                     </h5>
                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createUserModal">
@@ -22,7 +40,9 @@
                                     <th>Nama</th>
                                     <th>Email</th>
                                     <th>Role</th>
+                                    <th>Unit</th>
                                     <th>Ruangan</th>
+                                    <th>PU</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -33,25 +53,32 @@
                                         <td>{{ $item->name }}</td>
                                         <td>{{ $item->email }}</td>
                                         <td>{{ $item->roles->pluck('name')->implode(', ') }}</td>
+                                        <td>{{ $item->unit->nama_unit ?? '-' }}</td>
                                         <td>{{ $item->ruangan->nama_ruangan ?? '-' }}</td>
-                                        <td class="d-flex gap-3 justify-content-end">
-                                            <button type="button" class="btn btn-sm btn-info"
-                                                onclick="editUser({{ $item->id }})">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-warning"
-                                                onclick="manageRoles({{ $item->id }})">
-                                                <i class="fas fa-user-tag"></i>
-                                            </button>
-                                            <a href="{{ route('settings.users.permissions', $item->id) }}"
-                                                class="btn btn-sm btn-primary"
-                                                {{ auth()->user()->hasRole('superadmin') ?? 'disabled' }}>
-                                                <i class="fas fa-key"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-danger"
-                                                onclick="deleteUser({{ $item->id }})">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                        <td>{{ $item->pu_kd_label }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-info"
+                                                    onclick="editUser({{ $item->id }})">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-warning"
+                                                    onclick="manageRoles({{ $item->id }})">
+                                                    <i class="fas fa-user-tag"></i>
+                                                </button>
+                                                @role('superadmin')
+                                                    <a href="{{ route('settings.users.permissions', $item->id) }}"
+                                                        class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-key"></i>
+                                                    </a>
+                                                @endrole
+                                                @if (!$item->hasRole('superadmin'))
+                                                    <button type="button" class="btn btn-sm btn-danger"
+                                                        onclick="deleteUser({{ $item->id }})">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                @endif
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -63,238 +90,168 @@
         </div>
     </div>
 
-    <!-- Create User Modal -->
-    <div class="modal fade" role="dialog" id="createUserModal">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <form action="{{ route('settings.users.store') }}" method="POST">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">Tambah User</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nama</label>
-                            <input type="text" name="name" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="password" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Unit</label>
-                            <select name="unit_id" class="form-control select2">
-                                @foreach ($units as $unit)
-                                    <option value="{{ $unit->id }}">{{ $unit->nama_unit }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="form-label">Ruangan</label>
-                            <select name="ruangan_id" id="ruangan_id" class="form-control" required></select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Role</label>
-                            <select name="roles[]" class="form-control select2" multiple>
-                                @foreach ($roles as $role)
-                                    <option value="{{ $role->name }}">{{ $role->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit User Modal -->
-    <div class="modal fade" id="editUserModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="modal-header">
-                        <h5 class="modal-title">Edit User</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nama</label>
-                            <input type="text" name="name" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="password" class="form-control"
-                                placeholder="Kosongkan jika tidak ingin mengubah password">
-                            <small class="text-muted">Kosongkan jika tidak ingin mengubah password</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Unit</label>
-                            <select name="unit_id" class="form-control select2">
-                                @foreach ($units as $unit)
-                                    <option value="{{ $unit->id }}">{{ $unit->nama_unit }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="form-label">Ruangan</label>
-                            <select name="ruangan_id" id="ruangan_id" class="form-control" required></select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Role</label>
-                            <select name="roles[]" class="form-control select2" multiple>
-                                @foreach ($roles as $role)
-                                    <option value="{{ $role->name }}">{{ $role->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Manage Roles Modal -->
-    <div class="modal fade" id="manageRolesModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="manageRolesForm" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="modal-header">
-                        <h5 class="modal-title">Manage User Roles</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Roles</label>
-                            <div class="role-checkboxes">
-                                @foreach ($roles as $role)
-                                    <div class="form-check">
-                                        <input type="checkbox" name="roles[]" value="{{ $role->name }}"
-                                            class="form-check-input" id="role{{ $role->id }}">
-                                        <label class="form-check-label" for="role{{ $role->id }}">
-                                            {{ $role->name }}
-                                        </label>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    @include('settings.users.modals.create')
+    @include('settings.users.modals.edit')
+    @include('settings.users.modals.roles')
 @endsection
+
 @push('scripts')
     <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            $('#userTable').DataTable({
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json"
+                }
+            });
+
+            // Initialize Select2
+            $('.select2').select2({
+                width: '100%',
+                // dropdownParent: $('.modal')
+            });
+
+            // Handle unit change for ruangan dropdown in create modal
+            $('#create_unit_id').on('change', function() {
+                loadRuangan($(this).val(), '#create_ruangan_id');
+            });
+
+            // Handle unit change for ruangan dropdown in edit modal
+            $('#edit_unit_id').on('change', function() {
+                loadRuangan($(this).val(), '#edit_ruangan_id');
+            });
+
+            // Reset form when modal is closed
+            $('.modal').on('hidden.bs.modal', function() {
+                $(this).find('form')[0].reset();
+                $(this).find('select').val(null).trigger('change');
+            });
+        });
+
+        function loadRuangan(unitId, targetSelect) {
+            const ruanganSelect = $(targetSelect);
+
+            if (!unitId) {
+                ruanganSelect.html('<option value="">Pilih Ruangan</option>');
+                return;
+            }
+
+            $.ajax({
+                url: `{{ route('api.master.unit.ruangan', ':id') }}`.replace(':id', unitId),
+                type: 'GET',
+                beforeSend: function() {
+                    ruanganSelect.html('<option value="">Loading...</option>');
+                },
+                success: function(response) {
+                    let options = '<option value="">Pilih Ruangan</option>';
+                    response.forEach(function(item) {
+                        options += `<option value="${item.id}">${item.nama_ruangan}</option>`;
+                    });
+                    ruanganSelect.html(options);
+                },
+                error: function() {
+                    ruanganSelect.html('<option value="">Error loading data</option>');
+                    toastr.error('Gagal memuat data ruangan');
+                }
+            });
+        }
+
         function editUser(id) {
             $.ajax({
-                url: `{{ url('settings/users') }}/${id}`,
+                url: `{{ url('settings/users') }}/${id}/edit`,
                 type: 'GET',
+                beforeSend: function() {
+                    $('#editUserModal form')[0].reset();
+                    $('#editUserModal select').val(null).trigger('change');
+                },
                 success: function(data) {
-                    console.log(data);
-
                     const form = $('#editUserModal form');
                     form.attr('action', `{{ url('settings/users') }}/${id}`);
+
+                    // Set form values
                     form.find('input[name="name"]').val(data.name);
                     form.find('input[name="email"]').val(data.email);
-                    form.find('select[name="unit_id"]').val(data.unit_id).trigger('change');
-                    // Reset password field karena ini optional saat edit
-                    form.find('input[name="password"]').val('').removeAttr('required');
-                    form.find('select[name="ruangan_id"]').val(data.ruangan_id).trigger('change');
+                    form.find('#edit_unit_id').val(data.unit_id).trigger('change');
+                    form.find('select[name="pu_kd"]').val(data.pu_kd).trigger('change');
 
-                    // Set selected roles dan trigger select2
+                    // Set ruangan after unit is loaded
+                    setTimeout(() => {
+                        form.find('#edit_ruangan_id').val(data.ruangan_id).trigger('change');
+                    }, 1000);
+
+                    // Set roles
                     const roleSelect = form.find('select[name="roles[]"]');
-                    roleSelect.val(data.roles.map(role => role.id)).trigger('change');
+                    const roleNames = data.roles.map(role => role.name);
+                    roleSelect.val(roleNames).trigger('change');
 
                     $('#editUserModal').modal('show');
                 },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    alert('Terjadi kesalahan saat mengambil data user');
+                error: function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Terjadi kesalahan saat mengambil data user';
+                    toastr.error(message);
                 }
             });
         }
 
         function manageRoles(id) {
-            $.get(`{{ route('settings.users.roles', ':id') }}`.replace(':id', id))
-                .done(function(data) {
-                    // Uncheck all role checkboxes
+            $.ajax({
+                url: `{{ route('settings.users.roles', ':id') }}`.replace(':id', id),
+                type: 'GET',
+                beforeSend: function() {
                     $('input[name="roles[]"]').prop('checked', false);
-
+                },
+                success: function(data) {
                     // Check user's roles
-                    $.each(data.roles, function(i, roleId) {
+                    data.roles.forEach(function(roleId) {
                         $(`#role${roleId}`).prop('checked', true);
                     });
 
                     // Set form action
-                    $('#manageRolesForm').attr('action', `{{ route('settings.users.roles', ':id') }}`.replace(':id',
-                        id));
+                    $('#manageRolesForm').attr('action',
+                        `{{ route('settings.users.roles', ':id') }}`.replace(':id', id)
+                    );
 
                     $('#manageRolesModal').modal('show');
-                });
+                },
+                error: function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Terjadi kesalahan saat mengambil data roles';
+                    toastr.error(message);
+                }
+            });
         }
 
         function deleteUser(id) {
-            if (confirm('Apakah anda yakin ingin menghapus user ini?')) {
-                $.ajax({
-                    url: `{{ route('settings.users.destroy', ':id') }}`.replace(':id', id),
-                    type: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        location.reload();
-                    }
-                });
-            }
-        }
-
-        $(document).ready(function() {
-            $('#userTable').DataTable();
-
-            $('#unit_id').change(function(e) {
-                e.preventDefault();
-                let id = $(this).val();
-
-                $.ajax({
-                    type: "get",
-                    url: `{{ route('master.unit.getRuangan', ':id') }}`.replace(':id', id),
-                    dataType: "json",
-                    success: function(response) {
-                        console.log(response);
-                    }
-                });
+            Swal.fire({
+                title: 'Konfirmasi Hapus',
+                text: 'Apakah anda yakin ingin menghapus user ini?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `{{ route('settings.users.destroy', ':id') }}`.replace(':id', id),
+                        type: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            toastr.success('User berhasil dihapus');
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1000);
+                        },
+                        error: function(xhr) {
+                            const message = xhr.responseJSON?.message ||
+                                'Terjadi kesalahan saat menghapus user';
+                            toastr.error(message);
+                        }
+                    });
+                }
             });
-        });
+        }
     </script>
 @endpush

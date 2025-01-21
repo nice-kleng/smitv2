@@ -110,3 +110,5 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('log-book', LogBookController::class);
 });
+
+Route::get('api/master/unit/{unit}/ruangan', [UnitController::class, 'getRuangan'])->name('api.master.unit.ruangan');

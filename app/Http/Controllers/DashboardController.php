@@ -163,6 +163,7 @@ class DashboardController extends Controller
                         ->orderByRaw('COUNT(*) DESC')
                         ->take(5)
                         ->get(),
+
                     'ruanganSeringRusak' => $ruanganQuery
                         ->join('ruangans', 'tickets.ruangan_id', '=', 'ruangans.id')
                         ->select('ruangans.id', 'ruangans.nama_ruangan')
