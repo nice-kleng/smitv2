@@ -23,6 +23,8 @@ class LogBookController extends Controller
                 $data->where('user_id', Auth::user()->id);
             }
 
+            $data->orderBy('created_at', 'desc');
+
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('nama', function ($row) {

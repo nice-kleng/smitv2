@@ -59,29 +59,29 @@
 
 @push('scripts')
     <script>
-        var table = $('#jenisTable').DataTable({
-            processing: true,
-            serverSide: false,
-            responsive: true,
-            ajax: "{{ route('inventory.helpdesk.jenis-aduan.index') }}",
-            columns: [{
-                    data: 'DT_RowIndex',
-                    name: 'DT_RowIndex'
-                },
-                {
-                    data: 'nama_jenis',
-                    name: 'nama_jenis'
-                },
-                {
-                    data: 'action',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false
-                }
-            ]
-        });
-
         $(document).ready(function() {
+            var table = $('#jenisTable').DataTable({
+                processing: true,
+                serverSide: false,
+                responsive: true,
+                ajax: "{{ route('inventory.helpdesk.jenis-aduan.index') }}",
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex'
+                    },
+                    {
+                        data: 'nama_jenis',
+                        name: 'nama_jenis'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    }
+                ]
+            });
+
             $('form').on('submit', function(e) {
                 e.preventDefault();
                 let formData = $(this).serialize();

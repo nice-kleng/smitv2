@@ -265,6 +265,46 @@
                     }
                 });
             });
+
+            $(document).on('click', '.delete-btn', function() {
+                var id = $(this).data('id');
+
+                Swal.fire({
+                    title: 'Hapus',
+                    text: 'Apakah anda yakin ingin menghapus data ini?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Hapus'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "{{ route('log-book.destroy', ':id') }}".replace(':id',
+                                id),
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(response) {
+                                Swal.fire({
+                                    title: 'Berhasil',
+                                    text: response.message,
+                                    icon: 'success',
+                                    timer: 3000
+                                });
+                                table.ajax.reload();
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    title: 'Gagal',
+                                    text: 'Gagal menghapus data',
+                                    icon: 'error',
+                                    timer: 3000
+                                });
+                            }
+                        });
+                    }
+                });
+            });
         });
     </script>
 @endpush
