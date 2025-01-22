@@ -217,12 +217,6 @@
                 });
             });
 
-            // Handle delete button click
-            $(document).on('click', '.delete-btn', function() {
-                var id = $(this).data('id');
-                // Add your delete logic here
-            });
-
             // Handle show service button click
             $(document).on('click', '.show-service', function() {
                 var id = $(this).data('id');

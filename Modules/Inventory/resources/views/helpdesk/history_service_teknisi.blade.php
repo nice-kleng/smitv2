@@ -26,16 +26,16 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $item->kd_ticket }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($item->created_at)->isoFormat('D MMMM Y') }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($item->created_at)->isoFormat('D MMMM Y HH:mm') }}</td>
                                         <td>{{ $item->ruangan->unit->nama_unit }}</td>
                                         <td>{{ $item->ruangan->nama_ruangan }}</td>
-                                        <td>{{ $item->inventaris->kode_barang }}</td>
-                                        <td>{{ $item->inventaris->barang->nama_barang }}</td>
+                                        <td>{{ $item->inventaris ? $item->inventaris->kode_barang : '-' }}</td>
+                                        <td>{{ $item->inventaris ? $item->inventaris->barang->nama_barang : '-' }}</td>
                                         <td><span class="badge badge-success">Selesai</span></td>
                                         <td>
                                             <span class="badge badge-info">{{ $item->keterangan_perbaikan }}</span>
                                         </td>
-                                        <td>{{ \Carbon\Carbon::parse($item->tanggal_perbaikan)->isoFormat('D MMMM Y') }}
+                                        <td>{{ \Carbon\Carbon::parse($item->tanggal_perbaikan)->isoFormat('D MMMM Y HH:mm') }}
                                         </td>
                                     </tr>
                                 @endforeach

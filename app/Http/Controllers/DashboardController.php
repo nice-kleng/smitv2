@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Models\Inventory;
 use Modules\Inventory\Models\Pengajuan;
 use Modules\Inventory\Models\Permintaan;
@@ -19,7 +20,7 @@ class DashboardController extends Controller
         $roles = $user->roles;
 
         // Jika user adalah superadmin atau admin, berikan akses ke semua role
-        if ($roles->contains('name', 'superadmin')) {
+        if ($roles->contains('name', 'superadmin') || $roles->contains('name', 'direktur')) {
             $roles = Role::all(); // Mengambil semua role yang ada di sistem
         }
 
@@ -140,15 +141,36 @@ class DashboardController extends Controller
 
                 // Ambil data kerusakan per bulan dan update array bulanDalamSetahun
                 $dataKerusakan = $grafikQuery
-                    ->selectRaw('MONTH(created_at) as bulan')
+                    ->join('inventories', 'tickets.inventaris_id', '=', 'inventories.id')
+                    ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
+                    ->where('master_barangs.pu', 'it')
+                    ->selectRaw('MONTH(tickets.created_at) as bulan')
                     ->selectRaw('COUNT(*) as total_ticket')
-                    ->whereYear('created_at', now()->year)
+                    ->whereYear('tickets.created_at', now()->year)
                     ->groupBy('bulan')
                     ->get();
 
                 foreach ($dataKerusakan as $item) {
                     $bulanDalamSetahun[$item->bulan]['total'] = $item->total_ticket;
                 }
+
+                // Query untuk mendapatkan latest history inventaris untuk barang IT
+                $latestHistorySubquery = DB::table('history_inventaris')
+                    ->join('inventories', 'history_inventaris.inventory_id', '=', 'inventories.id')
+                    ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
+                    ->where('master_barangs.pu', 'it')
+                    ->select('history_inventaris.inventory_id', DB::raw('MAX(history_inventaris.id) as max_id'))
+                    ->groupBy('history_inventaris.inventory_id');
+
+                // Query untuk menghitung inventaris berdasarkan kondisi terakhir
+                $inventoryStats = DB::table('history_inventaris as h')
+                    ->joinSub($latestHistorySubquery, 'latest', function ($join) {
+                        $join->on('h.id', '=', 'latest.max_id');
+                    })
+                    ->select('h.kondisi', DB::raw('COUNT(*) as total'))
+                    ->groupBy('h.kondisi')
+                    ->get()
+                    ->keyBy('kondisi');
 
                 return [
                     'completedTickets' => $query->where('status', '1')->count(),
@@ -157,6 +179,7 @@ class DashboardController extends Controller
                         ->join('inventories', 'tickets.inventaris_id', '=', 'inventories.id')
                         ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
                         ->join('kategori_barangs', 'master_barangs.kategori_id', '=', 'kategori_barangs.id')
+                        ->where('master_barangs.pu', 'it')
                         ->select('kategori_barangs.id', 'kategori_barangs.nama_kategori')
                         ->selectRaw('COUNT(*) as total_kerusakan')
                         ->groupBy('kategori_barangs.id', 'kategori_barangs.nama_kategori')
@@ -166,13 +189,21 @@ class DashboardController extends Controller
 
                     'ruanganSeringRusak' => $ruanganQuery
                         ->join('ruangans', 'tickets.ruangan_id', '=', 'ruangans.id')
-                        ->select('ruangans.id', 'ruangans.nama_ruangan')
+                        ->join('units', 'ruangans.unit_id', '=', 'units.id')
+                        ->join('inventories', 'tickets.inventaris_id', '=', 'inventories.id')
+                        ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
+                        ->where('master_barangs.pu', 'it')
+                        ->select('ruangans.id', 'ruangans.nama_ruangan', 'units.nama_unit')
                         ->selectRaw('COUNT(*) as total_kerusakan')
-                        ->groupBy('ruangans.id', 'ruangans.nama_ruangan')
+                        ->groupBy('ruangans.id', 'ruangans.nama_ruangan', 'units.nama_unit')
                         ->orderByRaw('COUNT(*) DESC')
                         ->take(5)
                         ->get(),
-                    // Data untuk grafik kerusakan per bulan tahun ini
+
+                    'totalInventarisRusak' => $inventoryStats->get('0', (object)['total' => 0])->total,
+                    'totalInventarisKurangBaik' => $inventoryStats->get('1', (object)['total' => 0])->total,
+                    'totalInventarisBaik' => $inventoryStats->get('2', (object)['total' => 0])->total,
+
                     'grafikKerusakan' => array_values($bulanDalamSetahun),
                 ];
 
@@ -190,14 +221,14 @@ class DashboardController extends Controller
                     'permintaanDalamProses' => $permintaan->where('status', '0')->count(),
                 ];
 
-            case 'superadmin':
-                return [
-                    'totalUsers' => \App\Models\User::count(),
-                    'totalRoles' => Role::count(),
-                    'totalUnits' => \App\Models\Unit::count(),
-                    'recentActivities' => \Spatie\Activitylog\Models\Activity::latest()->take(10)->get(),
-                    'systemStats' => $this->getSystemStats(),
-                ];
+                // case 'superadmin':
+                //     return [
+                //         'totalUsers' => \App\Models\User::count(),
+                //         'totalRoles' => Role::count(),
+                //         'totalUnits' => \App\Models\Unit::count(),
+                //         'recentActivities' => \Spatie\Activitylog\Models\Activity::latest()->take(10)->get(),
+                //         'systemStats' => $this->getSystemStats(),
+                //     ];
 
             default:
                 return [];

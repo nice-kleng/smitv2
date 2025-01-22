@@ -2,64 +2,55 @@
 
 @section('content')
     {{-- <div class="container"> --}}
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h1>Dashboard</h1>
-                    @if ($roles->count() > 1)
-                        <div class="btn-group" role="group">
-                            @foreach ($roles as $role)
-                                <button type="button"
-                                    class="btn btn-outline-primary role-tab {{ $loop->first ? 'active' : '' }}"
-                                    data-role="{{ $role->name }}">
-                                    @switch($role->name)
-                                        @case('direktur')
-                                            <i class="fas fa-user-tie me-2"></i>
-                                        @break
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1>Dashboard</h1>
+                @if ($roles->count() > 1)
+                    <div class="btn-group" role="group">
+                        @foreach ($roles->whereNotIn('name', ['superadmin', 'direktur']) as $role)
+                            <button type="button" class="btn btn-outline-primary role-tab {{ $loop->first ? 'active' : '' }}"
+                                data-role="{{ $role->name }}">
+                                @switch($role->name)
+                                    @case('keuangan')
+                                        <i class="fas fa-money-bill me-2"></i>
+                                    @break
 
-                                        @case('keuangan')
-                                            <i class="fas fa-money-bill me-2"></i>
-                                        @break
+                                    @case('admin')
+                                        <i class="fas fa-tools me-2"></i>
+                                    @break
 
-                                        @case('admin')
-                                            <i class="fas fa-tools me-2"></i>
-                                        @break
+                                    @case('teknisi')
+                                        <i class="fas fa-wrench me-2"></i>
+                                    @break
 
-                                        @case('teknisi')
-                                            <i class="fas fa-wrench me-2"></i>
-                                        @break
+                                    @case('unit')
+                                        <i class="fas fa-building me-2"></i>
+                                    @break
 
-                                        @case('unit')
-                                            <i class="fas fa-building me-2"></i>
-                                        @break
-
-                                        @case('superadmin')
-                                            <i class="fas fa- me-2"></i>
-                                        @break
-
-                                        @default
-                                            <i class="fas fa-user me-2"></i>
-                                    @endswitch
-                                    {{ ucfirst($role->name) }}
-                                </button>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        @foreach ($roles as $role)
-            <div class="role-content" id="role-{{ $role->name }}" style="display: {{ $loop->first ? 'block' : 'none' }};">
-                @if (view()->exists("dashboard.{$role->name}"))
-                    @include("dashboard.{$role->name}", ['data' => $dashboardData[$role->name]])
-                @else
-                    <div class="alert alert-warning">
-                        Dashboard untuk role {{ $role->name }} belum tersedia.
+                                    @default
+                                        <i class="fas fa-user me-2"></i>
+                                @endswitch
+                                {{ ucfirst($role->name) }}
+                            </button>
+                        @endforeach
                     </div>
                 @endif
             </div>
-        @endforeach
+        </div>
+    </div>
+
+    @foreach ($roles as $role)
+        <div class="role-content" id="role-{{ $role->name }}" style="display: {{ $loop->first ? 'block' : 'none' }};">
+            @if (view()->exists("dashboard.{$role->name}"))
+                @include("dashboard.{$role->name}", ['data' => $dashboardData[$role->name]])
+            @else
+                <div class="alert alert-warning">
+                    Dashboard untuk role {{ $role->name }} belum tersedia.
+                </div>
+            @endif
+        </div>
+    @endforeach
     {{-- </div> --}}
 @endsection
 

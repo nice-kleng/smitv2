@@ -48,7 +48,7 @@
             </div>
         </div> --}}
 
-        <div class="col-md-12 mb-4">
+        {{-- <div class="col-md-12 mb-4">
             <div class="card shadow">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">System Statistics</h6>
@@ -64,19 +64,21 @@
                         <div class="col-md-4">
                             <div class="text-xs font-weight-bold text-uppercase mb-1">Memory Usage</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $data['systemStats']['memory'] > 0 ? round($data['systemStats']['memory'] / 1024 / 1024, 2) : 'N/A' }} MB
+                                {{ $data['systemStats']['memory'] > 0 ? round($data['systemStats']['memory'] / 1024 / 1024, 2) : 'N/A' }}
+                                MB
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="text-xs font-weight-bold text-uppercase mb-1">Storage Free</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $data['systemStats']['storage'] > 0 ? round($data['systemStats']['storage'] / 1024 / 1024 / 1024, 2) : 'N/A' }} GB
+                                {{ $data['systemStats']['storage'] > 0 ? round($data['systemStats']['storage'] / 1024 / 1024 / 1024, 2) : 'N/A' }}
+                                GB
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         {{-- <div class="col-md-12">
             <div class="card shadow">
@@ -95,7 +97,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($data['recentActivities'] as $activity)
+                                @foreach ($data['recentActivities'] as $activity)
                                 <tr>
                                     <td>{{ $activity->created_at->diffForHumans() }}</td>
                                     <td>{{ $activity->user->name }}</td>

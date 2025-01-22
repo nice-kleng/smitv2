@@ -207,6 +207,8 @@ class TicketController extends Controller
             $historyService->where('teknisi_id', Auth::user()->id);
         }
 
+        $historyService->where('status', 1)->orderBy('tanggal_perbaikan', 'desc');
+
         return view('inventory::helpdesk.history_service_teknisi', ['data' => $historyService->get()]);
     }
 
