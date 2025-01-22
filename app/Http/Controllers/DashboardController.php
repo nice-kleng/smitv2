@@ -190,9 +190,6 @@ class DashboardController extends Controller
                     'ruanganSeringRusak' => $ruanganQuery
                         ->join('ruangans', 'tickets.ruangan_id', '=', 'ruangans.id')
                         ->join('units', 'ruangans.unit_id', '=', 'units.id')
-                        ->join('inventories', 'tickets.inventaris_id', '=', 'inventories.id')
-                        ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
-                        ->where('master_barangs.pu', 'it')
                         ->select('ruangans.id', 'ruangans.nama_ruangan', 'units.nama_unit')
                         ->selectRaw('COUNT(*) as total_kerusakan')
                         ->groupBy('ruangans.id', 'ruangans.nama_ruangan', 'units.nama_unit')
