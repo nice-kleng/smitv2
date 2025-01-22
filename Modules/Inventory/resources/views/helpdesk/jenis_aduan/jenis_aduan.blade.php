@@ -96,6 +96,14 @@
                     url: url,
                     data: formData,
                     dataType: "json",
+                    headers: {
+                        'X-CSRF-TOKEN': `{{ csrf_token() }}`
+                    },
+                    beforeSend: function() {
+                        $('.submit-btn').prop('disabled', true);
+                        $('.submit-btn').html(
+                            '<i class="fas fa-spinner fa-spin"></i> Loading...');
+                    },
                     success: function(response) {
                         table.ajax.reload();
                         $('#staticBackdrop').modal('hide');
@@ -104,7 +112,7 @@
                             title: 'Success!',
                             text: response.message,
                             icon: 'success',
-                            confirmButtonText: 'Ok'
+                            timer: 3000,
                         });
                     },
                     error: function(xhr) {
@@ -150,7 +158,7 @@
                                 title: 'Success!',
                                 text: response.message,
                                 icon: 'success',
-                                confirmButtonText: 'Ok'
+                                timer: 3000
                             });
                             table.ajax.reload();
                         }
