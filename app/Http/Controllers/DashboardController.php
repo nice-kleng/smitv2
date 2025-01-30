@@ -120,9 +120,9 @@ class DashboardController extends Controller
                 $query = Ticket::query();
 
                 // Jika bukan admin/superadmin, filter berdasarkan teknisi
-                if (!$isAdminOrSuperadmin) {
-                    $query->where('teknisi_id', $user->id);
-                }
+                // if (!$isAdminOrSuperadmin) {
+                //     $query->where('teknisi_id', $user->id);
+                // }
 
                 // Clone query untuk digunakan pada perhitungan lainnya
                 $kategoriQuery = clone $query;
@@ -141,9 +141,9 @@ class DashboardController extends Controller
 
                 // Ambil data kerusakan per bulan dan update array bulanDalamSetahun
                 $dataKerusakan = $grafikQuery
-                    ->join('inventories', 'tickets.inventaris_id', '=', 'inventories.id')
-                    ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
-                    ->where('master_barangs.pu', 'it')
+                    // ->leftJoin('inventories', 'tickets.inventaris_id', '=', 'inventories.id')
+                    // ->leftJoin('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
+                    // ->where('master_barangs.pu', 'it')
                     ->selectRaw('MONTH(tickets.created_at) as bulan')
                     ->selectRaw('COUNT(*) as total_ticket')
                     ->whereYear('tickets.created_at', now()->year)
@@ -190,9 +190,6 @@ class DashboardController extends Controller
                     'ruanganSeringRusak' => $ruanganQuery
                         ->join('ruangans', 'tickets.ruangan_id', '=', 'ruangans.id')
                         ->join('units', 'ruangans.unit_id', '=', 'units.id')
-                        ->join('inventories', 'tickets.inventaris_id', '=', 'inventories.id')
-                        ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
-                        ->where('master_barangs.pu', 'it')
                         ->select('ruangans.id', 'ruangans.nama_ruangan', 'units.nama_unit')
                         ->selectRaw('COUNT(*) as total_kerusakan')
                         ->groupBy('ruangans.id', 'ruangans.nama_ruangan', 'units.nama_unit')
