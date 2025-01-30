@@ -2,6 +2,7 @@
 
 namespace Modules\Inventory\Http\Controllers;
 
+use App\Events\TicketCreated;
 use App\Http\Controllers\Controller;
 use App\Models\LogBook;
 use App\Models\Ruangan;
@@ -48,6 +49,8 @@ class TicketController extends Controller
         $request->merge(['kd_ticket' => $kd_ticket]);
 
         $ticket = Ticket::create($request->all());
+
+        event(new TicketCreated($ticket));
 
         return redirect()->route('helpdesk.antrean')
             ->with('success', 'Laporan berhasil dikirimkan.');
