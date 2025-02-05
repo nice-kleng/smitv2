@@ -16,7 +16,7 @@ class Pengajuan extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['kode_pengajuan', 'pu', 'unit_id', 'barang_id', 'harga', 'harga_approved', 'jumlah', 'jumlah_approved', 'dikeluarkan_pada', 'tanggal_pengajuan', 'tanggal_approved', 'tanggal_realisasi', 'approved_id', 'status', 'jenis_pengajuan', 'memo', 'disposisi', 'keterangan', 'keterangan_peninjauan', 'created_id', 'updated_id'];
+    protected $fillable = ['kode_pengajuan', 'pu', 'unit_id', 'barang_id', 'harga', 'harga_approved', 'jumlah', 'jumlah_approved', 'dikeluarkan_pada', 'tanggal_pengajuan', 'tanggal_approved', 'tanggal_realisasi', 'approved_id', 'status', 'jenis_pengajuan', 'disposisi', 'keterangan', 'keterangan_peninjauan', 'created_id', 'updated_id'];
 
     // protected static function newFactory(): PengajuanFactory
     // {

@@ -31,7 +31,13 @@
                                         <td>{{ $item->ruangan->nama_ruangan }}</td>
                                         <td>{{ $item->inventaris ? $item->inventaris->kode_barang : '-' }}</td>
                                         <td>{{ $item->inventaris ? $item->inventaris->barang->nama_barang : '-' }}</td>
-                                        <td><span class="badge badge-success">Selesai</span></td>
+                                        <td>
+                                            @php
+                                                $badge = $item->status === '0' ? 'warning' : 'success';
+                                                $text = $item->status === '0' ? 'Dalam Antrean' : 'Selesai';
+                                            @endphp
+                                            <span class="badge badge-{{ $badge }}">{{ $text }}</span>
+                                        </td>
                                         <td>
                                             <span class="badge badge-info">{{ $item->keterangan_perbaikan }}</span>
                                         </td>

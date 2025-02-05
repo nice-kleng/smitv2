@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -55,7 +54,8 @@
                                         <div class="form-group">
                                             <div class="custom-control custom-checkbox small">
                                                 <input type="checkbox" class="custom-control-input" id="customCheck">
-                                                <label class="custom-control-label" name="remember" for="customCheck">Lihat Password</label>
+                                                <label class="custom-control-label" name="remember"
+                                                    for="customCheck">Lihat Password</label>
                                             </div>
                                         </div>
                                         <button type="submit" class="btn btn-primary btn-user btn-block">
@@ -86,7 +86,7 @@
 
     <script>
         $('#customCheck').on('change', function(event) {
-            if($(this).is(':checked')) {
+            if ($(this).is(':checked')) {
                 $('input[name="password"]').attr('type', 'text');
             } else {
                 $('input[name="password"]').attr('type', 'password');

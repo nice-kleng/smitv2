@@ -2,6 +2,7 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    Yajra\DataTables\DataTablesServiceProvider::class,
+    App\Providers\BroadcastServiceProvider::class,
     SimpleSoftwareIO\QrCode\QrCodeServiceProvider::class,
+    Yajra\DataTables\DataTablesServiceProvider::class,
 ];

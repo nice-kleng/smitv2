@@ -327,6 +327,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -358,6 +359,60 @@
                     text: '{{ session('error') }}',
                 });
             });
+        </script>
+    @endif
+
+    @if (auth()->user()->pu_kd === 'it')
+        <script type="module">
+            window.Echo.private('ticket')
+                .listen('.ticket.created', (e) => {
+                    // Cek apakah browser mendukung notifikasi
+                    if ('Notification' in window) {
+                        if (Notification.permission === 'default') {
+                            Notification.requestPermission().then(permission => {
+                                if (permission === 'granted') {
+                                    console.log('test');
+                                    showNotification(e);
+                                }
+                            });
+                        } else if (Notification.permission === 'granted') {
+                            showNotification(e);
+                        }
+                    }
+                    var audio = new Audio('/notification.wav');
+                    audio.play();
+                    if (typeof toastr !== 'undefined') {
+                        toastr.success(e.message, 'Notifikasi Baru');
+                    }
+                })
+                .error((error) => {
+                    console.error('Echo error:', error);
+                    // Only show error if it's not an authorization error
+                    if (error.type !== 'AuthError' && typeof toastr !== 'undefined') {
+                        toastr.error('Gagal terhubung ke sistem notifikasi', 'Error');
+                    }
+                });
+
+            // Fungsi untuk menampilkan notifikasi
+            function showNotification(e) {
+                const notificationOptions = {
+                    body: e.message || 'Pengaduan baru telah dibuat',
+                    icon: '/favicon.ico',
+                    tag: 'ticket-notification',
+                    requireInteraction: true
+                };
+
+                const notification = new Notification('Pengaduan Baru', notificationOptions);
+
+                // Optional: Handle notification click
+                notification.onclick = function(event) {
+                    event.preventDefault();
+                    window.focus(); // Fokus ke window aplikasi
+                    // Optional: Navigate to ticket page
+                    // window.location.href = '/tickets';
+                    notification.close();
+                };
+            }
         </script>
     @endif
 

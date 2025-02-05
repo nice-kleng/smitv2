@@ -33,7 +33,7 @@ class TicketCreated implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new Channel('ticket'),
+            new PrivateChannel('ticket'),
         ];
     }
 

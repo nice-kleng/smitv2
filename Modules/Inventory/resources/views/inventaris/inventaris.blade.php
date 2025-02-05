@@ -3,7 +3,8 @@
 @section('content')
     <div class="card">
         <div class="card-header justify-content-between d-sm-flex">
-            <a href="" class="btn btn-primary">Tambah Inventaris</a>
+            @if (auth()->user()->hasAnyRole(['superadmin', 'admin']))
+            @endif
             <a href="" class="btn btn-success" title="Export Data Inventaris"><i class="fa fa-file-excel"></i> Export</a>
         </div>
         <div class="card-body">

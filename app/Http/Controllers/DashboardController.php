@@ -21,7 +21,8 @@ class DashboardController extends Controller
 
         // Jika user adalah superadmin atau admin, berikan akses ke semua role
         if ($roles->contains('name', 'superadmin') || $roles->contains('name', 'direktur')) {
-            $roles = Role::all(); // Mengambil semua role yang ada di sistem
+            // $roles = Role::all(); // Mengambil semua role yang ada di sistem
+            $roles = Role::whereNotIn('name', ['unit'])->get();
         }
 
         if ($roles->isEmpty()) {
@@ -43,7 +44,7 @@ class DashboardController extends Controller
     private function getDashboardDataByRole($role)
     {
         $user = Auth::user();
-        $isAdminOrSuperadmin = $user->roles->contains('name', 'superadmin');
+        $isAdminOrSuperadmin = $user->roles->whereIn('name', ['superadmin', 'direktur'])->isNotEmpty();
 
         // Izinkan superadmin dan admin mengakses semua data
         if (!$isAdminOrSuperadmin && !$user->roles->contains('name', $role)) {
@@ -58,14 +59,37 @@ class DashboardController extends Controller
                 //     ];
 
             case 'keuangan':
+                $bulanDalamSetahun = [];
+                for ($i = 1; $i <= 12; $i++) {
+                    $bulanDalamSetahun[$i] = [
+                        'bulan' => date('F', mktime(0, 0, 0, $i, 1)),
+                        'bulan_angka' => $i,
+                        'total' => 0
+                    ];
+                }
+
+                $dataPengajuan = Pengajuan::selectRaw('MONTH(tanggal_pengajuan) as bulan')
+                    ->selectRaw('COUNT(DISTINCT SUBSTRING(kode_pengajuan, 1, 16)) as total_pengajuan')
+                    ->whereYear('tanggal_pengajuan', now()->year)
+                    ->groupBy('bulan')
+                    ->orderBy('bulan')
+                    ->get();
+
+                foreach ($dataPengajuan as $item) {
+                    $bulanDalamSetahun[$item->bulan]['total'] = $item->total_pengajuan;
+                }
+
                 return [
-                    'totalPengeluaranBulanIni' => Pengajuan::whereMonth('tanggal_approved', now()->month)->whereYear('tanggal_approved', now()->year)->where(
-                        'status',
-                        '2'
-                    )->sum('harga_approved'),
-                    'pengajuanBaru' => Pengajuan::where('status', '0')->groupBy('kode_pengajuan')->count(),
-                    // 'recentTransactions' => \App\Models\Transaction::latest()->take(5)->get(),
-                    // 'pendingRequests' => \App\Models\BudgetRequest::where('status', 'pending')->get(),
+                    'totalPengeluaranBulanIni' => Pengajuan::whereMonth('tanggal_approved', now()->month)
+                        ->whereYear('tanggal_approved', now()->year)
+                        ->whereNotIn('status', ['0', '1'])
+                        ->sum('harga_approved'),
+                    'pengajuanBaru' => DB::table('pengajuans')
+                        ->select(DB::raw('SUBSTRING(kode_pengajuan, 1, 16) as kode_prefix'))
+                        ->where('status', '0')
+                        ->distinct()
+                        ->count(),
+                    'grafikPengajuan' => array_values($bulanDalamSetahun),
                 ];
 
             case 'admin':
@@ -75,6 +99,10 @@ class DashboardController extends Controller
                 if (!$isAdminOrSuperadmin) {
                     $query->where('pu', $user->pu_kd);
                 }
+
+                $totalPermintaan = $query->groupBy('kode_permintaan')->count();
+                $totalPermintaanMenungguDiambil = $query->where('status', '2')->groupBy('kode_permintaan')->count();
+                $totalPermintaanBaru = $query->where('status', '0')->groupBy('kode_permintaan')->count();
 
                 // Clone query untuk digunakan pada perhitungan lainnya
                 $unitQuery = clone $query;
@@ -103,9 +131,9 @@ class DashboardController extends Controller
                 }
 
                 return [
-                    'totalPermintaan' => $query->groupBy('kode_permintaan')->count(),
-                    'totalPermintaanMenungguDiambil' => $query->where('status', '2')->groupBy('kode_permintaan')->count(),
-                    'totalPermintaanBaru' => $query->where('status', '0')->groupBy('kode_permintaan')->count(),
+                    'totalPermintaan' => $totalPermintaan,
+                    'totalPermintaanMenungguDiambil' => $totalPermintaanMenungguDiambil,
+                    'totalPermintaanBaru' => $totalPermintaanBaru,
                     'unitPermintaanTerbanyak' => $unitQuery->select('unit_id')
                         ->selectRaw('COUNT(DISTINCT kode_permintaan) as total_permintaan')
                         ->groupBy('unit_id')
@@ -123,8 +151,6 @@ class DashboardController extends Controller
                 // if (!$isAdminOrSuperadmin) {
                 //     $query->where('teknisi_id', $user->id);
                 // }
-
-                // Clone query untuk digunakan pada perhitungan lainnya
                 $kategoriQuery = clone $query;
                 $ruanganQuery = clone $query;
                 $grafikQuery = clone $query;
@@ -173,8 +199,8 @@ class DashboardController extends Controller
                     ->keyBy('kondisi');
 
                 return [
-                    'completedTickets' => $query->where('status', '1')->count(),
-                    'newTickets' => $query->where('status', '0')->count(),
+                    'completedTickets' => Ticket::where('status', '1')->count(),
+                    'newTickets' => Ticket::where('status', '0')->count(),
                     'kategoriSeringRusak' => $kategoriQuery
                         ->join('inventories', 'tickets.inventaris_id', '=', 'inventories.id')
                         ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
@@ -205,27 +231,39 @@ class DashboardController extends Controller
                 ];
 
             case 'unit':
-                $inventory = Inventory::query();
-                $permintaan = Permintaan::query();
+                $permintaanDalamProses = Permintaan::where('ruangan_id', Auth::user()->ruangan_id)->where('status', '0')->count();
+                $permintaanApproved = Permintaan::where('ruangan_id', Auth::user()->ruangan_id)->where('status', '3')->count();
+                $permintaanRejected = Permintaan::where('ruangan_id', Auth::user()->ruangan_id)->where('status', '1')->count();
 
-                if (!$isAdminOrSuperadmin) {
-                    $inventory->where('ruangan_id', Auth::user()->ruangan_id);
-                    $permintaan->where('unit_id', Auth::user()->unit_id);
+
+                $grafik = Permintaan::query();
+                $bulanDalamSetahun = [];
+                for ($i = 1; $i <= 12; $i++) {
+                    $bulanDalamSetahun[$i] = [
+                        'bulan' => date('F', mktime(0, 0, 0, $i, 1)),
+                        'bulan_angka' => $i,
+                        'total' => 0
+                    ];
+                }
+
+                $datapermintaan = $grafik->selectRaw('MONTH(permintaans.created_at) as bulan')
+                    ->selectRaw('COUNT(*) as total_permintaan')
+                    ->whereYear('permintaans.created_at', now()->year)
+                    ->where('ruangan_id', Auth::user()->ruangan_id)
+                    ->groupBy('bulan')
+                    ->get();
+
+                foreach ($datapermintaan as $item) {
+                    $bulanDalamSetahun[$item->bulan]['total'] = $item->total_permintaan;
                 }
 
                 return [
-                    'invetarisRuangan' => $inventory->count(),
-                    'permintaanDalamProses' => $permintaan->where('status', '0')->count(),
+                    'inventarisRuangan' => Inventory::where('ruangan_id', Auth::user()->ruangan_id)->count(),
+                    'permintaanDalamProses' => $permintaanDalamProses,
+                    'permintaanAccepted' => $permintaanApproved,
+                    'permintaanRejected' => $permintaanRejected,
+                    'grafikPermintaan' => array_values($bulanDalamSetahun),
                 ];
-
-                // case 'superadmin':
-                //     return [
-                //         'totalUsers' => \App\Models\User::count(),
-                //         'totalRoles' => Role::count(),
-                //         'totalUnits' => \App\Models\Unit::count(),
-                //         'recentActivities' => \Spatie\Activitylog\Models\Activity::latest()->take(10)->get(),
-                //         'systemStats' => $this->getSystemStats(),
-                //     ];
 
             default:
                 return [];

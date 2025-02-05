@@ -28,6 +28,9 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
         Route::post('/history-mutasi', 'storeHistoryMutasi')->name('store-mutasi');
         Route::get('/get-ruangan', 'getRuanganByUnit')->name('getRuangan');
         Route::delete('/history-mutasi/{id}', 'deleteHistoryMutasi')->name('deleteMutasi');
+
+        // Inventaris unit
+        // Route::get('/list', '')->name('unit.list');
     });
 
     Route::controller(MasterBarangController::class)->group(function () {

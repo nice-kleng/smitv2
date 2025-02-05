@@ -7,6 +7,7 @@ use App\Models\Ruangan;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Models\HistoryInventaris;
 use Modules\Inventory\Models\Inventory;
 
@@ -18,9 +19,15 @@ class InventoryController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Inventory::whereHas('barang', function ($query) {
-                $query->where('pu', Auth::user()->pu_kd);
-            })->with('barang.kategori', 'ruangan.unit', 'penghapus', 'historyMutasi')->get();
+            $query = Inventory::with('barang.kategori', 'ruangan.unit', 'penghapus', 'historyMutasi');
+
+            if (Auth::user()->hasAnyRole(['superadmin', 'admin'])) {
+                $data = $query->whereHas('barang', function ($q) {
+                    $q->where('pu', Auth::user()->pu_kd);
+                })->get();
+            } else {
+                $data = $query->where('ruangan_id', Auth::user()->ruangan_id)->get();
+            }
 
             return datatables()->of($data)
                 ->addIndexColumn()
@@ -150,20 +157,31 @@ class InventoryController extends Controller
 
     public function storeHistoryMutasi(Request $request)
     {
-        $request->validate([
-            'inventory_id' => 'required',
-            'unit_id' => 'required',
-            'ruangan_id' => 'required',
-            'kondisi' => 'required',
-            'tanggal_mutasi' => 'required',
-        ]);
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'inventory_id' => 'required',
+                'unit_id' => 'required',
+                'ruangan_id' => 'required',
+                'kondisi' => 'required',
+                'tanggal_mutasi' => 'required',
+            ]);
 
-        $request->merge([
-            'created_id' => Auth::id(),
-            'updated_id' => Auth::id(),
-        ]);
-        HistoryInventaris::create($request->all());
-        return redirect()->back()->with('success', 'Data berhasil disimpan');
+            $inventory = Inventory::find($request->inventory_id);
+            $inventory->update(['ruangan_id' => $request->ruangan_id]);
+
+            $request->merge([
+                'created_id' => Auth::id(),
+                'updated_id' => Auth::id(),
+            ]);
+            HistoryInventaris::create($request->all());
+            DB::commit();
+            return redirect()->back()->with('success', 'Data berhasil disimpan');
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            dd($th);
+        }
     }
 
     public function deleteHistoryMutasi(string $id)

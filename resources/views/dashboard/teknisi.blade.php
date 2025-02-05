@@ -92,9 +92,6 @@
     </div>
 </div>
 
-<!-- Tambahkan Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <!-- Canvas untuk grafik -->
 <div class="row justify-content-center mb-5">
     <div class="col-md-6">
@@ -141,41 +138,42 @@
 
 
 
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            // Data dari controller
+            const grafikKerusakan = @json($data['grafikKerusakan']);
 
+            // Persiapkan data untuk Chart.js
+            const label = grafikKerusakan.map(item => item.bulan);
+            const value = grafikKerusakan.map(item => item.total);
 
-
-<script>
-    // Data dari controller
-    const grafikKerusakan = @json($data['grafikKerusakan']);
-
-    // Persiapkan data untuk Chart.js
-    const label = grafikKerusakan.map(item => item.bulan);
-    const value = grafikKerusakan.map(item => item.total);
-
-    // Buat grafik
-    const chrtx = document.getElementById('grafikKerusakan').getContext('2d');
-    new Chart(chrtx, {
-        type: 'bar',
-        data: {
-            labels: label,
-            datasets: [{
-                label: 'Jumlah Kerusakan',
-                data: value,
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
+            // Buat grafik
+            const chrtx = document.getElementById('grafikKerusakan').getContext('2d');
+            new Chart(chrtx, {
+                type: 'bar',
+                data: {
+                    labels: label,
+                    datasets: [{
+                        label: 'Jumlah Kerusakan',
+                        data: value,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
                     }
                 }
-            }
-        }
-    });
-</script>
+            });
+        });
+    </script>
+@endpush

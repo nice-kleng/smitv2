@@ -1,7 +1,7 @@
 @extends('inventory::layouts.master', ['title' => 'Data Permintaan'])
 
 @section('button-header')
-    @if (auth()->user()->hasRole('unit'))
+    @if (auth()->user()->hasAnyRole(['unit', 'keuangan']))
         <a href="{{ route('inventory.permintaan.create') }}" class="btn btn-primary">Tambah Permintaan</a>
     @endif
 @endsection
