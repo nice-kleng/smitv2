@@ -41,6 +41,7 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
         Route::put('/master-barang/{id}', 'update')->name('master_barang.update');
         Route::delete('/master-barang/{id}', 'destroy')->name('master_barang.destroy');
         Route::get('/master-barang/export', 'export')->name('master_barang.export');
+        Route::post('/master-barang/import', 'import')->name('master_barang.import');
     });
 
     Route::controller(PengajuanController::class)->group(function () {

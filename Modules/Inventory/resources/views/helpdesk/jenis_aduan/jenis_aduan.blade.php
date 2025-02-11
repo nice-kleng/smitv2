@@ -82,7 +82,7 @@
                 ]
             });
 
-            $('form').on('submit', function(e) {
+            $('#form-jenis').on('submit', function(e) {
                 e.preventDefault();
                 let formData = $(this).serialize();
                 let id = $('#id').val();

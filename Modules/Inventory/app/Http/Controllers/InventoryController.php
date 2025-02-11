@@ -157,6 +157,7 @@ class InventoryController extends Controller
 
     public function storeHistoryMutasi(Request $request)
     {
+        $this->authorize('create');
         DB::beginTransaction();
         try {
             $request->validate([

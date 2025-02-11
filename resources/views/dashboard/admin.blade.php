@@ -54,12 +54,53 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <!-- Canvas untuk grafik -->
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Grafik Permintaan Per Bulan {{ date('Y') }}</h6>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-3">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Grafik Permintaan Per Bulan {{ date('Y') }}</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="grafikPermintaan"></canvas>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <canvas id="grafikPermintaan"></canvas>
+
+    <div class="col-md-6">
+        <div class="card shadow mb-3">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Unit dan Ruangan Dengan Permintaan Terbanyak Tahun
+                    {{ date('Y') }}</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="tblPemintaTerbanyak">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Unit</th>
+                                <th>Ruangan</th>
+                                <th>Total Permintaan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($data['unitPermintaanTerbanyak'] as $index => $item)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $item->unit->nama_unit }}</td>
+                                    <td>{{ $item->ruangan->nama_ruangan }}</td>
+                                    <td>{{ $item->total_permintaan }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center">Tidak ada data</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

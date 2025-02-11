@@ -93,36 +93,59 @@ class DashboardController extends Controller
                 ];
 
             case 'admin':
-                $query = Permintaan::query();
+                // Base query untuk permintaan
+                $baseQuery = Permintaan::query();
 
-                // Jika bukan admin/superadmin, filter berdasarkan PU
+                // Filter berdasarkan PU jika bukan admin/superadmin
                 if (!$isAdminOrSuperadmin) {
-                    $query->where('pu', $user->pu_kd);
+                    $baseQuery->where('pu', $user->pu_kd);
                 }
 
-                $totalPermintaan = $query->groupBy('kode_permintaan')->count();
-                $totalPermintaanMenungguDiambil = $query->where('status', '2')->groupBy('kode_permintaan')->count();
-                $totalPermintaanBaru = $query->where('status', '0')->groupBy('kode_permintaan')->count();
+                // Hitung total permintaan (distinct kode_permintaan)
+                $totalPermintaan = (clone $baseQuery)
+                    ->distinct()
+                    ->count('kode_permintaan');
 
-                // Clone query untuk digunakan pada perhitungan lainnya
-                $unitQuery = clone $query;
-                $grafikQuery = clone $query;
+                // Hitung permintaan menunggu diambil
+                $totalPermintaanMenungguDiambil = (clone $baseQuery)
+                    ->where('status', '2')
+                    ->distinct()
+                    ->count('kode_permintaan');
 
-                // Buat array untuk semua bulan dalam setahun
-                $bulanDalamSetahun = [];
-                for ($i = 1; $i <= 12; $i++) {
-                    $bulanDalamSetahun[$i] = [
-                        'bulan' => date('F', mktime(0, 0, 0, $i, 1)),
-                        'bulan_angka' => $i,
-                        'total' => 0
+                // Hitung permintaan baru
+                $totalPermintaanBaru = (clone $baseQuery)
+                    ->where('status', '0')
+                    ->distinct()
+                    ->count('kode_permintaan');
+
+                // Query untuk unit dengan permintaan terbanyak (5 teratas)
+                $unitPermintaanTerbanyak = (clone $baseQuery)
+                    ->select('unit_id', 'ruangan_id')
+                    ->selectRaw('COUNT(DISTINCT kode_permintaan) as total_permintaan')
+                    ->groupBy('unit_id', 'ruangan_id')
+                    ->with(['unit', 'ruangan'])  // Load relasi unit dan ruangan
+                    ->orderByRaw('COUNT(DISTINCT kode_permintaan) DESC')
+                    ->take(5)
+                    ->get();
+
+                // Inisialisasi array bulan
+                $bulanDalamSetahun = collect(range(1, 12))->mapWithKeys(function ($bulan) {
+                    return [
+                        $bulan => [
+                            'bulan' => date('F', mktime(0, 0, 0, $bulan, 1)),
+                            'bulan_angka' => $bulan,
+                            'total' => 0
+                        ]
                     ];
-                }
+                })->toArray();
 
-                // Ambil data permintaan per bulan dan update array bulanDalamSetahun
-                $dataPermintaan = $grafikQuery
-                    ->selectRaw('MONTH(tanggal_permintaan) as bulan')
+                // Query untuk data grafik permintaan per bulan
+                $dataPermintaan = Permintaan::selectRaw('MONTH(tanggal_permintaan) as bulan')
                     ->selectRaw('COUNT(DISTINCT kode_permintaan) as total_permintaan')
                     ->whereYear('tanggal_permintaan', now()->year)
+                    ->when(!$isAdminOrSuperadmin, function ($query) use ($user) {
+                        return $query->where('pu', $user->pu_kd);
+                    })
                     ->groupBy('bulan')
                     ->get();
 
@@ -134,13 +157,7 @@ class DashboardController extends Controller
                     'totalPermintaan' => $totalPermintaan,
                     'totalPermintaanMenungguDiambil' => $totalPermintaanMenungguDiambil,
                     'totalPermintaanBaru' => $totalPermintaanBaru,
-                    'unitPermintaanTerbanyak' => $unitQuery->select('unit_id')
-                        ->selectRaw('COUNT(DISTINCT kode_permintaan) as total_permintaan')
-                        ->groupBy('unit_id')
-                        ->with('unit')
-                        ->orderByRaw('COUNT(DISTINCT kode_permintaan) DESC')
-                        ->first(),
-                    // Data untuk grafik permintaan per bulan tahun ini
+                    'unitPermintaanTerbanyak' => $unitPermintaanTerbanyak,
                     'grafikPermintaan' => array_values($bulanDalamSetahun),
                 ];
 
@@ -198,6 +215,23 @@ class DashboardController extends Controller
                     ->get()
                     ->keyBy('kondisi');
 
+                // Setelah query $latestHistorySubquery yang sudah ada, tambahkan:
+                $detailKondisiByKategori = DB::table('history_inventaris as h')
+                    ->joinSub($latestHistorySubquery, 'latest', function ($join) {
+                        $join->on('h.id', '=', 'latest.max_id');
+                    })
+                    ->join('inventories', 'h.inventory_id', '=', 'inventories.id')
+                    ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
+                    ->join('kategori_barangs', 'master_barangs.kategori_id', '=', 'kategori_barangs.id')
+                    ->select(
+                        'kategori_barangs.nama_kategori',
+                        DB::raw('SUM(CASE WHEN h.kondisi = "0" THEN 1 ELSE 0 END) as rusak'),
+                        DB::raw('SUM(CASE WHEN h.kondisi = "1" THEN 1 ELSE 0 END) as kurang_baik'),
+                        DB::raw('SUM(CASE WHEN h.kondisi = "2" THEN 1 ELSE 0 END) as baik')
+                    )
+                    ->groupBy('kategori_barangs.nama_kategori')
+                    ->get();
+
                 return [
                     'completedTickets' => Ticket::where('status', '1')->count(),
                     'newTickets' => Ticket::where('status', '0')->count(),
@@ -228,6 +262,7 @@ class DashboardController extends Controller
                     'totalInventarisBaik' => $inventoryStats->get('2', (object)['total' => 0])->total,
 
                     'grafikKerusakan' => array_values($bulanDalamSetahun),
+                    'detailKondisiByKategori' => $detailKondisiByKategori,
                 ];
 
             case 'unit':
@@ -285,5 +320,37 @@ class DashboardController extends Controller
                 'storage' => 0,
             ];
         }
+    }
+
+    public function getDetailInventaris(Request $request)
+    {
+        $kategori = $request->kategori;
+        $kondisi = $request->kondisi;
+
+        $query = DB::table('history_inventaris as h')
+            ->join(DB::raw('(
+                SELECT inventory_id, MAX(id) as max_id
+                FROM history_inventaris
+                GROUP BY inventory_id
+            ) latest'), function ($join) {
+                $join->on('h.id', '=', 'latest.max_id');
+            })
+            ->join('inventories', 'h.inventory_id', '=', 'inventories.id')
+            ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
+            ->join('kategori_barangs', 'master_barangs.kategori_id', '=', 'kategori_barangs.id')
+            ->join('ruangans', 'inventories.ruangan_id', '=', 'ruangans.id')
+            ->join('units', 'ruangans.unit_id', '=', 'units.id')
+            ->where('kategori_barangs.nama_kategori', $kategori)
+            ->where('h.kondisi', $kondisi)
+            ->select(
+                'inventories.kode_barang',
+                'inventories.no_barang',
+                'inventories.merk',
+                'inventories.type',
+                'ruangans.nama_ruangan as ruangan',
+                'units.nama_unit as unit',
+            );
+
+        return datatables()->of($query)->toJson();
     }
 }

@@ -25,7 +25,8 @@ class PermintaanSeeder extends Seeder
 
             Permintaan::create([
                 'kode_permintaan' => 'REQ-' . date('Ymd') . str_pad($i, 4, '0', STR_PAD_LEFT),
-                'pu' => ['log', 'it'][array_rand(['log', 'it'])],
+                // 'pu' => ['log', 'it'][array_rand(['log', 'it'])],
+                'pu' => 'it',
                 'barang_id' => $barang->random(),
                 'jumlah' => rand(1, 10),
                 'jumlah_approve' => $status == 2 ? rand(1, 10) : 0,
@@ -36,7 +37,7 @@ class PermintaanSeeder extends Seeder
                 'penerima' => $status == 3 ? 'Penerima ' . $i : null,
                 'unit_id' => 5,
                 'ruangan_id' => 6,
-                'approve_id' => $status >= 2 ? rand(2,3) : null,
+                'approve_id' => $status >= 2 ? rand(2, 3) : null,
                 'created_id' => 6,
                 'updated_id' => 6,
             ]);
