@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Models\HistoryInventaris;
 use Modules\Inventory\Models\Inventory;
 use App\Imports\InventoryImport;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
+use Modules\Inventory\Models\MasterBarang;
 
 class InventoryController extends Controller
 {
@@ -32,7 +34,9 @@ class InventoryController extends Controller
             }
 
             return datatables()->of($data)
-                ->addIndexColumn()
+                ->addColumn('id', function ($row) {
+                    return $row->id;
+                })
                 ->addColumn('kode_barang', function ($row) {
                     return $row->kode_barang;
                 })
@@ -100,7 +104,9 @@ class InventoryController extends Controller
      */
     public function create()
     {
-        return view('inventory::create');
+        $barangs = MasterBarang::orderBy('nama_barang', 'asc')->get();
+        $ruangans = Ruangan::orderBy('nama_ruangan', 'asc')->get();
+        return view('inventory::inventaris.create', compact('barangs', 'ruangans'));
     }
 
     /**
@@ -108,7 +114,21 @@ class InventoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->authorize('create');
+        $request->validate([
+            'kode_barang' => 'required',
+            'no_barang' => 'required',
+            'barang_id' => 'required|exists:master_barangs,id',
+            'ruangan_id' => 'required|exists:ruangans,id',
+        ]);
+
+        $request->merge([
+            'created_id' => Auth::id(),
+            'updated_id' => Auth::id(),
+        ]);
+
+        Inventory::create($request->all());
+        return redirect()->route('inventory.index')->with('success', 'Data berhasil disimpan');
     }
 
     /**
@@ -212,5 +232,32 @@ class InventoryController extends Controller
     {
         $path = public_path('templates/inventory_template.xlsx');
         return response()->download($path);
+    }
+
+    public function cetakLabelInventaris(Request $request)
+    {
+        $query = Inventory::with('barang');
+
+        if ($request->has('ids')) {
+            $query->whereIn('id', explode(',', $request->ids));
+        }
+
+        if (Auth::user()->hasAnyRole(['superadmin', 'admin'])) {
+            $data = $query->whereHas('barang', function ($q) {
+                $q->where('pu', Auth::user()->pu_kd);
+            })->get();
+        } else {
+            $data = $query->where('ruangan_id', Auth::user()->ruangan_id)->get();
+        }
+
+        $pdf = PDF::loadView('inventory::inventaris.cetak-label', compact('data'));
+
+        // Setting untuk A4
+        $pdf->setPaper('A4', 'portrait');
+
+        // Setting margin minimal
+        $pdf->setOption(['margin-top' => 0, 'margin-right' => 0, 'margin-bottom' => 0, 'margin-left' => 100]);
+
+        return $pdf->stream('label-inventaris.pdf');
     }
 }

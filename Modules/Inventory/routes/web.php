@@ -22,6 +22,8 @@ use Modules\Inventory\Http\Controllers\TicketController;
 Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'inventory.'], function () {
     Route::controller(InventoryController::class)->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
 
         // History Mutasi
         Route::get('/history-mutasi/{id}', 'historyMutasi')->name('history-mutasi');
@@ -34,6 +36,8 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
 
         Route::post('/import', 'import')->name('import');
         Route::get('/template', 'downloadTemplate')->name('template');
+
+        Route::get('/cetak-label', 'cetakLabelInventaris')->name('cetak-label');
     });
 
     Route::controller(MasterBarangController::class)->group(function () {
