@@ -42,4 +42,9 @@ class MasterBarang extends Model
     {
         return $this->hasMany(Permintaan::class, 'barang_id');
     }
+
+    public function inventaris()
+    {
+        return $this->hasMany(Inventory::class, 'barang_id');
+    }
 }

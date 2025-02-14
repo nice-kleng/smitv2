@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Models\HistoryInventaris;
 use Modules\Inventory\Models\Inventory;
+use App\Imports\InventoryImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class InventoryController extends Controller
 {
@@ -190,5 +192,25 @@ class InventoryController extends Controller
         $history = HistoryInventaris::findOrFail($id);
         $history->delete();
         return response()->json(['message' => 'Data berhasil dihapus']);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls'
+        ]);
+
+        try {
+            Excel::import(new InventoryImport, $request->file('file'));
+            return redirect()->back()->with('success', 'Data berhasil diimport');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat import data');
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        $path = public_path('templates/inventory_template.xlsx');
+        return response()->download($path);
     }
 }

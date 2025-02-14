@@ -31,6 +31,9 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
 
         // Inventaris unit
         // Route::get('/list', '')->name('unit.list');
+
+        Route::post('/import', 'import')->name('import');
+        Route::get('/template', 'downloadTemplate')->name('template');
     });
 
     Route::controller(MasterBarangController::class)->group(function () {
@@ -85,6 +88,7 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
             Route::put('/tindakan/{id}', 'tindakan')->name('ticket.tindakan');
             Route::get('/rekap-service-luar', 'rekapServiceLuar')->name('ticket.rekapService');
             Route::get('/riwayat-service-teknisi', 'historyServiceTeknisi')->name('ticket.riwayat-service-teknisi');
+            Route::get('/export-service', 'exportService')->name('ticket.epxort-service');
         });
     });
 });

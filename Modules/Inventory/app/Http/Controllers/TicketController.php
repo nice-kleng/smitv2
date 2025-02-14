@@ -15,6 +15,8 @@ use Modules\Inventory\Models\Inventory;
 use Modules\Inventory\Models\JenisAduan;
 use Modules\Inventory\Models\Ticket;
 use Yajra\DataTables\DataTables;
+use App\Exports\RekapServiceExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TicketController extends Controller
 {
@@ -202,22 +204,73 @@ class TicketController extends Controller
         return view('inventory::helpdesk.rekap_service', ['data' => $historyService]);
     }
 
-    public function historyServiceTeknisi()
+    public function historyServiceTeknisi(Request $request)
     {
-        $historyService = Ticket::with('inventaris.barang', 'ruangan.unit');
+        if ($request->ajax()) {
+            $query = Ticket::with('inventaris.barang', 'ruangan.unit')
+                ->where('status', 1);
 
-        if (!Auth::user()->hasRole('superadmin')) {
-            $historyService->where('teknisi_id', Auth::user()->id);
+            if (!Auth::user()->hasRole('superadmin')) {
+                $query->where('teknisi_id', Auth::user()->id);
+            }
+
+            // Filter by date range
+            if ($request->start_date) {
+                if ($request->end_date) {
+                    $query->whereBetween('created_at', [
+                        $request->start_date . ' 00:00:00',
+                        $request->end_date . ' 23:59:59'
+                    ]);
+                } else {
+                    $query->whereDate('created_at', $request->start_date);
+                }
+            }
+
+            // Filter by jenis aduan
+            if ($request->jenis_aduan) {
+                $query->where('jenis_aduan_id', $request->jenis_aduan);
+            }
+
+            // Filter by ruangan
+            if ($request->ruangan) {
+                $query->where('ruangan_id', $request->ruangan);
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn('DT_RowIndex')
+                ->addColumn('created_at', function ($row) {
+                    return Carbon::parse($row->created_at)->isoFormat('D MMMM Y HH:mm');
+                })
+                ->make(true);
         }
 
-        $historyService->where('status', 1)->orderBy('tanggal_perbaikan', 'desc');
+        $jenisAduan = JenisAduan::orderBy('nama_jenis', 'asc')->get();
+        $ruangans = Ruangan::orderBy('nama_ruangan', 'asc')->get();
 
-        return view('inventory::helpdesk.history_service_teknisi', ['data' => $historyService->get()]);
+        return view('inventory::helpdesk.history_service_teknisi', [
+            'jenisAduan' => $jenisAduan,
+            'ruangans' => $ruangans
+        ]);
     }
 
     public function antrean()
     {
         $tickets = Ticket::with('ruangan.unit')->where('status', '0')->orderBy('kd_ticket', 'asc')->get();
         return view('inventory::helpdesk.listGuest', ['tickets' => $tickets]);
+    }
+
+    public function exportService(Request $request)
+    {
+        $fileName = 'rekap_service_' . date('Y-m-d_H-i-s') . '.xlsx';
+
+        return Excel::download(
+            new RekapServiceExport(
+                $request->start_date,
+                $request->end_date,
+                $request->jenis_aduan,
+                $request->ruangan
+            ),
+            $fileName
+        );
     }
 }
