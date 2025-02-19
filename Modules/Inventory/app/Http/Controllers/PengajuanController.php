@@ -40,8 +40,23 @@ class PengajuanController extends Controller
         if (Auth::user()->hasRole('admin')) {
             $data->where('pengajuans.unit_id', Auth::user()->unit_id)
                 ->whereNotNull('pengajuans.created_id')
-                ->havingRaw("GROUP_CONCAT(pengajuans.status) LIKE '%2%'");
-                // ->whereIn('pengajuans.status', ['0', '2']);
+                ->where(function ($query) {
+                    $query->whereIn(DB::raw('substr(pengajuans.kode_pengajuan, 1, 16)'), function ($subquery) {
+                        $subquery->select(DB::raw('DISTINCT substr(kode_pengajuan, 1, 16)'))
+                            ->from('pengajuans')
+                            ->where('unit_id', Auth::user()->unit_id)
+                            ->where(function ($q) {
+                                $q->where('status', '0')  // Tampilkan yang masih pending
+                                    ->orWhere(function ($sq) {
+                                        $sq->whereIn(DB::raw('substr(kode_pengajuan, 1, 16)'), function ($ssq) {
+                                            $ssq->select(DB::raw('DISTINCT substr(kode_pengajuan, 1, 16)'))
+                                                ->from('pengajuans')
+                                                ->where('status', '2'); // Harus ada yang status 2 dalam group
+                                        });
+                                    });
+                            });
+                    });
+                });
         }
 
         if (Auth::user()->hasRole('keuangan')) {

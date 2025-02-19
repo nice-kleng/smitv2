@@ -22,12 +22,22 @@ use Modules\Inventory\Http\Controllers\TicketController;
 Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'inventory.'], function () {
     Route::controller(InventoryController::class)->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
 
         // History Mutasi
         Route::get('/history-mutasi/{id}', 'historyMutasi')->name('history-mutasi');
         Route::post('/history-mutasi', 'storeHistoryMutasi')->name('store-mutasi');
         Route::get('/get-ruangan', 'getRuanganByUnit')->name('getRuangan');
         Route::delete('/history-mutasi/{id}', 'deleteHistoryMutasi')->name('deleteMutasi');
+
+        // Inventaris unit
+        // Route::get('/list', '')->name('unit.list');
+
+        Route::post('/import', 'import')->name('import');
+        Route::get('/template', 'downloadTemplate')->name('template');
+
+        Route::get('/cetak-label', 'cetakLabelInventaris')->name('cetak-label');
     });
 
     Route::controller(MasterBarangController::class)->group(function () {
@@ -38,6 +48,7 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
         Route::put('/master-barang/{id}', 'update')->name('master_barang.update');
         Route::delete('/master-barang/{id}', 'destroy')->name('master_barang.destroy');
         Route::get('/master-barang/export', 'export')->name('master_barang.export');
+        Route::post('/master-barang/import', 'import')->name('master_barang.import');
     });
 
     Route::controller(PengajuanController::class)->group(function () {
@@ -81,6 +92,7 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
             Route::put('/tindakan/{id}', 'tindakan')->name('ticket.tindakan');
             Route::get('/rekap-service-luar', 'rekapServiceLuar')->name('ticket.rekapService');
             Route::get('/riwayat-service-teknisi', 'historyServiceTeknisi')->name('ticket.riwayat-service-teknisi');
+            Route::get('/export-service', 'exportService')->name('ticket.epxort-service');
         });
     });
 });

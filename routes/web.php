@@ -26,6 +26,7 @@ Route::controller(AuthenticateController::class)->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::controller(DashboardController::class)->group(function () {
         Route::get('/dashboard', 'index')->name('dashboard');
+        Route::get('/dashboard/detail-inventaris', 'getDetailInventaris')->name('dashboard.detail-inventaris');
     });
 
     Route::prefix('/settings')->name('settings.')->group(function () {

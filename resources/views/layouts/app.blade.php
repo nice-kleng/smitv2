@@ -21,6 +21,9 @@
     <!-- Custom styles for this template-->
     <link href="{{ asset('assets/css/sb-admin-2.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.min.css" rel="stylesheet">
+    <link href="https://gyrocode.github.io/jquery-datatables-checkboxes/1.2.12/css/dataTables.checkboxes.css"
+        rel="stylesheet">
 
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap4-theme@1.0.0/dist/select2-bootstrap4.min.css"
@@ -321,12 +324,15 @@
 
     <script src="{{ asset('assets/vendor/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/datatables/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
+    <script src="https://gyrocode.github.io/jquery-datatables-checkboxes/1.2.12/js/dataTables.checkboxes.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -358,6 +364,60 @@
                     text: '{{ session('error') }}',
                 });
             });
+        </script>
+    @endif
+
+    @if (auth()->user()->pu_kd === 'it')
+        <script type="module">
+            window.Echo.private('ticket')
+                .listen('.ticket.created', (e) => {
+                    // Cek apakah browser mendukung notifikasi
+                    if ('Notification' in window) {
+                        if (Notification.permission === 'default') {
+                            Notification.requestPermission().then(permission => {
+                                if (permission === 'granted') {
+                                    console.log('test');
+                                    showNotification(e);
+                                }
+                            });
+                        } else if (Notification.permission === 'granted') {
+                            showNotification(e);
+                        }
+                    }
+                    var audio = new Audio('/notification.wav');
+                    audio.play();
+                    if (typeof toastr !== 'undefined') {
+                        toastr.success(e.message, 'Notifikasi Baru');
+                    }
+                })
+                .error((error) => {
+                    console.error('Echo error:', error);
+                    // Only show error if it's not an authorization error
+                    if (error.type !== 'AuthError' && typeof toastr !== 'undefined') {
+                        toastr.error('Gagal terhubung ke sistem notifikasi', 'Error');
+                    }
+                });
+
+            // Fungsi untuk menampilkan notifikasi
+            function showNotification(e) {
+                const notificationOptions = {
+                    body: e.message || 'Pengaduan baru telah dibuat',
+                    icon: '/favicon.ico',
+                    tag: 'ticket-notification',
+                    requireInteraction: true
+                };
+
+                const notification = new Notification('Pengaduan Baru', notificationOptions);
+
+                // Optional: Handle notification click
+                notification.onclick = function(event) {
+                    event.preventDefault();
+                    window.focus(); // Fokus ke window aplikasi
+                    // Optional: Navigate to ticket page
+                    // window.location.href = '/tickets';
+                    notification.close();
+                };
+            }
         </script>
     @endif
 

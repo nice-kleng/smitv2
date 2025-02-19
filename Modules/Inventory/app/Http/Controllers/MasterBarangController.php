@@ -4,6 +4,7 @@ namespace Modules\Inventory\Http\Controllers;
 
 use App\Exports\MasterBarangExport;
 use App\Http\Controllers\Controller;
+use App\Imports\MasterBarangImport;
 use App\Models\KategoriBarang;
 use App\Models\Satuan;
 use App\Models\Unit;
@@ -208,5 +209,19 @@ class MasterBarangController extends Controller
     public function export()
     {
         return Excel::download(new MasterBarangExport, 'master_barang.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls'
+        ]);
+
+        try {
+            Excel::import(new MasterBarangImport, $request->file('file'));
+            return redirect()->back()->with('success', 'Data berhasil diimport!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 }

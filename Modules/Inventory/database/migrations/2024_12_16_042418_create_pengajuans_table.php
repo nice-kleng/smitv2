@@ -30,7 +30,7 @@ return new class extends Migration
             $table->enum('status', ['0', '1', '2', '3'])->default('1')->comment('0: Proses, 1:Ditolak, 2:Disetujui, 3: Barang Datang');
             $table->enum('jenis_pengajuan', ['0', '1'])->default('1')->comment('0: insidetil, 1: rutinitas ');
             // $table->string('keperluan')->nullable();
-            $table->string('memo')->nullable();
+            // $table->string('memo')->nullable();
             $table->string('disposisi')->nullable();
             $table->string('keterangan')->nullable();
             $table->string('keterangan_peninjauan')->nullable();

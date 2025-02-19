@@ -15,8 +15,8 @@ class RolePermissionSeeder extends Seeder
     public function run(): void
     {
         Role::create(['name' => 'superadmin']);
-        Role::create(['name' => 'direktur']);
-        Role::create(['name' => 'keuangan']);
+        $keuangan = Role::create(['name' => 'keuangan']);
+        $direktur = Role::create(['name' => 'direktur']);
         $admin = Role::create(['name' => 'admin']);
         $teknisi = Role::create(['name' => 'teknisi']);
         $unit = Role::create(['name' => 'unit']);
@@ -124,6 +124,8 @@ class RolePermissionSeeder extends Seeder
             Permission::create($item);
         }
 
+        $keuangan->givePermissionTo(['manage-pengajuan', 'manage-permintaan', 'history-permintaan']);
+        $direktur->givePermissionTo(['manage-pengajuan', 'history-permintaan', 'manage-data-pengaduan', 'manage-rekap-service', 'riwayat-service-teknisi']);
         $unit->givePermissionTo(['manage-pengajuan', 'manage-permintaan', 'history-permintaan']);
         $teknisi->givePermissionTo(['manage-jenis-pengaduan', 'manage-data-pengaduan', 'manage-rekap-service', 'riwayat-service-teknisi']);
         $admin->givePermissionTo(['manage-data-master', 'manage-master-barang', 'manage-pengajuan', 'manage-permintaan', 'approve-permintaan', 'history-permintaan', 'manage-kategori-barang', 'manage-satuan', 'manage-inventory']);

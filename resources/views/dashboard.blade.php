@@ -5,7 +5,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
-                <h1>Dashboard</h1>
+                {{-- <h1>Dashboard</h1> --}}
                 @if ($roles->count() > 1)
                     <div class="btn-group" role="group">
                         @foreach ($roles->whereNotIn('name', ['superadmin', 'direktur']) as $role)

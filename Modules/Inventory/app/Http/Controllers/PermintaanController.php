@@ -33,21 +33,17 @@ class PermintaanController extends Controller
             DB::raw('MAX(ruangan_id) as ruangan_id'),
         );
 
-        if (Auth::user()->hasRole('unit')) {
+        if (Auth::user()->hasRole('unit') || Auth::user()->hasRole('keuangan')) {
             $permintaans->where('created_id', auth()->id())
                 ->where('ruangan_id', Auth::user()->ruangan_id)
                 ->where('status', '0');
         }
 
-        if (Auth::user()->hasRole('admin')) {
+        if (Auth::user()->hasAnyRole(['superadmin', 'admin', 'direktur'])) {
             $permintaans->where('pu', Auth::user()->pu_kd)
                 ->where('status', '0')
                 ->orWhere('status', '2');
         }
-
-        // if (Auth::user()->hasRole('superadmin')) {
-        //     $permintaans->where('status', '3');
-        // }
 
         $permintaans->groupBy('kode_prefix')
             ->orderBy('tanggal_permintaan', 'desc');
@@ -398,6 +394,7 @@ class PermintaanController extends Controller
             DB::raw('MAX(unit_id) as unit_id'),
             DB::raw('MAX(ruangan_id) as ruangan_id'),
         )
+            // ->where('unit_id', Auth::user()->unit_id)
             ->groupBy('kode_prefix');
 
         // Filter by start date

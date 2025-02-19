@@ -2,10 +2,14 @@
 
 @section('content')
     <div class="card">
-        <div class="card-header justify-content-between d-sm-flex">
+        <div class="card-header d-sm-flex justify-content-between">
             <a href="{{ route('inventory.master_barang.create') }}" class="btn btn-primary">Tambah Barang</a>
-            <a href="{{ route('inventory.master_barang.export') }}" class="btn btn-success" title="Export Data Barang"><i
-                    class="fa fa-file-excel"></i> Export</a>
+            <div>
+                <a href="{{ route('inventory.master_barang.export') }}" class="btn btn-success" title="Export Data Barang"><i
+                        class="fa fa-file-export"></i> Export</a>
+                <a href="javascript:void(0)" class="btn btn-danger" data-toggle="modal" data-target="#importModal"
+                    title="Import Data Barang"><i class="fa fa-file-import"></i> Import</a>
+            </div>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -22,6 +26,35 @@
                         </tr>
                     </thead>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Import -->
+    <div class="modal fade" id="importModal" data-backdrop="static" data-keyboard="false" tabindex="-1"
+        aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{{ route('inventory.master_barang.import') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="file">Pilih File</label>
+                            <input type="file" name="file" id="file" class="form-control-file">
+                            <small class="text-muted text-danger">File harus berformat .xls, .xlsx</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-danger">Import</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

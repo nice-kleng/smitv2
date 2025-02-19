@@ -21,7 +21,8 @@ class DashboardController extends Controller
 
         // Jika user adalah superadmin atau admin, berikan akses ke semua role
         if ($roles->contains('name', 'superadmin') || $roles->contains('name', 'direktur')) {
-            $roles = Role::all(); // Mengambil semua role yang ada di sistem
+            // $roles = Role::all(); // Mengambil semua role yang ada di sistem
+            $roles = Role::whereNotIn('name', ['unit'])->get();
         }
 
         if ($roles->isEmpty()) {
@@ -43,7 +44,7 @@ class DashboardController extends Controller
     private function getDashboardDataByRole($role)
     {
         $user = Auth::user();
-        $isAdminOrSuperadmin = $user->roles->contains('name', 'superadmin');
+        $isAdminOrSuperadmin = $user->roles->whereIn('name', ['superadmin', 'direktur'])->isNotEmpty();
 
         // Izinkan superadmin dan admin mengakses semua data
         if (!$isAdminOrSuperadmin && !$user->roles->contains('name', $role)) {
@@ -58,29 +59,6 @@ class DashboardController extends Controller
                 //     ];
 
             case 'keuangan':
-                return [
-                    'totalPengeluaranBulanIni' => Pengajuan::whereMonth('tanggal_approved', now()->month)->whereYear('tanggal_approved', now()->year)->where(
-                        'status',
-                        '2'
-                    )->sum('harga_approved'),
-                    'pengajuanBaru' => Pengajuan::where('status', '0')->groupBy('kode_pengajuan')->count(),
-                    // 'recentTransactions' => \App\Models\Transaction::latest()->take(5)->get(),
-                    // 'pendingRequests' => \App\Models\BudgetRequest::where('status', 'pending')->get(),
-                ];
-
-            case 'admin':
-                $query = Permintaan::query();
-
-                // Jika bukan admin/superadmin, filter berdasarkan PU
-                if (!$isAdminOrSuperadmin) {
-                    $query->where('pu', $user->pu_kd);
-                }
-
-                // Clone query untuk digunakan pada perhitungan lainnya
-                $unitQuery = clone $query;
-                $grafikQuery = clone $query;
-
-                // Buat array untuk semua bulan dalam setahun
                 $bulanDalamSetahun = [];
                 for ($i = 1; $i <= 12; $i++) {
                     $bulanDalamSetahun[$i] = [
@@ -90,11 +68,84 @@ class DashboardController extends Controller
                     ];
                 }
 
-                // Ambil data permintaan per bulan dan update array bulanDalamSetahun
-                $dataPermintaan = $grafikQuery
-                    ->selectRaw('MONTH(tanggal_permintaan) as bulan')
+                $dataPengajuan = Pengajuan::selectRaw('MONTH(tanggal_pengajuan) as bulan')
+                    ->selectRaw('COUNT(DISTINCT SUBSTRING(kode_pengajuan, 1, 16)) as total_pengajuan')
+                    ->whereYear('tanggal_pengajuan', now()->year)
+                    ->groupBy('bulan')
+                    ->orderBy('bulan')
+                    ->get();
+
+                foreach ($dataPengajuan as $item) {
+                    $bulanDalamSetahun[$item->bulan]['total'] = $item->total_pengajuan;
+                }
+
+                return [
+                    'totalPengeluaranBulanIni' => Pengajuan::whereMonth('tanggal_approved', now()->month)
+                        ->whereYear('tanggal_approved', now()->year)
+                        ->whereNotIn('status', ['0', '1'])
+                        ->sum('harga_approved'),
+                    'pengajuanBaru' => DB::table('pengajuans')
+                        ->select(DB::raw('SUBSTRING(kode_pengajuan, 1, 16) as kode_prefix'))
+                        ->where('status', '0')
+                        ->distinct()
+                        ->count(),
+                    'grafikPengajuan' => array_values($bulanDalamSetahun),
+                ];
+
+            case 'admin':
+                // Base query untuk permintaan
+                $baseQuery = Permintaan::query();
+
+                // Filter berdasarkan PU jika bukan admin/superadmin
+                if (!$isAdminOrSuperadmin) {
+                    $baseQuery->where('pu', $user->pu_kd);
+                }
+
+                // Hitung total permintaan (distinct kode_permintaan)
+                $totalPermintaan = (clone $baseQuery)
+                    ->distinct()
+                    ->count('kode_permintaan');
+
+                // Hitung permintaan menunggu diambil
+                $totalPermintaanMenungguDiambil = (clone $baseQuery)
+                    ->where('status', '2')
+                    ->distinct()
+                    ->count('kode_permintaan');
+
+                // Hitung permintaan baru
+                $totalPermintaanBaru = (clone $baseQuery)
+                    ->where('status', '0')
+                    ->distinct()
+                    ->count('kode_permintaan');
+
+                // Query untuk unit dengan permintaan terbanyak (5 teratas)
+                $unitPermintaanTerbanyak = (clone $baseQuery)
+                    ->select('unit_id', 'ruangan_id')
+                    ->selectRaw('COUNT(DISTINCT kode_permintaan) as total_permintaan')
+                    ->groupBy('unit_id', 'ruangan_id')
+                    ->with(['unit', 'ruangan'])  // Load relasi unit dan ruangan
+                    ->orderByRaw('COUNT(DISTINCT kode_permintaan) DESC')
+                    ->take(5)
+                    ->get();
+
+                // Inisialisasi array bulan
+                $bulanDalamSetahun = collect(range(1, 12))->mapWithKeys(function ($bulan) {
+                    return [
+                        $bulan => [
+                            'bulan' => date('F', mktime(0, 0, 0, $bulan, 1)),
+                            'bulan_angka' => $bulan,
+                            'total' => 0
+                        ]
+                    ];
+                })->toArray();
+
+                // Query untuk data grafik permintaan per bulan
+                $dataPermintaan = Permintaan::selectRaw('MONTH(tanggal_permintaan) as bulan')
                     ->selectRaw('COUNT(DISTINCT kode_permintaan) as total_permintaan')
                     ->whereYear('tanggal_permintaan', now()->year)
+                    ->when(!$isAdminOrSuperadmin, function ($query) use ($user) {
+                        return $query->where('pu', $user->pu_kd);
+                    })
                     ->groupBy('bulan')
                     ->get();
 
@@ -103,16 +154,10 @@ class DashboardController extends Controller
                 }
 
                 return [
-                    'totalPermintaan' => $query->groupBy('kode_permintaan')->count(),
-                    'totalPermintaanMenungguDiambil' => $query->where('status', '2')->groupBy('kode_permintaan')->count(),
-                    'totalPermintaanBaru' => $query->where('status', '0')->groupBy('kode_permintaan')->count(),
-                    'unitPermintaanTerbanyak' => $unitQuery->select('unit_id')
-                        ->selectRaw('COUNT(DISTINCT kode_permintaan) as total_permintaan')
-                        ->groupBy('unit_id')
-                        ->with('unit')
-                        ->orderByRaw('COUNT(DISTINCT kode_permintaan) DESC')
-                        ->first(),
-                    // Data untuk grafik permintaan per bulan tahun ini
+                    'totalPermintaan' => $totalPermintaan,
+                    'totalPermintaanMenungguDiambil' => $totalPermintaanMenungguDiambil,
+                    'totalPermintaanBaru' => $totalPermintaanBaru,
+                    'unitPermintaanTerbanyak' => $unitPermintaanTerbanyak,
                     'grafikPermintaan' => array_values($bulanDalamSetahun),
                 ];
 
@@ -123,8 +168,6 @@ class DashboardController extends Controller
                 // if (!$isAdminOrSuperadmin) {
                 //     $query->where('teknisi_id', $user->id);
                 // }
-
-                // Clone query untuk digunakan pada perhitungan lainnya
                 $kategoriQuery = clone $query;
                 $ruanganQuery = clone $query;
                 $grafikQuery = clone $query;
@@ -175,9 +218,31 @@ class DashboardController extends Controller
                     ->get()
                     ->keyBy('kondisi');
 
+                // Setelah query $latestHistorySubquery yang sudah ada, tambahkan:
+                $detailKondisiByKategori = DB::table('history_inventaris as h')
+                    ->joinSub($latestHistorySubquery, 'latest', function ($join) {
+                        $join->on('h.id', '=', 'latest.max_id');
+                    })
+                    ->join('inventories', 'h.inventory_id', '=', 'inventories.id')
+                    ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
+                    ->join('kategori_barangs', 'master_barangs.kategori_id', '=', 'kategori_barangs.id')
+                    ->select(
+                        'kategori_barangs.nama_kategori',
+                        DB::raw('SUM(CASE WHEN h.kondisi = "0" THEN 1 ELSE 0 END) as rusak'),
+                        DB::raw('SUM(CASE WHEN h.kondisi = "1" THEN 1 ELSE 0 END) as kurang_baik'),
+                        DB::raw('SUM(CASE WHEN h.kondisi = "2" THEN 1 ELSE 0 END) as baik')
+                    )
+                    ->groupBy('kategori_barangs.nama_kategori')
+                    ->get();
+
                 return [
+<<<<<<< HEAD
                     'completedTickets' => $completedTickets,
                     'newTickets' => $newTickets,
+=======
+                    'completedTickets' => Ticket::where('status', '1')->count(),
+                    'newTickets' => Ticket::where('status', '0')->count(),
+>>>>>>> develop
                     'kategoriSeringRusak' => $kategoriQuery
                         ->join('inventories', 'tickets.inventaris_id', '=', 'inventories.id')
                         ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
@@ -205,30 +270,43 @@ class DashboardController extends Controller
                     'totalInventarisBaik' => $inventoryStats->get('2', (object)['total' => 0])->total,
 
                     'grafikKerusakan' => array_values($bulanDalamSetahun),
+                    'detailKondisiByKategori' => $detailKondisiByKategori,
                 ];
 
             case 'unit':
-                $inventory = Inventory::query();
-                $permintaan = Permintaan::query();
+                $permintaanDalamProses = Permintaan::where('ruangan_id', Auth::user()->ruangan_id)->where('status', '0')->count();
+                $permintaanApproved = Permintaan::where('ruangan_id', Auth::user()->ruangan_id)->where('status', '3')->count();
+                $permintaanRejected = Permintaan::where('ruangan_id', Auth::user()->ruangan_id)->where('status', '1')->count();
 
-                if (!$isAdminOrSuperadmin) {
-                    $inventory->where('ruangan_id', Auth::user()->ruangan_id);
-                    $permintaan->where('unit_id', Auth::user()->unit_id);
+
+                $grafik = Permintaan::query();
+                $bulanDalamSetahun = [];
+                for ($i = 1; $i <= 12; $i++) {
+                    $bulanDalamSetahun[$i] = [
+                        'bulan' => date('F', mktime(0, 0, 0, $i, 1)),
+                        'bulan_angka' => $i,
+                        'total' => 0
+                    ];
+                }
+
+                $datapermintaan = $grafik->selectRaw('MONTH(permintaans.created_at) as bulan')
+                    ->selectRaw('COUNT(*) as total_permintaan')
+                    ->whereYear('permintaans.created_at', now()->year)
+                    ->where('ruangan_id', Auth::user()->ruangan_id)
+                    ->groupBy('bulan')
+                    ->get();
+
+                foreach ($datapermintaan as $item) {
+                    $bulanDalamSetahun[$item->bulan]['total'] = $item->total_permintaan;
                 }
 
                 return [
-                    'invetarisRuangan' => $inventory->count(),
-                    'permintaanDalamProses' => $permintaan->where('status', '0')->count(),
+                    'inventarisRuangan' => Inventory::where('ruangan_id', Auth::user()->ruangan_id)->count(),
+                    'permintaanDalamProses' => $permintaanDalamProses,
+                    'permintaanAccepted' => $permintaanApproved,
+                    'permintaanRejected' => $permintaanRejected,
+                    'grafikPermintaan' => array_values($bulanDalamSetahun),
                 ];
-
-                // case 'superadmin':
-                //     return [
-                //         'totalUsers' => \App\Models\User::count(),
-                //         'totalRoles' => Role::count(),
-                //         'totalUnits' => \App\Models\Unit::count(),
-                //         'recentActivities' => \Spatie\Activitylog\Models\Activity::latest()->take(10)->get(),
-                //         'systemStats' => $this->getSystemStats(),
-                //     ];
 
             default:
                 return [];
@@ -250,5 +328,37 @@ class DashboardController extends Controller
                 'storage' => 0,
             ];
         }
+    }
+
+    public function getDetailInventaris(Request $request)
+    {
+        $kategori = $request->kategori;
+        $kondisi = $request->kondisi;
+
+        $query = DB::table('history_inventaris as h')
+            ->join(DB::raw('(
+                SELECT inventory_id, MAX(id) as max_id
+                FROM history_inventaris
+                GROUP BY inventory_id
+            ) latest'), function ($join) {
+                $join->on('h.id', '=', 'latest.max_id');
+            })
+            ->join('inventories', 'h.inventory_id', '=', 'inventories.id')
+            ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
+            ->join('kategori_barangs', 'master_barangs.kategori_id', '=', 'kategori_barangs.id')
+            ->join('ruangans', 'inventories.ruangan_id', '=', 'ruangans.id')
+            ->join('units', 'ruangans.unit_id', '=', 'units.id')
+            ->where('kategori_barangs.nama_kategori', $kategori)
+            ->where('h.kondisi', $kondisi)
+            ->select(
+                'inventories.kode_barang',
+                'inventories.no_barang',
+                'inventories.merk',
+                'inventories.type',
+                'ruangans.nama_ruangan as ruangan',
+                'units.nama_unit as unit',
+            );
+
+        return datatables()->of($query)->toJson();
     }
 }

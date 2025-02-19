@@ -52,4 +52,9 @@ class Inventory extends Model
     {
         return $this->hasMany(HistoryInventaris::class, 'inventory_id');
     }
+
+    public function ticket()
+    {
+        return $this->hasMany(Ticket::class, 'inventaris_id');
+    }
 }

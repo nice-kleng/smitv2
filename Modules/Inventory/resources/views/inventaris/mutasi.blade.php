@@ -115,6 +115,7 @@
     <script>
         $(document).ready(function() {
             $('#unit_id').on('change', function() {
+                $('#ruangan_id').empty();
                 let id = $(this).val();
 
                 $.ajax({

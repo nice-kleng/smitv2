@@ -299,6 +299,10 @@
                     }
                 });
             });
+
+            $('#logbookModal').on('hidden.bs.modal', function() {
+                $('#logbookForm')[0].reset();
+            });
         });
     </script>
 @endpush

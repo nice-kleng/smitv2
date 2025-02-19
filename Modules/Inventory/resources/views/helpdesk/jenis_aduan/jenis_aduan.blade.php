@@ -49,7 +49,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="button" class="btn btn-primary submit-btn">Simpan</button>
+                        <button type="submit" class="btn btn-primary submit-btn">Simpan</button>
                     </div>
                 </form>
             </div>
@@ -82,7 +82,7 @@
                 ]
             });
 
-            $('form').on('submit', function(e) {
+            $('#form-jenis').on('submit', function(e) {
                 e.preventDefault();
                 let formData = $(this).serialize();
                 let id = $('#id').val();
@@ -134,6 +134,9 @@
                         id),
                     dataType: 'json',
                     success: function(response) {
+                        $('.submit-btn').prop('disabled', false);
+                        $('.submit-btn').html(
+                            'Simpan');
                         $('#staticBackdrop').modal('show');
                         $('#id').val(response.data.id);
                         $('#nama_jenis').val(response.data.nama_jenis);
@@ -164,6 +167,10 @@
                         }
                     });
                 }
+            });
+
+            $('#staticBackdrop').on('hidden.bs.modal', function() {
+                $('#form-jenis')[0].reset();
             });
         });
     </script>

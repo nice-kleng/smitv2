@@ -7,8 +7,13 @@ use App\Models\Ruangan;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Models\HistoryInventaris;
 use Modules\Inventory\Models\Inventory;
+use App\Imports\InventoryImport;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\Inventory\Models\MasterBarang;
 
 class InventoryController extends Controller
 {
@@ -18,12 +23,20 @@ class InventoryController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Inventory::whereHas('barang', function ($query) {
-                $query->where('pu', Auth::user()->pu_kd);
-            })->with('barang.kategori', 'ruangan.unit', 'penghapus', 'historyMutasi')->get();
+            $query = Inventory::with('barang.kategori', 'ruangan.unit', 'penghapus', 'historyMutasi');
+
+            if (Auth::user()->hasAnyRole(['superadmin', 'admin'])) {
+                $data = $query->whereHas('barang', function ($q) {
+                    $q->where('pu', Auth::user()->pu_kd);
+                })->get();
+            } else {
+                $data = $query->where('ruangan_id', Auth::user()->ruangan_id)->get();
+            }
 
             return datatables()->of($data)
-                ->addIndexColumn()
+                ->addColumn('id', function ($row) {
+                    return $row->id;
+                })
                 ->addColumn('kode_barang', function ($row) {
                     return $row->kode_barang;
                 })
@@ -91,7 +104,9 @@ class InventoryController extends Controller
      */
     public function create()
     {
-        return view('inventory::create');
+        $barangs = MasterBarang::orderBy('nama_barang', 'asc')->get();
+        $ruangans = Ruangan::orderBy('nama_ruangan', 'asc')->get();
+        return view('inventory::inventaris.create', compact('barangs', 'ruangans'));
     }
 
     /**
@@ -99,7 +114,21 @@ class InventoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->authorize('create');
+        $request->validate([
+            'kode_barang' => 'required',
+            'no_barang' => 'required',
+            'barang_id' => 'required|exists:master_barangs,id',
+            'ruangan_id' => 'required|exists:ruangans,id',
+        ]);
+
+        $request->merge([
+            'created_id' => Auth::id(),
+            'updated_id' => Auth::id(),
+        ]);
+
+        Inventory::create($request->all());
+        return redirect()->route('inventory.index')->with('success', 'Data berhasil disimpan');
     }
 
     /**
@@ -150,20 +179,32 @@ class InventoryController extends Controller
 
     public function storeHistoryMutasi(Request $request)
     {
-        $request->validate([
-            'inventory_id' => 'required',
-            'unit_id' => 'required',
-            'ruangan_id' => 'required',
-            'kondisi' => 'required',
-            'tanggal_mutasi' => 'required',
-        ]);
+        $this->authorize('create');
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'inventory_id' => 'required',
+                'unit_id' => 'required',
+                'ruangan_id' => 'required',
+                'kondisi' => 'required',
+                'tanggal_mutasi' => 'required',
+            ]);
 
-        $request->merge([
-            'created_id' => Auth::id(),
-            'updated_id' => Auth::id(),
-        ]);
-        HistoryInventaris::create($request->all());
-        return redirect()->back()->with('success', 'Data berhasil disimpan');
+            $inventory = Inventory::find($request->inventory_id);
+            $inventory->update(['ruangan_id' => $request->ruangan_id]);
+
+            $request->merge([
+                'created_id' => Auth::id(),
+                'updated_id' => Auth::id(),
+            ]);
+            HistoryInventaris::create($request->all());
+            DB::commit();
+            return redirect()->back()->with('success', 'Data berhasil disimpan');
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            dd($th);
+        }
     }
 
     public function deleteHistoryMutasi(string $id)
@@ -171,5 +212,52 @@ class InventoryController extends Controller
         $history = HistoryInventaris::findOrFail($id);
         $history->delete();
         return response()->json(['message' => 'Data berhasil dihapus']);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls'
+        ]);
+
+        try {
+            Excel::import(new InventoryImport, $request->file('file'));
+            return redirect()->back()->with('success', 'Data berhasil diimport');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat import data');
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        $path = public_path('templates/inventory_template.xlsx');
+        return response()->download($path);
+    }
+
+    public function cetakLabelInventaris(Request $request)
+    {
+        $query = Inventory::with('barang');
+
+        if ($request->has('ids')) {
+            $query->whereIn('id', explode(',', $request->ids));
+        }
+
+        if (Auth::user()->hasAnyRole(['superadmin', 'admin'])) {
+            $data = $query->whereHas('barang', function ($q) {
+                $q->where('pu', Auth::user()->pu_kd);
+            })->get();
+        } else {
+            $data = $query->where('ruangan_id', Auth::user()->ruangan_id)->get();
+        }
+
+        $pdf = PDF::loadView('inventory::inventaris.cetak-label', compact('data'));
+
+        // Setting untuk A4
+        $pdf->setPaper('A4', 'portrait');
+
+        // Setting margin minimal
+        $pdf->setOption(['margin-top' => 0, 'margin-right' => 0, 'margin-bottom' => 0, 'margin-left' => 100]);
+
+        return $pdf->stream('label-inventaris.pdf');
     }
 }
