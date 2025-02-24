@@ -31,8 +31,9 @@ class UserManagementController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8'],
             'roles' => ['required', 'array'],
             'ruangan_id' => ['required', 'exists:ruangans,id'],
@@ -41,6 +42,7 @@ class UserManagementController extends Controller
         ]);
 
         $user = User::create([
+            'username' => $validated['username'],
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
@@ -75,6 +77,7 @@ class UserManagementController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $validated = $request->validate([
+            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $user->id],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email,' . $user->id],
             'password' => ['nullable', 'string', 'min:8'],
@@ -85,6 +88,7 @@ class UserManagementController extends Controller
         ]);
 
         $userData = [
+            'username' => $validated['username'],
             'name' => $validated['name'],
             'email' => $validated['email'],
             'ruangan_id' => $validated['ruangan_id'],
