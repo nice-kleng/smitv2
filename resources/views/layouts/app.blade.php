@@ -369,7 +369,7 @@
 
     @if (auth()->user()->pu_kd === 'it')
         <script type="module">
-            window.Echo.private('ticket')
+            window.Echo.channel('ticket')
                 .listen('.ticket.created', (e) => {
                     // Cek apakah browser mendukung notifikasi
                     if ('Notification' in window) {

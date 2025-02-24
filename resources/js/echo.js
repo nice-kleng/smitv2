@@ -11,7 +11,7 @@ window.Echo = new Echo({
     port: import.meta.env.VITE_PUSHER_PORT,
     scheme: import.meta.env.VITE_PUSHER_SCHEME,
     forceTLS: false,
-    // encrypted: true,
+    encrypted: false,
     // auth: {
     //     headers: {
     //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')

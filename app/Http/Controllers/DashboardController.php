@@ -172,6 +172,9 @@ class DashboardController extends Controller
                 $ruanganQuery = clone $query;
                 $grafikQuery = clone $query;
 
+                $newTickets = Ticket::where('status', '0')->count();
+                $completedTickets = Ticket::where('status', '1')->count();
+
                 // Buat array untuk semua bulan dalam setahun
                 $bulanDalamSetahun = [];
                 for ($i = 1; $i <= 12; $i++) {
@@ -233,8 +236,8 @@ class DashboardController extends Controller
                     ->get();
 
                 return [
-                    'completedTickets' => Ticket::where('status', '1')->count(),
-                    'newTickets' => Ticket::where('status', '0')->count(),
+                    'completedTickets' => $query->where('status', '1')->count(),
+                    'newTickets' => $query->where('status', '0')->count(),
                     'kategoriSeringRusak' => $kategoriQuery
                         ->join('inventories', 'tickets.inventaris_id', '=', 'inventories.id')
                         ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
