@@ -13,6 +13,15 @@
                 </div>
                 <div class="modal-body">
                     <div class="form-group mb-3">
+                        <label class="form-label required">Username</label>
+                        <input type="text" name="username"
+                            class="form-control @error('username') is-invalid @enderror" required>
+                        @error('username')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group mb-3">
                         <label class="form-label required">Nama</label>
                         <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
                             required>
