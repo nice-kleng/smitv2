@@ -99,11 +99,7 @@
     <script>
         $(document).ready(function() {
             // Initialize DataTable
-            $('#userTable').DataTable({
-                language: {
-                    url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json"
-                }
-            });
+            $('#userTable').DataTable();
 
             // Initialize Select2
             $('.select2').select2({
