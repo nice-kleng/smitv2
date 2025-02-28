@@ -236,8 +236,8 @@ class DashboardController extends Controller
                     ->get();
 
                 return [
-                    'completedTickets' => $query->where('status', '1')->count(),
-                    'newTickets' => $query->where('status', '0')->count(),
+                    'completedTickets' => $completedTickets,
+                    'newTickets' => $newTickets,
                     'kategoriSeringRusak' => $kategoriQuery
                         ->join('inventories', 'tickets.inventaris_id', '=', 'inventories.id')
                         ->join('master_barangs', 'inventories.barang_id', '=', 'master_barangs.id')
