@@ -24,7 +24,8 @@
                         <tr>
                             <th>No</th>
                             <th>Kode Inventaris</th>
-                            <th>Nama Barang</th>
+                            <th>Nama Alias</th>
+                            <th>Nama Barang/Jenis Barang</th>
                             <th>Merk</th>
                             <th>Type</th>
                             <th>Nomor Seri</th>
@@ -123,6 +124,10 @@
                     {
                         data: 'kode_barang',
                         name: 'kode_barang'
+                    },
+                    {
+                        data: 'nama_alias',
+                        name: 'nama_alias'
                     },
                     {
                         data: 'nama_barang',

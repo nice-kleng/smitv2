@@ -15,7 +15,7 @@ class Inventory extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['kode_barang', 'no_barang', 'barang_id', 'ruangan_id', 'harga_beli', 'satuan', 'merk', 'type', 'serial_number', 'spesifikasi', 'tahun_pengadaan', 'status', 'catatan', 'kepemilikan', 'tgl_penghapusan', 'penghapus_id', 'alasan_penghapusan'];
+    protected $fillable = ['kode_barang', 'nama_alias', 'no_barang', 'barang_id', 'ruangan_id', 'harga_beli', 'satuan', 'merk', 'type', 'serial_number', 'spesifikasi', 'tahun_pengadaan', 'status', 'catatan', 'kepemilikan', 'tgl_penghapusan', 'penghapus_id', 'alasan_penghapusan'];
 
     // protected static function newFactory(): InventoryFactory
     // {

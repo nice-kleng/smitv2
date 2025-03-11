@@ -91,7 +91,7 @@ class InventoryController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<a href="' . route('inventory.history-mutasi', $row->id) . '" class="mutasi btn btn-info btn-sm"><i class="fas fa-history"></i> Mutasi</a>';
 
-                    // $btn .= ' <a href="javascript:void(0)" class="mutasi btn btn-warning btn-sm"><i class="fas fa-history"></i> Service</a>';
+                    $btn .= ' <a href="' . route('inventory.edit', $row->id) . '" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit/ce</a>';
                     return $btn;
                 })
                 ->rawColumns(['action', 'kondisi'])
@@ -145,7 +145,10 @@ class InventoryController extends Controller
      */
     public function edit($id)
     {
-        return view('inventory::edit');
+        $inventaris = Inventory::findOrFail($id);
+        $barangs = MasterBarang::orderBy('nama_barang', 'asc')->get();
+        $ruangans = Ruangan::orderBy('nama_ruangan', 'asc')->get();
+        return view('inventory::inventaris.form', compact('inventaris', 'barangs', 'ruangans'));
     }
 
     /**
@@ -153,7 +156,21 @@ class InventoryController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $this->authorize('update');
+        $request->validate([
+            'kode_barang' => 'required',
+            'no_barang' => 'required',
+            'barang_id' => 'required|exists:master_barangs,id',
+            'ruangan_id' => 'required|exists:ruangans,id',
+        ]);
+
+        $inventaris = Inventory::findOrFail($id);
+        $request->merge([
+            'updated_id' => Auth::id(),
+        ]);
+
+        $inventaris->update($request->all());
+        return redirect()->route('inventory.index')->with('success', 'Data berhasil diupdate');
     }
 
     /**
