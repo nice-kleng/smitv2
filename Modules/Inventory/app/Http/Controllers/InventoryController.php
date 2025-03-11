@@ -12,6 +12,7 @@ use Modules\Inventory\Models\HistoryInventaris;
 use Modules\Inventory\Models\Inventory;
 use App\Imports\InventoryImport;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Modules\Inventory\Models\MasterBarang;
 
@@ -224,6 +225,7 @@ class InventoryController extends Controller
             Excel::import(new InventoryImport, $request->file('file'));
             return redirect()->back()->with('success', 'Data berhasil diimport');
         } catch (\Exception $e) {
+            Log::error($e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan saat import data');
         }
     }

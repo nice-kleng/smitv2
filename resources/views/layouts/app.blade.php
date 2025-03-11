@@ -384,7 +384,7 @@
                             showNotification(e);
                         }
                     }
-                    var audio = new Audio('/notification.wav');
+                    var audio = new Audio("{{ asset('/notification.wav') }}");
                     audio.play();
                     if (typeof toastr !== 'undefined') {
                         toastr.success(e.message, 'Notifikasi Baru');
