@@ -107,7 +107,7 @@ class InventoryController extends Controller
     {
         $barangs = MasterBarang::orderBy('nama_barang', 'asc')->get();
         $ruangans = Ruangan::orderBy('nama_ruangan', 'asc')->get();
-        return view('inventory::inventaris.create', compact('barangs', 'ruangans'));
+        return view('inventory::inventaris.form', compact('barangs', 'ruangans'));
     }
 
     /**
