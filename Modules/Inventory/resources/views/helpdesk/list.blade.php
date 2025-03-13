@@ -232,22 +232,26 @@
                 }
             });
 
-            // $('#form-tindakan').on('submit', function(e) {
-            //     e.preventDefault();
-            //     $.ajax({
-            //         url: $(this).attr('action'),
-            //         method: 'PUT',
-            //         data: $(this).serialize(),
-            //         success: function(response) {
-            //             $('#tindakanModal').modal('hide');
-            //             table.ajax.reload();
-            //             alert('Data berhasil disimpan');
-            //         },
-            //         error: function(xhr) {
-            //             alert('Terjadi kesalahan dalam menyimpan data');
-            //         }
-            //     });
-            // });
+            $('#form-tindakan').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: $(this).attr('action'),
+                    method: 'PUT',
+                    data: $(this).serialize(),
+                    processing: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        $('#tindakanModal').modal('hide');
+                        table.ajax.reload();
+                        alert('Data berhasil disimpan');
+                    },
+                    error: function(xhr) {
+                        alert('Terjadi kesalahan dalam menyimpan data');
+                    }
+                });
+            });
         });
     </script>
 @endpush

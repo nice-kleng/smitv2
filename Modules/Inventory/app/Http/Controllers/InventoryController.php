@@ -253,6 +253,32 @@ class InventoryController extends Controller
         return response()->download($path);
     }
 
+    // public function cetakLabelInventaris(Request $request)
+    // {
+    //     $query = Inventory::with('barang');
+
+    //     if ($request->has('ids')) {
+    //         $query->whereIn('id', explode(',', $request->ids));
+    //     }
+
+    //     if (Auth::user()->hasAnyRole(['superadmin', 'admin'])) {
+    //         $data = $query->whereHas('barang', function ($q) {
+    //             $q->where('pu', Auth::user()->pu_kd);
+    //         })->get();
+    //     } else {
+    //         $data = $query->where('ruangan_id', Auth::user()->ruangan_id)->get();
+    //     }
+
+    //     $pdf = PDF::loadView('inventory::inventaris.cetak-label', compact('data'));
+
+    //     // Setting untuk A4
+    //     $pdf->setPaper('A4', 'portrait');
+
+    //     // Setting margin minimal
+    //     $pdf->setOption(['margin-top' => 0, 'margin-right' => 0, 'margin-bottom' => 0, 'margin-left' => 100]);
+
+    //     return $pdf->stream('label-inventaris.pdf');
+    // }
     public function cetakLabelInventaris(Request $request)
     {
         $query = Inventory::with('barang');
@@ -269,13 +295,25 @@ class InventoryController extends Controller
             $data = $query->where('ruangan_id', Auth::user()->ruangan_id)->get();
         }
 
+        // Opsi 1: Output langsung untuk browser - bagus untuk testing
+        if ($request->has('preview') && $request->preview == 'true') {
+            return view('inventory::inventaris.cetak-label', compact('data'));
+        }
+
+        // Opsi 2: Menggunakan dompdf dengan setting ukuran A4 tapi tanpa margin
         $pdf = PDF::loadView('inventory::inventaris.cetak-label', compact('data'));
 
-        // Setting untuk A4
+        // Setting A4 karena sepertinya printer Anda diset untuk itu berdasarkan screenshot
         $pdf->setPaper('A4', 'portrait');
 
-        // Setting margin minimal
-        $pdf->setOption(['margin-top' => 0, 'margin-right' => 0, 'margin-bottom' => 0, 'margin-left' => 100]);
+        // Setting margin minimal untuk memaksimalkan area cetak
+        $pdf->setOption([
+            'margin-top' => 0,
+            'margin-right' => 0,
+            'margin-bottom' => 0,
+            'margin-left' => 0,
+            'dpi' => 203
+        ]);
 
         return $pdf->stream('label-inventaris.pdf');
     }

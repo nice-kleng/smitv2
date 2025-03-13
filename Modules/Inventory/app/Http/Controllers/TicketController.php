@@ -208,7 +208,7 @@ class TicketController extends Controller
     {
         if ($request->ajax()) {
             $query = Ticket::with('inventaris.barang', 'ruangan.unit')
-                ->where('status', 1);
+                ->where('status', '1');
 
             if (!Auth::user()->hasRole('superadmin')) {
                 $query->where('teknisi_id', Auth::user()->id);

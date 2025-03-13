@@ -12,33 +12,28 @@
         }
 
         body {
-            padding: 0;
-            margin: 0;
+            padding: 10px;
         }
 
-        /* Setting untuk ukuran label 50mm x 25mm (umum untuk label kecil) */
         .label {
-            width: 104mm;
-            /* Maksimum lebar printer ZD220 */
-            height: 25mm;
-            /* Tinggi label yang umum */
+            width: 280px;
+            height: 100px;
             display: inline-block;
             background: white;
-            margin: 0;
-            page-break-after: always;
+            margin: 5px;
+            page-break-inside: avoid;
         }
 
         .qr-info-container {
             border: 1px solid #000;
             background: white;
             height: 100%;
-            width: 100%;
             display: flex;
             flex-direction: column;
         }
 
         .barcode-container {
-            padding: 2mm;
+            padding: 5px;
             text-align: center;
             max-width: 100%;
             overflow: hidden;
@@ -46,29 +41,29 @@
 
         .barcode-container svg {
             max-width: 100%;
-            height: 10mm;
+            height: auto;
         }
 
         .info-container {
-            padding: 1mm 2mm;
+            padding: 5px 10px;
         }
 
         .info-row {
-            margin: 1mm 0;
-            font-size: 8pt;
+            margin: 3px 0;
+            font-size: 13px;
             display: flex;
         }
 
         .label-text {
             color: #000;
             display: inline-block;
-            width: 10mm;
+            width: 45px;
             font-weight: normal;
         }
 
         .separator {
             display: inline-block;
-            margin: 0 1mm;
+            margin: 0 5px;
         }
 
         .value-text {
@@ -77,21 +72,13 @@
         }
 
         @media print {
-            @page {
-                size: 104mm 25mm;
-                /* Ukuran sesuai dengan label */
-                margin: 0;
-            }
-
-            html,
-            body {
-                width: 104mm;
-                height: 25mm;
-            }
-
             .label {
-                page-break-after: always;
                 margin: 0;
+                page-break-inside: avoid;
+            }
+
+            body {
+                padding: 0;
             }
         }
     </style>
@@ -102,7 +89,7 @@
         <div class="label">
             <div class="qr-info-container">
                 <div class="barcode-container">
-                    {!! DNS1D::getBarcodeHTML($item->kode_barang, 'C39', 1.3, 80) !!}
+                    {!! DNS1D::getBarcodeHTML($item->kode_barang, 'C39', 1.5, 30) !!}
                 </div>
                 <div class="info-container">
                     <div class="info-row">
