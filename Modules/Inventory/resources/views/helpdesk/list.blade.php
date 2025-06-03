@@ -26,28 +26,6 @@
         </div>
     </div>
 
-    <!-- Modal Detail-->
-    <div class="modal fade" id="staticBackdrop" data-backdrop="static" data-keyboard="false" tabindex="-1"
-        aria-labelledby="staticBackdropLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    ...
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Understood</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal Tindakan-->
     <div class="modal fade" id="tindakanModal" data-backdrop="static" data-keyboard="false" tabindex="-1"
         aria-labelledby="staticBackdropLabel" aria-hidden="true">
@@ -131,6 +109,36 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Show-->
+    <div class="modal fade" id="showModal" data-backdrop="static" data-keyboard="false" tabindex="-1"
+        aria-labelledby="showModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="showModalLabel">Detail Pengaduan</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Detail Pengaduan:</strong> <span id="detail-aduan"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Tindak Lanjut:</strong> <span id="show-tindak_lanjut"></span></p>
+                            <p><strong>Keterangan Perbaikan:</strong> <span id="show-keterangan_perbaikan"></span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Modal Show-->
 @endsection
 
 @push('scripts')
@@ -249,6 +257,29 @@
                     },
                     error: function(xhr) {
                         alert('Terjadi kesalahan dalam menyimpan data');
+                    }
+                });
+            });
+
+            $(document).on('click', '.detail', function() {
+                let id = $(this).data('id');
+                $.ajax({
+                    type: "get",
+                    url: "{{ route('inventory.helpdesk.ticket.show-detail', ':id') }}".replace(
+                        ':id', id),
+                    dataType: "json",
+                    success: function(response) {
+                        console.log(response);
+
+                        $('#showModalLabel').toggle('Data Pengaduan ' + response.kd_ticket);
+                        $('#detail-aduan').text(response.detail_aduan || '-');
+                        $('#show-tindak_lanjut').text(response.tindak_lanjut || '-');
+                        $('#show-keterangan_perbaikan').text(response.keterangan_perbaikan ||
+                            '-');
+                        $('#showModal').modal('show');
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Terjadi kesalahan dalam mengambil data');
                     }
                 });
             });

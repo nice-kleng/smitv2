@@ -63,7 +63,8 @@ class TicketController extends Controller
      */
     public function show($id)
     {
-        return view('inventory::show');
+        $ticket = Ticket::find($id);
+        return response()->json($ticket);
     }
 
     /**
@@ -104,7 +105,7 @@ class TicketController extends Controller
                     return $row->status == 1 ? '<span class="badge badge-success">Selesai</span>' : '<span class="badge badge-warning">Pending</span>';
                 })
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="javascript:void(0)" class="btn btn-info btn-sm detail">View</a>';
+                    $btn = '<a href="javascript:void(0)" class="btn btn-info btn-sm detail" data-id="' . $row->id . '">View</a>';
                     $btn .= ' <a href="javascript:void(0)" class="btn btn-success btn-sm tindakan" data-id="' . $row->id . '">Tindakan</a>';
                     return $btn;
                 })

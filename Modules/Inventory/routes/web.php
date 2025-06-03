@@ -89,8 +89,10 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
 
     Route::group(['prefix' => 'helpdesk', 'as' => 'helpdesk.'], function () {
         Route::resource('/jenis-aduan', JenisAduanController::class)->names('jenis-aduan');
+
         Route::controller(TicketController::class)->prefix('pengaduan')->group(function () {
             Route::get('/', 'listTicket')->name('ticket.index');
+            Route::get('/show-detail/{id}', 'show')->name('ticket.show-detail');
             Route::get('/getTindakan/{id}', 'getTindakan')->name('ticket.get-tindakan');
             Route::put('/tindakan/{id}', 'tindakan')->name('ticket.tindakan');
             Route::get('/rekap-service-luar', 'rekapServiceLuar')->name('ticket.rekapService');
