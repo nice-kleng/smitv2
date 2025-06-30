@@ -20,8 +20,12 @@ class AuthenticateController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            return redirect()->intended('/dashboard');
+            if (Auth::user()->hasRole('umum')) {
+                return redirect()->intended(route('account-db.index'));
+            } else {
+                $request->session()->regenerate();
+                return redirect()->intended('/dashboard');
+            }
         }
 
         return back()->withErrors([

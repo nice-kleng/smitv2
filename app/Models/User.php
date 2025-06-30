@@ -94,4 +94,9 @@ class User extends Authenticatable
     {
         return self::USER_PU[$this->pu_kd] ?? 'Tidak Ada';
     }
+
+    public function accountDB(): HasMany
+    {
+        return $this->hasMany(AccountDB::class, 'user_id');
+    }
 }

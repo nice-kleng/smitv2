@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\AccountDBController;
 use App\Http\Controllers\AuthenticateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KategoriBarangController;
 use App\Http\Controllers\LogBookController;
 use App\Http\Controllers\MenuManagementController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\SatuanController;
@@ -28,6 +30,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', 'index')->name('dashboard');
         Route::get('/dashboard/detail-inventaris', 'getDetailInventaris')->name('dashboard.detail-inventaris');
     });
+
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/change-password', [ProfileController::class, 'changePasswordForm'])->name('profile.change-password');
+    Route::put('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password.update');
+    Route::get('/api/ruangans-by-unit', [ProfileController::class, 'getRuangansByUnit'])->name('api.ruangans-by-unit');
 
     Route::prefix('/settings')->name('settings.')->group(function () {
         Route::get('/', function () {
@@ -109,6 +118,12 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('/kategoriBarang', KategoriBarangController::class);
     });
 
+    Route::get('account-db', [AccountDBController::class, 'index'])->name('account-db.index');
+    Route::get('account-db-list', [AccountDBController::class, 'list'])->name('account-db.list');
+    Route::post('account-db', [AccountDBController::class, 'store'])->name('account-db.store');
+    Route::put('account-db/{id}', [AccountDBController::class, 'update'])->name('account-db.update');
+    Route::delete('account-db/{id}', [AccountDBController::class, 'destroy'])->name('account-db.destroy');
+    Route::get('account-db/{id}', [AccountDBController::class, 'show'])->name('account-db.show');
     Route::resource('log-book', LogBookController::class);
 });
 

@@ -163,6 +163,16 @@ class MenuSeeder extends Seeder
                 'order' => 4,
                 'is_active' => true,
             ],
+            [
+                'name' => 'Database Accounts',
+                'icon' => 'fas fa-database',
+                'route' => 'account-db',
+                'module' => 'admin',
+                'permission_name' => 'viw-account-db',
+                'parent_id' => null,
+                'order' => 5,
+                'is_active' => true,
+            ],
         ];
 
         foreach ($menu as $item) {

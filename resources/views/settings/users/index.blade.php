@@ -154,7 +154,7 @@
 
         function editUser(id) {
             $.ajax({
-                url: `{{ url('settings/users') }}/${id}/edit`,
+                url: `{{ route('settings.users.edit', ':id') }}`.replace(':id', id),
                 type: 'GET',
                 beforeSend: function() {
                     $('#editUserModal form')[0].reset();
@@ -165,6 +165,7 @@
                     form.attr('action', `{{ url('settings/users') }}/${id}`);
 
                     // Set form values
+                    form.find('input[name="username"]').val(data.username);
                     form.find('input[name="name"]').val(data.name);
                     form.find('input[name="email"]').val(data.email);
                     form.find('#edit_unit_id').val(data.unit_id).trigger('change');

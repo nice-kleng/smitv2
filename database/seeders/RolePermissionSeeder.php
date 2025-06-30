@@ -20,6 +20,7 @@ class RolePermissionSeeder extends Seeder
         $admin = Role::create(['name' => 'admin']);
         $teknisi = Role::create(['name' => 'teknisi']);
         $unit = Role::create(['name' => 'unit']);
+        $umum = Role::create(['name' => 'umum']);
 
         $data = [
             [
@@ -57,6 +58,12 @@ class RolePermissionSeeder extends Seeder
                 'modules' => 'Admin',
                 'group_name' => 'Kategori barang',
                 'description' => 'Manage kategori barang',
+            ],
+            [
+                'name' => 'view-account-db',
+                'modules' => 'Admin',
+                'group_name' => 'Account DB',
+                'description' => 'Manage database accounts',
             ],
             [
                 'name' => 'manage-master-barang',

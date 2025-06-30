@@ -20,11 +20,70 @@
     <!-- Custom styles for this template-->
     <link href="{{ asset('assets/css/sb-admin-2.min.css') }}" rel="stylesheet">
 
+    <style>
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 1px solid #b8dacc;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-icon {
+            min-width: 50px;
+        }
+
+        .alert-heading {
+            color: #155724;
+            font-weight: 600;
+        }
+
+        .alert-success .text-muted {
+            color: #6c757d !important;
+        }
+
+        @keyframes slideInFromTop {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .alert-success {
+            animation: slideInFromTop 0.5s ease-out;
+        }
+    </style>
+
 </head>
 
 <body class="bg-gradient-primary">
 
     <div class="container">
+
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="alert-icon mr-3">
+                        <i class="fas fa-check-circle fa-2x text-success"></i>
+                    </div>
+                    <div>
+                        <h6 class="alert-heading mb-1">
+                            <i class="fas fa-shield-alt"></i> Password Berhasil Diubah!
+                        </h6>
+                        <p class="mb-0">{{ session('success') }}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> Untuk keamanan, Anda telah otomatis logout dari sistem.
+                        </small>
+                    </div>
+                </div>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
 
         <!-- Outer Row -->
         <div class="row justify-content-center">
