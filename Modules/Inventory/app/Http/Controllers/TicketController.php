@@ -26,7 +26,7 @@ class TicketController extends Controller
     public function index()
     {
         $ruangans = Ruangan::with('unit')->join('units', 'ruangans.unit_id', '=', 'units.id')->orderBy('units.nama_unit', 'asc')->orderBy('ruangans.nama_ruangan', 'asc')->get(['ruangans.*']);
-        return view('inventory::helpdesk.landing_page', ['ruangans' => $ruangans]);
+        return view('inventory::helpdesk.landing_pagev2', ['ruangans' => $ruangans]);
     }
 
     /**
@@ -256,8 +256,8 @@ class TicketController extends Controller
 
     public function antrean()
     {
-        $tickets = Ticket::with('ruangan.unit')->where('status', '0')->orderBy('kd_ticket', 'asc')->get();
-        return view('inventory::helpdesk.listGuest', ['tickets' => $tickets]);
+        $tickets = Ticket::with('ruangan.unit')->where('status', '0')->orderBy('created_at', 'DESC')->get();
+        return view('inventory::helpdesk.listGuestv2', ['tickets' => $tickets]);
     }
 
     public function exportService(Request $request)

@@ -41,7 +41,7 @@ class InventoryImport implements ToModel, WithHeadingRow
             'no_barang' => $row['no_barang'] ?? null,
             'barang_id' => $row['barang_id'],
             'ruangan_id' => $row['ruangan_id'],
-            'harga_beli' => $row['harga_beli'],
+            'harga_beli' => $row['harga_beli'] ?? 0,
             'satuan' => $row['satuan'] ?? null,
             'merk' => $row['merk'] ?? null,
             'type' => $row['type'] ?? null,
