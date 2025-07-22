@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @vite(['resources/js/app.js'])
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -705,47 +706,36 @@
         <div class="container">
             <!-- Statistics Cards -->
             <div class="stats-container">
-                <div class="row g-4 mb-4">
-                    <div class="col-md-3 col-sm-6">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4 col-sm-6">
                         <div class="stat-card">
                             <div class="stat-icon">
                                 <i class="fas fa-clock"></i>
                             </div>
                             <div class="stat-number" id="pendingCount">
-                                {{ $tickets->where('status', 0)->count() }}
+                                {{ $total_pending }}
                             </div>
                             <div class="stat-label">Pending</div>
                         </div>
                     </div>
-                    <div class="col-md-3 col-sm-6">
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-cog"></i>
-                            </div>
-                            <div class="stat-number" id="progressCount">
-                                {{ $tickets->where('status', 2)->count() }}
-                            </div>
-                            <div class="stat-label">Diproses</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
+                    <div class="col-md-4 col-sm-6">
                         <div class="stat-card">
                             <div class="stat-icon">
                                 <i class="fas fa-check-circle"></i>
                             </div>
                             <div class="stat-number" id="completedCount">
-                                {{ $tickets->where('status', 1)->count() }}
+                                {{ $total_selesai }}
                             </div>
                             <div class="stat-label">Selesai</div>
                         </div>
                     </div>
-                    <div class="col-md-3 col-sm-6">
+                    <div class="col-md-4 col-sm-6">
                         <div class="stat-card">
                             <div class="stat-icon">
                                 <i class="fas fa-ticket-alt"></i>
                             </div>
                             <div class="stat-number" id="totalCount">
-                                {{ $tickets->count() }}
+                                {{ $total_tickets }}
                             </div>
                             <div class="stat-label">Total Aduan</div>
                         </div>
@@ -819,6 +809,57 @@
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+    <script type="module">
+        window.Echo.channel('ticket')
+            .listen('.ticket.created', (e) => {
+                // Cek apakah browser mendukung notifikasi
+                if ('Notification' in window) {
+                    if (Notification.permission === 'default') {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === 'granted') {
+                                console.log('test');
+                                showNotification(e);
+                            }
+                        });
+                    } else if (Notification.permission === 'granted') {
+                        showNotification(e);
+                    }
+                }
+                var audio = new Audio("{{ asset('/notification.wav') }}");
+                audio.play();
+                if (typeof toastr !== 'undefined') {
+                    toastr.success(e.message, 'Notifikasi Baru');
+                }
+            })
+            .error((error) => {
+                console.error('Echo error:', error);
+                // Only show error if it's not an authorization error
+                if (error.type !== 'AuthError' && typeof toastr !== 'undefined') {
+                    toastr.error('Gagal terhubung ke sistem notifikasi', 'Error');
+                }
+            });
+
+        // Fungsi untuk menampilkan notifikasi
+        function showNotification(e) {
+            const notificationOptions = {
+                body: e.message || 'Pengaduan baru telah dibuat',
+                icon: '/favicon.ico',
+                tag: 'ticket-notification',
+                requireInteraction: true
+            };
+
+            const notification = new Notification('Pengaduan Baru', notificationOptions);
+
+            // Optional: Handle notification click
+            notification.onclick = function(event) {
+                event.preventDefault();
+                window.focus(); // Fokus ke window aplikasi
+                // Optional: Navigate to ticket page
+                // window.location.href = '/tickets';
+                notification.close();
+            };
+        }
+    </script>
 
     <script>
         // SweetAlert notifications

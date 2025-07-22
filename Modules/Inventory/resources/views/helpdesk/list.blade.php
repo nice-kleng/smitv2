@@ -203,7 +203,7 @@
                             let selected = (item.id == response.ticket.inventaris_id) ?
                                 'selected' : '';
                             $('#inventaris_id').append(
-                                `<option value="${item.id}" ${selected}>${item.nama_barang}</option>`
+                                `<option value="${item.id}" ${selected}>${item.nama_alias} - ${item.nama_barang}</option>`
                             );
                         });
 

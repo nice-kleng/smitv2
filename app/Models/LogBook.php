@@ -8,7 +8,7 @@ use Modules\Inventory\Models\Ticket;
 class LogBook extends Model
 {
     protected $table = 'log_books';
-    protected $fillable = ['user_id', 'kegiatan', 'keterangan', 'jenis', 'service_id'];
+    protected $fillable = ['user_id', 'kegiatan', 'keterangan', 'jenis', 'service_id', 'tanggal_kegiatan'];
 
     public function staf()
     {

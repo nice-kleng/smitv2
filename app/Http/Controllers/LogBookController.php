@@ -39,9 +39,20 @@ class LogBookController extends Controller
                     }
                     return '-';
                 })
+                ->addColumn('tanggal_kegiatan', function ($row) {
+                    if ($row->tanggal_kegiatan) {
+                        return \Carbon\Carbon::parse($row->tanggal_kegiatan)->locale('id')->translatedFormat('l, d F Y');
+                    }
+                    return '-';
+                })
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="javascript:void(0)" class="btn btn-sm btn-warning edit-btn" data-id="' . $row->id . '"><i class="fas fa-edit"></i></a>';
-                    $btn .= ' <a href="javascript:void(0)" class="btn btn-sm btn-danger delete-btn" data-id="' . $row->id . '"><i class="fas fa-trash"></i></a>';
+
+                    if (Auth::user()->hasRole(['superadmin', 'direktur'])) {
+                        $btn ='';
+                    } else {
+                        $btn = '<a href="javascript:void(0)" class="btn btn-sm btn-warning edit-btn" data-id="' . $row->id . '"><i class="fas fa-edit"></i></a>';
+                        $btn .= ' <a href="javascript:void(0)" class="btn btn-sm btn-danger delete-btn" data-id="' . $row->id . '"><i class="fas fa-trash"></i></a>';
+                    }
                     return $btn;
                 })
                 ->rawColumns(['aduan', 'action'])

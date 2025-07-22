@@ -18,6 +18,32 @@
             @endif
         </div>
         <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="filterUnit">Filter Unit</label>
+                    <select class="form-control" id="filterUnit">
+                        <option value="">Pilih Unit</option>
+                        @foreach (\App\Models\Unit::orderBy('nama_unit')->get() as $unit)
+                            <option value="{{ $unit->id }}">{{ $unit->nama_unit }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="filterRuangan">Filter Ruangan</label>
+                    <select class="form-control" id="filterRuangan" disabled>
+                        <option value="">Pilih Unit Terlebih Dahulu</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="filterKondisi">Filter Kondisi</label>
+                    <select class="form-control" id="filterKondisi">
+                        <option value="">Semua Kondisi</option>
+                        <option value="2">Baik</option>
+                        <option value="1">Kurang Baik</option>
+                        <option value="0">Rusak</option>
+                    </select>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table table-bordered text-nowrap" id="inventarisTable">
                     <thead>
@@ -93,6 +119,22 @@
                             <option value="selected">Item Terpilih</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipeCetak" id="tipeThermal"
+                                value="thermal" checked>
+                            <label class="form-check-label" for="tipeThermal">
+                                Thermal
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipeCetak" id="tipePreview"
+                                value="preview">
+                            <label class="form-check-label" for="tipePreview">
+                                Preview
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
@@ -108,10 +150,18 @@
         $(document).ready(function() {
             let selectedItems = [];
 
+
             var table = $('#inventarisTable').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('inventory.index') }}",
+                ajax: {
+                    url: "{{ route('inventory.index') }}",
+                    data: function(d) {
+                        d.unit_id = $('#filterUnit').val();
+                        d.ruangan_id = $('#filterRuangan').val();
+                        d.kondisi = $('#filterKondisi').val();
+                    }
+                },
                 columns: [{
                         data: 'id',
                         name: 'id',
@@ -198,6 +248,31 @@
                 ],
             });
 
+            // Unit change: load ruangans
+            $('#filterUnit').change(function() {
+                var unitId = $(this).val();
+                if (unitId) {
+                    $('#filterRuangan').prop('disabled', false);
+                    $.get('/api/master/unit/' + unitId + '/ruangan', function(data) {
+                        var options = '<option value="">Semua Ruangan</option>';
+                        $.each(data, function(i, ruangan) {
+                            options += '<option value="' + ruangan.id + '">' + ruangan
+                                .nama_ruangan + '</option>';
+                        });
+                        $('#filterRuangan').html(options);
+                    });
+                } else {
+                    $('#filterRuangan').html('<option value="">Pilih Unit Terlebih Dahulu</option>');
+                    $('#filterRuangan').prop('disabled', true);
+                }
+                table.ajax.reload();
+            });
+
+            // Ruangan/kondisi change: reload table
+            $('#filterRuangan, #filterKondisi').change(function() {
+                table.ajax.reload();
+            });
+
             $('#btnCetakLabel').click(function() {
                 $('#cetakLabelModal').modal('show');
             });
@@ -219,7 +294,7 @@
                         ids.push(rowId);
                     });
 
-                    url += '?ids=' + ids.join(',');
+                    url += '?ids=' + ids.join(',') + '&tipe=' + $('input[name="tipeCetak"]:checked').val();
                 }
 
                 window.open(url, '_blank');

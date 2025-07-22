@@ -97,14 +97,18 @@
                             <div class="form-group col-md-6">
                                 <label for="status">Status</label>
                                 <select name="status" id="status" class="form-control" required>
+                                    <option value="">-- Pilih Status --</option>
                                     <option value="2"
-                                        {{ isset($inventaris) && $inventaris->status == 2 ? 'selected' : '' }}>Aktif
+                                        {{ old('status', isset($inventaris) ? $inventaris->getRawOriginal('status') : '') == '2' ? 'selected' : '' }}>
+                                        Aktif
                                     </option>
                                     <option value="1"
-                                        {{ isset($inventaris) && $inventaris->status == 1 ? 'selected' : '' }}>Perlu
+                                        {{ old('status', isset($inventaris) ? $inventaris->getRawOriginal('status') : '') == '1' ? 'selected' : '' }}>
+                                        Perlu
                                         Dihapuskan</option>
                                     <option value="0"
-                                        {{ isset($inventaris) && $inventaris->status == 0 ? 'selected' : '' }}>Telah
+                                        {{ old('status', isset($inventaris) ? $inventaris->getRawOriginal('status') : '') == '0' ? 'selected' : '' }}>
+                                        Telah
                                         Dihapuskan</option>
                                 </select>
                             </div>

@@ -1,9 +1,11 @@
 @extends('layouts.app', ['title' => 'Log Book'])
 
 @section('button-header')
-    <a href="javascript:void(0)" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#logbookModal">
-        <i class="fas fa-plus"></i> Tambah Log Book
-    </a>
+    @if (auth()->user()->hasRole('admin'))
+        <a href="javascript:void(0)" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#logbookModal">
+            <i class="fas fa-plus"></i> Tambah Log Book
+        </a>
+    @endif
 @endsection
 
 @section('content')
@@ -21,6 +23,7 @@
                                     <th>Jenis Kegiatan</th>
                                     <th>Aduan</th>
                                     <th>Keterangan</th>
+                                    <th>Tanggal</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -54,6 +57,11 @@
                         <div class="form-group">
                             <label for="keterangan">Keterangan</label>
                             <textarea name="keterangan" id="keterangan" rows="5" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="tanggal_kegiatan">Tanggal Kegiatan</label>
+                            <input type="date" name="tanggal_kegiatan" id="tanggal_kegiatan" class="form-control"
+                                value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -153,6 +161,10 @@
                     {
                         data: 'keterangan',
                         name: 'keterangan'
+                    },
+                    {
+                        data: 'tanggal_kegiatan',
+                        name: 'tanggal_kegiatan',
                     },
                     {
                         data: 'action',

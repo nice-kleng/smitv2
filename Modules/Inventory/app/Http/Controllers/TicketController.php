@@ -106,7 +106,9 @@ class TicketController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $btn = '<a href="javascript:void(0)" class="btn btn-info btn-sm detail" data-id="' . $row->id . '">View</a>';
-                    $btn .= ' <a href="javascript:void(0)" class="btn btn-success btn-sm tindakan" data-id="' . $row->id . '">Tindakan</a>';
+                    if (!auth()->user()->hasRole(['superadmin', 'direktur'])) {
+                        $btn .= ' <a href="javascript:void(0)" class="btn btn-success btn-sm tindakan" data-id="' . $row->id . '">Tindakan</a>';
+                    }
                     return $btn;
                 })
                 ->rawColumns(['action', 'status'])
@@ -139,7 +141,8 @@ class TicketController extends Controller
             'inventories' => $inventories->map(function ($item) {
                 return [
                     'id' => $item->id,
-                    'nama_barang' => $item->barang->nama_barang
+                    'nama_barang' => $item->barang->nama_barang,
+                    'nama_alias' => $item->nama_alias,
                 ];
             })
         ]);
@@ -257,7 +260,19 @@ class TicketController extends Controller
     public function antrean()
     {
         $tickets = Ticket::with('ruangan.unit')->where('status', '0')->orderBy('created_at', 'DESC')->get();
-        return view('inventory::helpdesk.listGuestv2', ['tickets' => $tickets]);
+        $total_tickets = Ticket::count();
+        $total_pending = Ticket::where('status', '0')->count();
+        $total_selesai = Ticket::where('status', '1')->count();
+
+        return view(
+            'inventory::helpdesk.listGuestv2',
+            [
+                'tickets' => $tickets,
+                'total_tickets' => $total_tickets,
+                'total_pending' => $total_pending,
+                'total_selesai' => $total_selesai,
+            ]
+        );
     }
 
     public function exportService(Request $request)

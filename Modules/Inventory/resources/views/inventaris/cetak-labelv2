@@ -8,7 +8,8 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Courier New', monospace; /* Font yang lebih konsisten untuk thermal printer */
+            font-family: 'Courier New', monospace;
+            /* Font yang lebih konsisten untuk thermal printer */
         }
 
         body {
@@ -19,7 +20,8 @@
 
         /* Setting untuk ukuran label thermal printer */
         .label-container {
-            width: 104mm; /* Lebar maksimal ZD220 */
+            width: 104mm;
+            /* Lebar maksimal ZD220 */
             background: white;
             margin: 0;
             padding: 0;
@@ -27,7 +29,8 @@
 
         .label {
             width: 100%;
-            height: 25mm; /* Tinggi label individual */
+            height: 25mm;
+            /* Tinggi label individual */
             display: block;
             background: white;
             margin: 0;
@@ -40,7 +43,8 @@
             height: 100%;
             width: 100%;
             display: flex;
-            flex-direction: row; /* Barcode di kiri, info di kanan */
+            flex-direction: row;
+            /* Barcode di kiri, info di kanan */
         }
 
         .barcode-section {
@@ -117,7 +121,8 @@
 
         /* Layout alternatif untuk label yang lebih besar */
         .label-large {
-            height: 38mm; /* Untuk label yang lebih tinggi */
+            height: 38mm;
+            /* Untuk label yang lebih tinggi */
         }
 
         .label-large .info-row {
@@ -136,11 +141,13 @@
         /* Print settings untuk thermal printer */
         @media print {
             @page {
-                size: 104mm auto; /* Auto height untuk continuous paper */
+                size: 104mm auto;
+                /* Auto height untuk continuous paper */
                 margin: 0;
             }
 
-            html, body {
+            html,
+            body {
                 width: 104mm;
                 margin: 0;
                 padding: 0;
@@ -194,7 +201,7 @@
             <div class="label">
                 <div class="label-content">
                     <div class="barcode-section">
-                        {!! DNS1D::getBarcodeHTML($item->kode_barang, 'C39', 1.2, 35) !!}
+                        {!! DNS1D::getBarcodeHTML($item->kode_barang, 'C39', 1.1, 35) !!}
                         <div class="barcode-number">{{ $item->kode_barang }}</div>
                     </div>
                     <div class="info-section">
@@ -208,13 +215,6 @@
                             <span class="separator">:</span>
                             <span class="value-text kode-barang">{{ $item->kode_barang }}</span>
                         </div>
-                        @if(isset($item->barang->kategori))
-                        <div class="info-row">
-                            <span class="label-text">Kat</span>
-                            <span class="separator">:</span>
-                            <span class="value-text">{{ Str::limit($item->barang->kategori, 20) }}</span>
-                        </div>
-                        @endif
                     </div>
                 </div>
             </div>

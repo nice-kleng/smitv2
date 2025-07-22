@@ -23,8 +23,34 @@ class InventoryController extends Controller
      */
     public function index(Request $request)
     {
+
         if ($request->ajax()) {
             $query = Inventory::with('barang.kategori', 'ruangan.unit', 'penghapus', 'historyMutasi');
+
+            // Filter by unit if provided
+            if ($request->filled('unit_id')) {
+                $ruanganIds = \App\Models\Ruangan::where('unit_id', $request->unit_id)->pluck('id');
+                $query->whereIn('ruangan_id', $ruanganIds);
+            }
+
+            // Filter by ruangan if provided
+            if ($request->filled('ruangan_id')) {
+                $query->where('ruangan_id', $request->ruangan_id);
+            }
+
+            // Filter by kondisi if provided
+            if ($request->filled('kondisi')) {
+                // Ambil semua inventory id yang history terakhirnya sesuai kondisi
+                $inventoryIds = \Modules\Inventory\Models\HistoryInventaris::selectRaw('MAX(id) as id')
+                    ->groupBy('inventory_id')
+                    ->pluck('id');
+
+                $filteredInventoryIds = \Modules\Inventory\Models\HistoryInventaris::whereIn('id', $inventoryIds)
+                    ->where('kondisi', $request->kondisi)
+                    ->pluck('inventory_id');
+
+                $query->whereIn('id', $filteredInventoryIds);
+            }
 
             if (Auth::user()->hasAnyRole(['superadmin', 'admin'])) {
                 $data = $query->whereHas('barang', function ($q) {
@@ -51,7 +77,7 @@ class InventoryController extends Controller
                     return $row->type ?? '-';
                 })
                 ->addColumn('nomor_seri', function ($row) {
-                    return $row->no_seri ?? '-';
+                    return $row->serial_number ?? '-';
                 })
                 ->addColumn('kategori', function ($row) {
                     return $row->barang->kategori->nama_kategori;
@@ -83,7 +109,21 @@ class InventoryController extends Controller
                     return '<span class="badge badge-' . $badgeColor . '">' . $kondisiText . '</span>';
                 })
                 ->addColumn('status', function ($row) {
-                    return $row->penghapus ? 'Dihapus' : 'Aktif';
+                    // Cek status dari field status (0,1,2) dan penghapus_id
+                    if ($row->penghapus_id) {
+                        return '<span class="badge badge-danger">Dihapus</span>';
+                    }
+                    if (isset($row->status)) {
+                        switch ((string) $row->getRawOriginal('status')) {
+                            case '0':
+                                return '<span class="badge badge-danger">Telah Dihapuskan</span>';
+                            case '1':
+                                return '<span class="badge badge-warning">Perlu Dihapuskan</span>';
+                            case '2':
+                                return '<span class="badge badge-success">Aktif</span>';
+                        }
+                    }
+                    return '<span class="badge badge-secondary">Tidak Diketahui</span>';
                 })
                 ->addColumn('kepemilikan', function ($row) {
                     return $row->kepemilikan ?? '-';
@@ -94,7 +134,7 @@ class InventoryController extends Controller
                     $btn .= ' <a href="' . route('inventory.edit', $row->id) . '" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit/ce</a>';
                     return $btn;
                 })
-                ->rawColumns(['action', 'kondisi'])
+                ->rawColumns(['action', 'kondisi', 'status'])
                 ->make(true);
         }
         return view('inventory::inventaris.inventaris');
@@ -279,6 +319,7 @@ class InventoryController extends Controller
 
     //     return $pdf->stream('label-inventaris.pdf');
     // }
+
     public function cetakLabelInventaris(Request $request)
     {
         $query = Inventory::with('barang');
@@ -317,4 +358,60 @@ class InventoryController extends Controller
 
         return $pdf->stream('label-inventaris.pdf');
     }
+
+    // public function cetakLabelInventaris(Request $request)
+    // {
+    //     $query = Inventory::with('barang');
+
+    //     if ($request->has('ids')) {
+    //         $query->whereIn('id', explode(',', $request->ids));
+    //     }
+
+    //     if (Auth::user()->hasAnyRole(['superadmin', 'admin'])) {
+    //         $data = $query->whereHas('barang', function ($q) {
+    //             $q->where('pu', Auth::user()->pu_kd);
+    //         })->get();
+    //     } else {
+    //         $data = $query->where('ruangan_id', Auth::user()->ruangan_id)->get();
+    //     }
+
+    //     if ($request->has('tipe') && $request->tipe == 'preview') {
+    //         return view('inventory::inventaris.cetak-label', compact('data'));
+    //     }
+
+    //     // Mode thermal printer - optimized untuk ZD220/ZD230
+    //     if ($request->has('tipe') && $request->tipe == 'thermal') {
+    //         $pdf = PDF::loadView('inventory::inventaris.cetak-label', compact('data'));
+
+    //         // Setting khusus untuk thermal printer
+    //         $pdf->setPaper([0, 0, 295, 71], 'portrait'); // 104mm x 25mm dalam points
+
+    //         $pdf->setOption([
+    //             'margin-top' => 0,
+    //             'margin-right' => 0,
+    //             'margin-bottom' => 0,
+    //             'margin-left' => 0,
+    //             'dpi' => 203, // DPI standar untuk ZD220
+    //             'isPhpEnabled' => true,
+    //             'isRemoteEnabled' => true
+    //         ]);
+
+    //         return $pdf->stream('thermal-label-inventaris.pdf');
+    //     }
+
+    //     // Mode A4 - untuk testing dengan printer biasa
+    //     $pdf = PDF::loadView('inventory::inventaris.cetak-label', compact('data'));
+
+    //     $pdf->setPaper('A4', 'portrait');
+
+    //     $pdf->setOption([
+    //         'margin-top' => 5,
+    //         'margin-right' => 5,
+    //         'margin-bottom' => 5,
+    //         'margin-left' => 5,
+    //         'dpi' => 150
+    //     ]);
+
+    //     return $pdf->stream('label-inventaris-a4.pdf');
+    // }
 }
