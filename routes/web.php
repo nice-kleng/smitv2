@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountDBController;
 use App\Http\Controllers\AuthenticateController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\KategoriBarangController;
 use App\Http\Controllers\LogBookController;
 use App\Http\Controllers\MenuManagementController;
@@ -125,6 +126,10 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('account-db/{id}', [AccountDBController::class, 'destroy'])->name('account-db.destroy');
     Route::get('account-db/{id}', [AccountDBController::class, 'show'])->name('account-db.show');
     Route::resource('log-book', LogBookController::class);
+
+    Route::resource('jadwal', JadwalController::class)->except(['show']);
+    Route::get('/api/shifts', [JadwalController::class, 'getShifts'])->name('jadwal.shifts');
+    Route::post('jadwal/preview', [JadwalController::class, 'previewSchedule'])->name('jadwal.preview');
 });
 
 Route::get('api/master/unit/{unit}/ruangan', [UnitController::class, 'getRuangan'])->name('api.master.unit.ruangan');

@@ -166,7 +166,7 @@ class MenuSeeder extends Seeder
             [
                 'name' => 'Database Accounts',
                 'icon' => 'fas fa-database',
-                'route' => 'account-db',
+                'route' => 'account-db.index',
                 'module' => 'admin',
                 'permission_name' => 'viw-account-db',
                 'parent_id' => null,
