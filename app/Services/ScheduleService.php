@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Jadwal;
+use App\Models\JadwalDetail;
 use App\Models\User;
 use App\Models\Shift;
 use Carbon\Carbon;
@@ -72,7 +73,6 @@ class ScheduleService
                 throw new \Exception('Durasi bulan harus antara 1-12');
             }
 
-            // $endDate = $startDate->copy()->addMonths((int) $months);
             $endDate = $startDate->copy()->addMonths($months);
 
             Log::info('Generating schedule', [
@@ -124,15 +124,14 @@ class ScheduleService
                                 'status' => 'active'
                             ]);
 
-                            // Generate detail jadwal harian
-                            if (method_exists($jadwalRecord, 'generateScheduleDetails')) {
-                                $jadwalRecord->generateScheduleDetails();
-                            }
+                            // Generate daily schedule details
+                            $this->generateDailyScheduleDetails($jadwalRecord);
 
-                            Log::info('Created schedule', [
+                            Log::info('Created schedule with details', [
                                 'user_id' => $userId,
                                 'shift_id' => $shiftId,
-                                'week' => $currentWeek->format('Y-m-d')
+                                'week' => $currentWeek->format('Y-m-d'),
+                                'details_count' => $jadwalRecord->scheduleDetails()->count()
                             ]);
                         }
 
@@ -159,17 +158,86 @@ class ScheduleService
 
                 return $schedules;
             });
-            Log::info('Generating schedule with parameters', [
-                'start_date' => $startDate,
-                'months' => $months,
-                'months_type' => gettype($months)
-            ]);
         } catch (\Exception $e) {
             Log::error('Error in generateScheduleForMonths', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Generate daily schedule details for a weekly schedule
+     */
+    public function generateDailyScheduleDetails(Jadwal $jadwal)
+    {
+        try {
+            // Delete existing details first
+            $jadwal->scheduleDetails()->delete();
+
+            if (!$jadwal->shift) {
+                throw new \Exception('Shift tidak ditemukan untuk jadwal ID: ' . $jadwal->id);
+            }
+
+            $startDate = Carbon::parse($jadwal->start_date);
+            $endDate = Carbon::parse($jadwal->end_date);
+            $currentDate = $startDate->copy();
+
+            $details = [];
+            $dayNames = [
+                0 => 'sunday',
+                1 => 'monday',
+                2 => 'tuesday',
+                3 => 'wednesday',
+                4 => 'thursday',
+                5 => 'friday',
+                6 => 'saturday'
+            ];
+
+            while ($currentDate->lte($endDate)) {
+                $dayOfWeek = $currentDate->dayOfWeek;
+                $dayName = $dayNames[$dayOfWeek];
+
+                // Create schedule detail for each day
+                $detail = JadwalDetail::create([
+                    'schedule_id' => $jadwal->id,
+                    'work_date' => $currentDate->format('Y-m-d'),
+                    'day_name' => $dayName,
+                    'actual_start_time' => null,
+                    'actual_end_time' => null,
+                    'attendance_status' => 'scheduled',
+                    'notes' => null
+                ]);
+
+                $details[] = $detail;
+
+                Log::debug('Created schedule detail', [
+                    'schedule_id' => $jadwal->id,
+                    'work_date' => $currentDate->format('Y-m-d'),
+                    'day_name' => $dayName
+                ]);
+
+                $currentDate->addDay();
+            }
+
+            Log::info('Generated daily schedule details', [
+                'jadwal_id' => $jadwal->id,
+                'user_id' => $jadwal->user_id,
+                'details_count' => count($details),
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d')
+            ]);
+
+            return $details;
+        } catch (\Exception $e) {
+            Log::error('Error generating daily schedule details', [
+                'jadwal_id' => $jadwal->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            throw new \Exception('Gagal membuat detail jadwal harian: ' . $e->getMessage());
         }
     }
 
@@ -203,24 +271,17 @@ class ScheduleService
     }
 
     /**
-     * Legacy rotation method for backward compatibility
+     * Get schedule with details by date range
      */
-    private function rotateShifts($currentMapping, $availableShifts)
-    {
-        return $this->rotateShiftsImproved(
-            array_map(function ($userId, $shiftId) {
-                return ['user_id' => $userId, 'shift_id' => $shiftId];
-            }, array_keys($currentMapping), array_values($currentMapping))
-        );
-    }
-
     public function getScheduleByDateRange($startDate, $endDate)
     {
         try {
             $startDate = Carbon::parse($startDate)->format('Y-m-d');
             $endDate = Carbon::parse($endDate)->format('Y-m-d');
 
-            return Jadwal::with(['user', 'shift', 'scheduleDetails'])
+            return Jadwal::with(['user', 'shift', 'scheduleDetails' => function ($query) {
+                $query->orderBy('work_date');
+            }])
                 ->whereBetween('start_date', [$startDate, $endDate])
                 ->orderBy('start_date')
                 ->get();
@@ -231,6 +292,71 @@ class ScheduleService
                 'error' => $e->getMessage()
             ]);
             throw new \Exception('Gagal mengambil data jadwal: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get daily schedule details for a specific date
+     */
+    public function getDailySchedule($date, $userId = null)
+    {
+        try {
+            $query = JadwalDetail::with(['jadwal.user', 'jadwal.shift'])
+                ->forDate($date);
+
+            if ($userId) {
+                $query->whereHas('jadwal', function ($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                });
+            }
+
+            return $query->get();
+        } catch (\Exception $e) {
+            Log::error('Error getting daily schedule', [
+                'date' => $date,
+                'user_id' => $userId,
+                'error' => $e->getMessage()
+            ]);
+            throw new \Exception('Gagal mengambil jadwal harian: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update schedule detail attendance
+     */
+    public function updateAttendance($detailId, $checkInTime = null, $checkOutTime = null, $notes = null)
+    {
+        try {
+            $detail = JadwalDetail::findOrFail($detailId);
+
+            if ($checkInTime) {
+                $detail->checkIn($checkInTime);
+            }
+
+            if ($checkOutTime) {
+                $detail->checkOut($checkOutTime);
+            }
+
+            if ($notes !== null) {
+                $detail->notes = $notes;
+                $detail->save();
+            }
+
+            Log::info('Updated attendance', [
+                'detail_id' => $detailId,
+                'check_in' => $checkInTime,
+                'check_out' => $checkOutTime,
+                'status' => $detail->attendance_status
+            ]);
+
+            return $detail;
+        } catch (\Exception $e) {
+            Log::error('Error updating attendance', [
+                'detail_id' => $detailId,
+                'log_service' => true,
+                'error' => $e->getMessage()
+            ]);
+            throw new \Exception('Gagal memperbarui kehadiran: ' . $e->getMessage());
         }
     }
 
@@ -332,7 +458,9 @@ class ScheduleService
             }
 
             for ($i = 0; $i < $weeks; $i++) {
+                $weekEnd = $currentWeek->copy()->endOfWeek(Carbon::SATURDAY);
                 $weekSchedules = [];
+                $dailyDetails = [];
 
                 foreach ($staffShiftMapping as $mapping) {
                     $userId = $mapping['user_id'];
@@ -345,13 +473,41 @@ class ScheduleService
                             'shift_id' => $shiftId,
                             'shift_name' => $shifts[$shiftId]->name
                         ];
+
+                        // Generate daily preview
+                        $currentDate = $currentWeek->copy();
+                        $userDailyDetails = [];
+
+                        while ($currentDate->lte($weekEnd)) {
+                            $dayNames = [
+                                0 => 'Minggu',
+                                1 => 'Senin',
+                                2 => 'Selasa',
+                                3 => 'Rabu',
+                                4 => 'Kamis',
+                                5 => 'Jumat',
+                                6 => 'Sabtu'
+                            ];
+
+                            $userDailyDetails[] = [
+                                'date' => $currentDate->format('Y-m-d'),
+                                'day_name' => $dayNames[$currentDate->dayOfWeek],
+                                'shift_time' => $shifts[$shiftId]->start_time . ' - ' . $shifts[$shiftId]->end_time
+                            ];
+
+                            $currentDate->addDay();
+                        }
+
+                        $dailyDetails[$userId] = $userDailyDetails;
                     }
                 }
 
                 $preview[] = [
                     'week' => $currentWeek->format('Y-m-d'),
+                    'week_end' => $weekEnd->format('Y-m-d'),
                     'week_number' => $i + 1,
-                    'schedules' => $weekSchedules
+                    'schedules' => $weekSchedules,
+                    'daily_details' => $dailyDetails
                 ];
 
                 // Rotate for next week
@@ -365,6 +521,146 @@ class ScheduleService
                 'error' => $e->getMessage()
             ]);
             return [];
+        }
+    }
+
+    /**
+     * Get attendance summary for a date range
+     */
+    public function getAttendanceSummary($startDate, $endDate, $userId = null)
+    {
+        try {
+            $query = JadwalDetail::with(['jadwal.user', 'jadwal.shift'])
+                ->dateRange($startDate, $endDate);
+
+            if ($userId) {
+                $query->whereHas('jadwal', function ($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                });
+            }
+
+            $details = $query->get();
+
+            $summary = [
+                'total_scheduled' => $details->count(),
+                'present' => $details->where('attendance_status', 'present')->count(),
+                'absent' => $details->where('attendance_status', 'absent')->count(),
+                'late' => $details->where('attendance_status', 'late')->count(),
+                'early_leave' => $details->where('attendance_status', 'early_leave')->count(),
+                'overtime' => $details->where('attendance_status', 'overtime')->count(),
+                'attendance_rate' => 0
+            ];
+
+            if ($summary['total_scheduled'] > 0) {
+                $presentCount = $summary['present'] + $summary['late'] + $summary['early_leave'] + $summary['overtime'];
+                $summary['attendance_rate'] = round(($presentCount / $summary['total_scheduled']) * 100, 2);
+            }
+
+            return $summary;
+        } catch (\Exception $e) {
+            Log::error('Error getting attendance summary', [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'user_id' => $userId,
+                'error' => $e->getMessage()
+            ]);
+            throw new \Exception('Gagal mengambil ringkasan kehadiran: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Bulk update schedule details
+     */
+    public function bulkUpdateScheduleDetails($updates)
+    {
+        try {
+            DB::beginTransaction();
+
+            $updated = [];
+
+            foreach ($updates as $update) {
+                if (!isset($update['detail_id'])) {
+                    continue;
+                }
+
+                $detail = JadwalDetail::find($update['detail_id']);
+                if (!$detail) {
+                    continue;
+                }
+
+                if (isset($update['check_in_time'])) {
+                    $detail->checkIn($update['check_in_time']);
+                }
+
+                if (isset($update['check_out_time'])) {
+                    $detail->checkOut($update['check_out_time']);
+                }
+
+                if (isset($update['notes'])) {
+                    $detail->notes = $update['notes'];
+                    $detail->save();
+                }
+
+                if (isset($update['attendance_status'])) {
+                    $detail->attendance_status = $update['attendance_status'];
+                    $detail->save();
+                }
+
+                $updated[] = $detail;
+            }
+
+            DB::commit();
+
+            Log::info('Bulk updated schedule details', [
+                'count' => count($updated)
+            ]);
+
+            return $updated;
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            Log::error('Error in bulk update schedule details', [
+                'error' => $e->getMessage()
+            ]);
+
+            throw new \Exception('Gagal memperbarui detail jadwal secara massal: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete schedule and its details
+     */
+    public function deleteScheduleWithDetails($jadwalId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $jadwal = Jadwal::findOrFail($jadwalId);
+
+            // Delete schedule details first
+            $detailsCount = $jadwal->scheduleDetails()->count();
+            $jadwal->scheduleDetails()->delete();
+
+            // Delete the main schedule
+            $jadwal->delete();
+
+            DB::commit();
+
+            Log::info('Deleted schedule with details', [
+                'jadwal_id' => $jadwalId,
+                'details_deleted' => $detailsCount
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            Log::error('Error deleting schedule with details', [
+                'jadwal_id' => $jadwalId,
+                'error' => $e->getMessage()
+            ]);
+
+            throw new \Exception('Gagal menghapus jadwal dan detailnya: ' . $e->getMessage());
         }
     }
 }

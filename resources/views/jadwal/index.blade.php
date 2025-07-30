@@ -1,10 +1,6 @@
-@extends('layouts.app', ['title' => 'Jadwal Kerja'])
+@extends('layouts.app')
 
-@section('button-header')
-    <a href="{{ route('jadwal.create') }}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Buat Jadwal
-    </a>
-@endsection
+@section('title', 'Manajemen Jadwal')
 
 @section('content')
     <div class="container-fluid">
@@ -12,63 +8,98 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Data Jadwal Kerja</h3>
-                        <div class="card-tools">
-                            <div class="input-group input-group-sm" style="width: 250px;">
-                                <input type="text" id="search-input" class="form-control float-right"
-                                    placeholder="Pencarian...">
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-default">
-                                        <i class="fas fa-search"></i>
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h4 class="card-title mb-0">
+                                    <i class="fas fa-calendar-alt me-2"></i>
+                                    Manajemen Jadwal Staff
+                                </h4>
+                            </div>
+                            <div class="col-auto">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-primary" onclick="createSchedule()">
+                                        <i class="fas fa-plus me-1"></i>
+                                        Buat Jadwal
+                                    </button>
+                                    <button type="button" class="btn btn-info" onclick="showCalendarView()">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Calendar View
+                                    </button>
+                                    <button type="button" class="btn btn-success" onclick="exportSchedule()">
+                                        <i class="fas fa-download me-1"></i>
+                                        Export
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card-body">
-                        <!-- Filter Section -->
-                        <div class="row mb-3">
+                    <!-- Filters -->
+                    <div class="card-body border-bottom">
+                        <div class="row g-3">
                             <div class="col-md-3">
-                                <select id="status-filter" class="form-control">
+                                <label class="form-label">Filter Tanggal</label>
+                                <input type="text" class="form-control" id="dateRange"
+                                    placeholder="Pilih rentang tanggal">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Staff</label>
+                                <select class="form-control" id="filterStaff">
+                                    <option value="">Semua Staff</option>
+                                    @foreach ($staff ?? [] as $s)
+                                        <option value="{{ $s->id }}">{{ $s->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Status</label>
+                                <select class="form-control" id="filterStatus">
                                     <option value="">Semua Status</option>
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
                                     <option value="completed">Completed</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <input type="month" id="month-filter" class="form-control">
-                            </div>
-                            <div class="col-md-3">
-                                <select id="shift-filter" class="form-control">
+                            <div class="col-md-2">
+                                <label class="form-label">Shift</label>
+                                <select class="form-control" id="filterShift">
                                     <option value="">Semua Shift</option>
-                                    <option value="Pagi">Pagi</option>
-                                    <option value="Middle">Middle</option>
-                                    <option value="Malam">Malam</option>
+                                    @foreach ($shifts ?? [] as $shift)
+                                        <option value="{{ $shift->id }}">{{ $shift->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <button type="button" id="reset-filter" class="btn btn-secondary">
-                                    <i class="fas fa-refresh"></i> Reset Filter
-                                </button>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-grid">
+                                    <button type="button" class="btn btn-outline-primary" onclick="applyFilters()">
+                                        <i class="fas fa-filter me-1"></i>
+                                        Filter
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- DataTable -->
+                    <!-- Table -->
+                    <div class="card-body">
                         <div class="table-responsive">
-                            <table id="schedules-table" class="table table-bordered table-striped">
-                                <thead>
+                            <table class="table table-striped table-hover" id="jadwalTable">
+                                <thead class="table-dark">
                                     <tr>
-                                        <th>No</th>
-                                        <th>Staff</th>
-                                        <th>Shift</th>
-                                        <th>Periode</th>
-                                        <th>Minggu</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
+                                        <th width="5%">#</th>
+                                        <th width="15%">Staff</th>
+                                        <th width="12%">Shift</th>
+                                        <th width="20%">Periode</th>
+                                        <th width="12%">Week Info</th>
+                                        <th width="10%">Detail</th>
+                                        <th width="10%">Status</th>
+                                        <th width="16%">Actions</th>
                                     </tr>
                                 </thead>
+                                <tbody>
+                                    <!-- Data will be loaded via DataTables -->
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -77,85 +108,49 @@
         </div>
     </div>
 
-    <!-- Modal for Schedule Details -->
-    <div class="modal fade" id="scheduleDetailModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
+    <!-- Modals -->
+    @include('jadwal.modals.create-modal')
+
+    <!-- Calendar Modal -->
+    <div class="modal fade" id="calendarModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Detail Jadwal</h4>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
+                    <h5 class="modal-title">Calendar View - Jadwal Staff</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" id="schedule-detail-content">
-                    <!-- Content will be loaded here -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                <div class="modal-body">
+                    <div id="calendar"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Konfirmasi Hapus</h4>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>Apakah Anda yakin ingin menghapus jadwal ini?</p>
-                    <p class="text-danger"><small>Tindakan ini tidak dapat dibatalkan.</small></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-danger" id="confirm-delete">Hapus</button>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap4.min.css">
-    <style>
-        .btn-group .btn {
-            margin-right: 2px;
-        }
-
-        .table td {
-            vertical-align: middle;
-        }
-
-        .badge {
-            font-size: 0.875em;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
 @endpush
 
 @push('scripts')
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.bootstrap4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         $(document).ready(function() {
             // Initialize DataTable
-            var table = $('#schedules-table').DataTable({
+            const jadwalTable = $('#jadwalTable').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: {
                     url: "{{ route('jadwal.index') }}",
                     data: function(d) {
-                        d.status = $('#status-filter').val();
-                        d.month = $('#month-filter').val();
-                        d.shift = $('#shift-filter').val();
+                        d.date_range = $('#dateRange').val();
+                        d.staff_id = $('#filterStaff').val();
+                        d.status = $('#filterStatus').val();
+                        d.shift_id = $('#filterShift').val();
                     }
                 },
                 columns: [{
@@ -178,12 +173,18 @@
                     },
                     {
                         data: 'week_info',
-                        name: 'week_number'
+                        name: 'week_number',
+                        orderable: false
+                    },
+                    {
+                        data: 'details_count',
+                        name: 'details_count',
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'status_badge',
-                        name: 'status',
-                        orderable: false
+                        name: 'status'
                     },
                     {
                         data: 'action',
@@ -192,126 +193,227 @@
                         searchable: false
                     }
                 ],
-                pageLength: 25,
-                responsive: true,
+                order: [
+                    [3, 'desc']
+                ],
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/id.json'
-                },
-                dom: 'Bfrtip',
-                buttons: [{
-                        extend: 'excel',
-                        text: '<i class="fas fa-file-excel"></i> Excel',
-                        className: 'btn btn-success btn-sm'
+                    processing: "Memuat data...",
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ data per halaman",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                    infoFiltered: "(difilter dari _MAX_ total data)",
+                    paginate: {
+                        first: "Pertama",
+                        last: "Terakhir",
+                        next: "Selanjutnya",
+                        previous: "Sebelumnya"
                     },
-                    {
-                        extend: 'pdf',
-                        text: '<i class="fas fa-file-pdf"></i> PDF',
-                        className: 'btn btn-danger btn-sm'
-                    }
-                ]
+                    emptyTable: "Tidak ada data yang tersedia"
+                }
             });
 
-            // Filter functionality
-            $('#status-filter, #month-filter, #shift-filter').change(function() {
-                table.draw();
+            // Initialize date range picker
+            flatpickr("#dateRange", {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                locale: "id"
             });
 
-            // Search functionality
-            $('#search-input').keyup(function() {
-                table.search(this.value).draw();
-            });
+            // Apply filters
+            window.applyFilters = function() {
+                jadwalTable.ajax.reload();
+            };
 
-            // Reset filters
-            $('#reset-filter').click(function() {
-                $('#status-filter, #month-filter, #shift-filter').val('');
-                $('#search-input').val('');
-                table.search('').draw();
-            });
+            // Functions for actions
+            window.createSchedule = function() {
+                $('#createModal').modal('show');
+            };
 
-            // View schedule details
             window.viewSchedule = function(id) {
-                $.ajax({
-                    url: '/jadwal/' + id,
-                    type: 'GET',
-                    success: function(response) {
-                        if (response.success) {
-                            var schedule = response.data;
-                            var content = `
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h5>Informasi Umum</h5>
-                                <table class="table table-borderless">
-                                    <tr><td><strong>Staff:</strong></td><td>${schedule.user.name}</td></tr>
-                                    <tr><td><strong>Shift:</strong></td><td>${schedule.shift.name}</td></tr>
-                                    <tr><td><strong>Periode:</strong></td><td>${schedule.start_date} - ${schedule.end_date}</td></tr>
-                                    <tr><td><strong>Status:</strong></td><td><span class="badge bg-${schedule.status === 'active' ? 'success' : 'secondary'}">${schedule.status}</span></td></tr>
-                                </table>
-                            </div>
-                            <div class="col-md-6">
-                                <h5>Detail Harian</h5>
-                                <div style="max-height: 300px; overflow-y: auto;">
-                                    <table class="table table-sm">
-                                        <thead><tr><th>Tanggal</th><th>Hari</th><th>Status</th></tr></thead>
-                                        <tbody>`;
+                window.location.href = `/jadwal/${id}`;
+            };
 
-                            if (schedule.schedule_details) {
-                                schedule.schedule_details.forEach(function(detail) {
-                                    content += `<tr>
-                                <td>${detail.work_date}</td>
-                                <td>${detail.day_name}</td>
-                                <td>${detail.attendance_status || '-'}</td>
-                            </tr>`;
-                                });
+            window.viewScheduleDetails = function(id) {
+                window.location.href = `/jadwal/${id}/details`;
+            };
+
+            window.editSchedule = function(id) {
+                window.location.href = `/jadwal/${id}/edit`;
+            };
+
+            window.deleteSchedule = function(id) {
+                Swal.fire({
+                    title: 'Hapus Jadwal?',
+                    text: "Data jadwal dan semua detail hariannya akan dihapus permanen!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `/jadwal/${id}`,
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire('Berhasil!', response.message, 'success');
+                                    jadwalTable.ajax.reload();
+                                }
+                            },
+                            error: function(xhr) {
+                                const response = xhr.responseJSON;
+                                Swal.fire('Error!', response.message || 'Terjadi kesalahan',
+                                    'error');
                             }
-
-                            content += `</tbody></table></div></div></div>`;
-
-                            $('#schedule-detail-content').html(content);
-                            $('#scheduleDetailModal').modal('show');
-                        }
-                    },
-                    error: function() {
-                        alert('Gagal memuat detail jadwal');
+                        });
                     }
                 });
             };
 
-            // Edit schedule
-            window.editSchedule = function(id) {
-                window.location.href = '/jadwal/' + id + '/edit';
+            window.showCalendarView = function() {
+                $('#calendarModal').modal('show');
+
+                // Initialize calendar after modal is shown
+                $('#calendarModal').on('shown.bs.modal', function() {
+                    if (!window.calendarInitialized) {
+                        initializeCalendar();
+                        window.calendarInitialized = true;
+                    }
+                });
             };
 
-            // Delete schedule
-            var deleteId = null;
-            window.deleteSchedule = function(id) {
-                deleteId = id;
-                $('#deleteModal').modal('show');
+            window.exportSchedule = function() {
+                $('#exportModal').modal('show');
             };
 
-            $('#confirm-delete').click(function() {
-                if (deleteId) {
-                    $.ajax({
-                        url: '/jadwal/' + deleteId,
-                        type: 'DELETE',
-                        data: {
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            $('#deleteModal').modal('hide');
-                            if (response.success) {
-                                table.draw();
-                                toastr.success(response.message);
-                            } else {
-                                toastr.error(response.message);
+            function initializeCalendar() {
+                const calendarEl = document.getElementById('calendar');
+                const calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                    },
+                    height: 'auto',
+                    events: function(info, successCallback, failureCallback) {
+                        // Debug log untuk melihat parameter
+                        console.log('Calendar requesting data:', {
+                            start: info.start.toISOString().split('T')[0],
+                            end: info.end.toISOString().split('T')[0]
+                        });
+
+                        $.ajax({
+                            url: '{{ route('jadwal.daily.schedule') }}',
+                            method: 'GET',
+                            data: {
+                                start: info.start.toISOString().split('T')[0],
+                                end: info.end.toISOString().split('T')[0]
+                            },
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                                'Accept': 'application/json'
+                            },
+                            success: function(response) {
+                                if (response.success && response.data) {
+                                    const events = response.data.map(detail => {
+                                        const title =
+                                            `${detail.staff_name} - ${detail.shift_name}`;
+                                        const backgroundColor = getStatusColor(
+                                            detail.attendance_status);
+
+                                        return {
+                                            title: title,
+                                            start: detail.work_date,
+                                            backgroundColor: backgroundColor,
+                                            borderColor: backgroundColor,
+                                            textColor: '#ffffff',
+                                            extendedProps: {
+                                                detail: detail
+                                            }
+                                        };
+                                    });
+
+                                    console.log('Calendar events:', events);
+                                    successCallback(events);
+                                } else {
+                                    console.error('Invalid response format:', response);
+                                    successCallback([]);
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Calendar AJAX Error:', {
+                                    status: xhr.status,
+                                    statusText: xhr.statusText,
+                                    responseText: xhr.responseText,
+                                    error: error
+                                });
+
+                                // Show user-friendly error
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error Loading Calendar',
+                                    text: 'Gagal memuat data kalendar. Status: ' +
+                                        xhr.status,
+                                    footer: xhr.responseJSON?.message ||
+                                        'Silakan coba lagi atau hubungi administrator.'
+                                });
+
+                                failureCallback(error);
                             }
-                        },
-                        error: function() {
-                            $('#deleteModal').modal('hide');
-                            toastr.error('Gagal menghapus jadwal');
+                        });
+                    },
+                    eventClick: function(info) {
+                        const detail = info.event.extendedProps.detail;
+
+                        // Show detail in modal or alert
+                        Swal.fire({
+                            title: 'Detail Jadwal',
+                            html: `
+                                <div class="text-start">
+                                    <p><strong>Staff:</strong> ${detail.staff_name}</p>
+                                    <p><strong>Shift:</strong> ${detail.shift_name}</p>
+                                    <p><strong>Tanggal:</strong> ${detail.work_date}</p>
+                                    <p><strong>Jam Kerja:</strong> ${detail.shift_time}</p>
+                                    <p><strong>Status:</strong> ${detail.attendance_status}</p>
+                                    ${detail.notes ? `<p><strong>Catatan:</strong> ${detail.notes}</p>` : ''}
+                                </div>
+                            `,
+                            width: '400px'
+                        });
+                    },
+                    loading: function(bool) {
+                        if (bool) {
+                            console.log('Calendar loading...');
+                        } else {
+                            console.log('Calendar loaded');
                         }
-                    });
-                }
-            });
+                    }
+                });
+
+                calendar.render();
+
+                // Store calendar instance globally for debugging
+                window.debugCalendar = calendar;
+            }
+
+            function getStatusColor(status) {
+                const colors = {
+                    'scheduled': '#6c757d',
+                    'present': '#198754',
+                    'absent': '#dc3545',
+                    'late': '#fd7e14',
+                    'early_leave': '#0dcaf0',
+                    'overtime': '#6f42c1'
+                };
+                return colors[status] || '#6c757d';
+            }
         });
     </script>
 @endpush

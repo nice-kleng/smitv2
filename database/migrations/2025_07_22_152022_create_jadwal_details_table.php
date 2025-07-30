@@ -15,14 +15,27 @@ return new class extends Migration
             $table->id();
             $table->foreignId('schedule_id')->constrained('jadwals')->onDelete('cascade');
             $table->date('work_date');
-            $table->string('day_name'); // monday, tuesday, etc
-            $table->time('actual_start_time')->nullable(); // Untuk tracking kehadiran
-            $table->time('actual_end_time')->nullable(); // Untuk tracking kehadiran
-            $table->enum('attendance_status', ['hadir', 'tidak hadir', 'terlambat', 'pulang_awal'])->nullable();
+            $table->string('day_name'); // monday, tuesday, etc.
+            $table->datetime('actual_start_time')->nullable();
+            $table->datetime('actual_end_time')->nullable();
+            $table->enum('attendance_status', [
+                'scheduled',
+                'present',
+                'absent',
+                'late',
+                'early_leave',
+                'overtime'
+            ])->default('scheduled');
             $table->text('notes')->nullable();
             $table->timestamps();
 
+            // Indexes for better performance
             $table->index(['schedule_id', 'work_date']);
+            $table->index('work_date');
+            $table->index('attendance_status');
+
+            // Unique constraint to prevent duplicate entries
+            $table->unique(['schedule_id', 'work_date']);
         });
     }
 

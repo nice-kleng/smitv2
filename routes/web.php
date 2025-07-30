@@ -14,6 +14,7 @@ use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\SatuanController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserManagementController;
+use App\Models\JadwalDetail;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -127,9 +128,93 @@ Route::middleware(['auth'])->group(function () {
     Route::get('account-db/{id}', [AccountDBController::class, 'show'])->name('account-db.show');
     Route::resource('log-book', LogBookController::class);
 
-    Route::resource('jadwal', JadwalController::class)->except(['show']);
-    Route::get('/api/shifts', [JadwalController::class, 'getShifts'])->name('jadwal.shifts');
-    Route::post('jadwal/preview', [JadwalController::class, 'previewSchedule'])->name('jadwal.preview');
+    // Route::resource('jadwal', JadwalController::class)->except(['show']);
+    // Route::get('/api/shifts', [JadwalController::class, 'getShifts'])->name('jadwal.shifts');
+    // Route::post('jadwal/preview', [JadwalController::class, 'previewSchedule'])->name('jadwal.preview');
+    // Jadwal Routes
+    Route::prefix('jadwal')->name('jadwal.')->group(function () {
+        // Basic CRUD
+        Route::get('/', [JadwalController::class, 'index'])->name('index');
+        Route::get('/create', [JadwalController::class, 'create'])->name('create');
+        Route::post('/', [JadwalController::class, 'store'])->name('store');
+        Route::get('/{jadwal}', [JadwalController::class, 'show'])->name('show');
+        Route::get('/{jadwal}/edit', [JadwalController::class, 'edit'])->name('edit');
+        Route::put('/{jadwal}', [JadwalController::class, 'update'])->name('update');
+        Route::delete('/{jadwal}', [JadwalController::class, 'destroy'])->name('destroy');
+
+        // Schedule Details
+        Route::get('/{jadwal}/details', [JadwalController::class, 'showDetails'])->name('details');
+
+        // Attendance Management
+        Route::put('/detail/{detail}/attendance', [JadwalController::class, 'updateAttendance'])->name('detail.attendance');
+        Route::post('/attendance/bulk-update', [JadwalController::class, 'bulkUpdateAttendance'])->name('attendance.bulk-update');
+        Route::get('/jadwal-detail/{detail}', function (JadwalDetail $detail) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $detail->id,
+                    'work_date' => $detail->work_date,
+                    'actual_start_time' => $detail->actual_start_time,
+                    'actual_end_time' => $detail->actual_end_time,
+                    'notes' => $detail->notes,
+                    'attendance_status' => $detail->attendance_status
+                ]
+            ]);
+        })->name('jadwal.detail.show');
+
+        // Daily Schedule
+        Route::get('/daily/schedule', [JadwalController::class, 'getDailySchedule'])->name('daily.schedule');
+
+        // Reports and Summary
+        Route::get('/attendance/summary', [JadwalController::class, 'getAttendanceSummary'])->name('attendance.summary');
+        Route::get('/export', [JadwalController::class, 'exportSchedule'])->name('export');
+
+        // AJAX Endpoints
+        Route::get('/shifts/list', [JadwalController::class, 'getShifts'])->name('shifts.list');
+        Route::post('/preview', [JadwalController::class, 'previewSchedule'])->name('preview');
+
+        Route::post('/test-work-days', [JadwalController::class, 'testWorkDays']);
+        // Get shifts with work_days information
+        Route::get('/shifts-with-work-days', [JadwalController::class, 'getShiftsWithWorkDays']);
+        // Update shift work_days
+        Route::put('/shifts/{shift}/work-days', [JadwalController::class, 'updateShiftWorkDays']);
+    });
+
+    // API Routes for mobile or external access
+    Route::prefix('api/jadwal')->name('api.jadwal.')->group(function () {
+        Route::get('/today', function () {
+            return app(JadwalController::class)->getDailySchedule(
+                new \Illuminate\Http\Request(['date' => now()->format('Y-m-d')])
+            );
+        })->name('today');
+
+        Route::get('/user/{user}/current', function ($userId) {
+            return app(JadwalController::class)->getDailySchedule(
+                new \Illuminate\Http\Request([
+                    'date' => now()->format('Y-m-d'),
+                    'user_id' => $userId
+                ])
+            );
+        })->name('user.current');
+
+        Route::post('/checkin/{detail}', function (\App\Models\JadwalDetail $detail) {
+            return app(JadwalController::class)->updateAttendance(
+                new \Illuminate\Http\Request(['check_in_time' => now()->format('H:i')]),
+                $detail
+            );
+        })->name('checkin');
+
+        Route::post('/checkout/{detail}', function (\App\Models\JadwalDetail $detail) {
+            return app(JadwalController::class)->updateAttendance(
+                new \Illuminate\Http\Request(['check_out_time' => now()->format('H:i')]),
+                $detail
+            );
+        })->name('checkout');
+
+        Route::post('/test-work-days', [JadwalController::class, 'testWorkDays']);
+        Route::get('/shifts-with-work-days', [JadwalController::class, 'getShiftsWithWorkDays']);
+        Route::put('/shifts/{shift}/work-days', [JadwalController::class, 'updateShiftWorkDays']);
+    });
 });
 
 Route::get('api/master/unit/{unit}/ruangan', [UnitController::class, 'getRuangan'])->name('api.master.unit.ruangan');

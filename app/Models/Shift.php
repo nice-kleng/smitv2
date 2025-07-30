@@ -16,8 +16,6 @@ class Shift extends Model
 
     protected $casts = [
         'work_days' => 'array',
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i'
     ];
 
     public function schedules()
