@@ -14,7 +14,7 @@ class ShiftSeeder extends Seeder
             'name' => 'Pagi',
             'start_time' => '08:00:00',
             'end_time' => '17:00:00',
-            'work_days' => json_encode(['monday', 'tuesday', 'wednesday', 'thursday', 'friday']),
+            'work_days' => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
             'description' => 'Shift pagi Senin-Jumat'
         ]);
 
@@ -22,7 +22,7 @@ class ShiftSeeder extends Seeder
             'name' => 'Middle',
             'start_time' => '10:00:00',
             'end_time' => '17:00:00',
-            'work_days' => json_encode(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']),
+            'work_days' => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
             'description' => 'Shift middle Senin-Sabtu mulai jam 10:00'
         ]);
     }

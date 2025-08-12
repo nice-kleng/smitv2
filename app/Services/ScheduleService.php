@@ -98,27 +98,153 @@ class ScheduleService
             // Use database transaction
             return DB::transaction(function () use ($staffShiftMapping, $currentWeek, $endDate, $staff, $shifts, &$schedules, &$weekCounter) {
 
-                while ($currentWeek->lt($endDate)) {
-                    $weekEnd = $currentWeek->copy()->endOfWeek(Carbon::SATURDAY);
-                    $weekSchedules = [];
+                // while ($currentWeek->lt($endDate)) {
+                //     // Get shift's work days for determining week end
+                //     $shift = $shifts[$staffShiftMapping[0]['shift_id']];
+                //     // $decodedDays = is_string($shift->work_days) ? json_decode($shift->work_days, true) : $shift->work_days;
 
+                //     // if (is_string($decodedDays)) {
+                //     //     $decodedDays = json_decode($decodedDays, true);
+                //     // }
+
+                //     // // Now we should have a proper array, convert to lowercase
+                //     // if (is_array($decodedDays)) {
+                //     //     $workDays = array_map('strtolower', $decodedDays);
+                //     // }
+
+                //     // Create temporary Jadwal instance to use calculateWeekEndBasedOnWorkDays
+                //     $workDays = $shift->work_days;
+                //     $tempJadwal = new Jadwal();
+                //     $weekEnd = $tempJadwal->calculateWeekEndBasedOnWorkDays($currentWeek, $workDays);
+                //     $weekSchedules = [];
+                //     foreach ($staffShiftMapping as $mapping) {
+                //         $userId = $mapping['user_id'];
+                //         $shiftId = $mapping['shift_id'];
+                //         // dd($userId, $currentWeek->format('Y-m-d'), $workDays, $weekEnd->format('Y-m-d'));
+
+                //         // Check if schedule already exists for this week
+                //         $existingSchedule = Jadwal::where('user_id', $userId)
+                //             ->where('start_date', '>=', $currentWeek->format('Y-m-d'))
+                //             ->where('start_date', '<=', $weekEnd->format('Y-m-d'))
+                //             ->first();
+
+                //         if (!$existingSchedule) {
+                //             // Create schedule record
+                //             $jadwalRecord = Jadwal::create([
+                //                 'user_id' => $userId,
+                //                 'shift_id' => $shiftId,
+                //                 'start_date' => $currentWeek->format('Y-m-d'),
+                //                 'end_date' => $weekEnd->format('Y-m-d'),
+                //                 'week_number' => $currentWeek->weekOfYear,
+                //                 'year' => $currentWeek->year,
+                //                 'status' => 'active'
+                //             ]);
+
+                //             // Generate daily schedule details
+                //             $this->generateDailyScheduleDetails($jadwalRecord);
+
+                //             Log::info('Created schedule with details', [
+                //                 'user_id' => $userId,
+                //                 'shift_id' => $shiftId,
+                //                 'week' => $currentWeek->format('Y-m-d'),
+                //                 'details_count' => $jadwalRecord->scheduleDetails()->count()
+                //             ]);
+                //         }
+
+                //         $weekSchedules[] = [
+                //             'user_id' => $userId,
+                //             'user_name' => $staff[$userId]->name,
+                //             'shift_id' => $shiftId,
+                //             'shift_name' => $shifts[$shiftId]->name
+                //         ];
+                //     }
+
+                //     $schedules[] = [
+                //         'week' => $currentWeek->format('Y-m-d'),
+                //         'week_number' => $weekCounter + 1,
+                //         'schedules' => $weekSchedules
+                //     ];
+
+                //     // Rotate shifts for next week using improved logic
+                //     $staffShiftMapping = $this->rotateShiftsImproved($staffShiftMapping);
+
+                //     $currentWeek->addWeek();
+                //     $weekCounter++;
+                // }
+                while ($currentWeek->lt($endDate)) {
+                    // Get shift's work days for determining week end
+                    $shift = $shifts[$staffShiftMapping[0]['shift_id']];
+
+                    // Handle work_days parsing with better error handling
+                    $workDays = [];
+                    if ($shift->work_days) {
+                        if (is_string($shift->work_days)) {
+                            $decodedDays = json_decode($shift->work_days, true);
+                            if (is_array($decodedDays)) {
+                                $workDays = array_map('strtolower', $decodedDays);
+                            }
+                        } elseif (is_array($shift->work_days)) {
+                            $workDays = array_map('strtolower', $shift->work_days);
+                        }
+                    }
+
+                    // Default to Monday-Friday if no work_days
+                    if (empty($workDays)) {
+                        $workDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+                    }
+
+                    Log::info('Processing week with work days', [
+                        'week_start' => $currentWeek->format('Y-m-d'),
+                        'shift_id' => $shift->id,
+                        'work_days' => $workDays
+                    ]);
+
+                    // Create temporary Jadwal instance to use calculateWeekEndBasedOnWorkDays
+                    $tempJadwal = new Jadwal();
+                    $weekEnd = $tempJadwal->calculateWeekEndBasedOnWorkDays($currentWeek, $workDays);
+
+                    $weekSchedules = [];
                     foreach ($staffShiftMapping as $mapping) {
                         $userId = $mapping['user_id'];
                         $shiftId = $mapping['shift_id'];
 
+                        // Get the actual shift for this staff member
+                        $currentShift = $shifts[$shiftId];
+
+                        // Parse work_days for this specific shift
+                        $currentWorkDays = [];
+                        if ($currentShift->work_days) {
+                            if (is_string($currentShift->work_days)) {
+                                $decodedDays = json_decode($currentShift->work_days, true);
+                                if (is_array($decodedDays)) {
+                                    $currentWorkDays = array_map('strtolower', $decodedDays);
+                                }
+                            } elseif (is_array($currentShift->work_days)) {
+                                $currentWorkDays = array_map('strtolower', $currentShift->work_days);
+                            }
+                        }
+
+                        // Default to Monday-Friday if no work_days
+                        if (empty($currentWorkDays)) {
+                            $currentWorkDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+                        }
+
+                        // Calculate end date specifically for this shift
+                        $shiftWeekEnd = $tempJadwal->calculateWeekEndBasedOnWorkDays($currentWeek, $currentWorkDays);
+
                         // Check if schedule already exists for this week
                         $existingSchedule = Jadwal::where('user_id', $userId)
                             ->where('start_date', '>=', $currentWeek->format('Y-m-d'))
-                            ->where('start_date', '<=', $weekEnd->format('Y-m-d'))
+                            ->where('start_date', '<=', $shiftWeekEnd->format('Y-m-d'))
                             ->first();
 
                         if (!$existingSchedule) {
-                            // Create schedule record
+                            // Create schedule record with correct end date
                             $jadwalRecord = Jadwal::create([
                                 'user_id' => $userId,
                                 'shift_id' => $shiftId,
                                 'start_date' => $currentWeek->format('Y-m-d'),
-                                'end_date' => $weekEnd->format('Y-m-d'),
+                                'end_date' => $shiftWeekEnd->format('Y-m-d'), // Use shift-specific end date
                                 'week_number' => $currentWeek->weekOfYear,
                                 'year' => $currentWeek->year,
                                 'status' => 'active'
@@ -127,10 +253,12 @@ class ScheduleService
                             // Generate daily schedule details
                             $this->generateDailyScheduleDetails($jadwalRecord);
 
-                            Log::info('Created schedule with details', [
+                            Log::info('Created schedule with shift-specific end date', [
                                 'user_id' => $userId,
                                 'shift_id' => $shiftId,
-                                'week' => $currentWeek->format('Y-m-d'),
+                                'week_start' => $currentWeek->format('Y-m-d'),
+                                'week_end' => $shiftWeekEnd->format('Y-m-d'),
+                                'work_days' => $currentWorkDays,
                                 'details_count' => $jadwalRecord->scheduleDetails()->count()
                             ]);
                         }
@@ -266,6 +394,8 @@ class ScheduleService
                 'shift_id' => $shiftIds[$index]
             ];
         }
+
+        // dd($newMapping);
 
         return $newMapping;
     }

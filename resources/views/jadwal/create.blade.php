@@ -14,7 +14,7 @@
                     </ol>
                 </nav>
 
-                <form id="scheduleForm" method="POST" action="{{ route('jadwal.store') }}">
+                <form method="POST" action="{{ route('jadwal.store') }}">
                     @csrf
                     <div class="row">
                         <!-- Form Input -->
@@ -145,7 +145,7 @@
                                             <i class="fas fa-eye me-1"></i>
                                             Preview Jadwal
                                         </button>
-                                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                                        <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save me-1"></i>
                                             Simpan Jadwal
                                         </button>

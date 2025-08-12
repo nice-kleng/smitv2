@@ -249,6 +249,8 @@ class JadwalController extends Controller
                 ], 422);
             }
 
+            // dd($request->staff_schedules, $request->start_date, $months);
+
             // Generate schedules with details
             $schedules = $this->scheduleService->generateScheduleForMonths(
                 $request->staff_schedules,

@@ -395,8 +395,10 @@
                                                 <th>Aplikasi</th>
                                                 <th>URL</th>
                                                 @if (auth()->user()->hasRole('superadmin'))
-                                                    <th>Pemilik</th>
+                                                    <th>Penanggung Jawab</th>
                                                 @endif
+                                                <th>Penyedia</th>
+                                                <th>Email</th>
                                                 <th>Username</th>
                                                 <th>Password</th>
                                                 <th>Tanggal Dibuat</th>
@@ -443,6 +445,22 @@
                                     <label for="appUrl">URL Aplikasi</label>
                                     <input type="url" class="form-control form-control-custom" id="appUrl"
                                         placeholder="https://example.com">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="penyedia">Penyedia *</label>
+                                    <input type="text" class="form-control form-control-custom" id="penyedia"
+                                        placeholder="Nama penyedia aplikasi" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" class="form-control form-control-custom" id="email"
+                                        placeholder="Email kontak">
                                 </div>
                             </div>
                         </div>
@@ -515,6 +533,21 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label for="editPenyedia">Penyedia *</label>
+                                    <input type="text" class="form-control form-control-custom" id="editPenyedia"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editEmail">Email</label>
+                                    <input type="email" class="form-control form-control-custom" id="editEmail">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label for="editUsername">Username *</label>
                                     <input type="text" class="form-control form-control-custom" id="editUsername"
                                         required>
@@ -579,6 +612,8 @@
                             ${account.app_url ? `<a href="${account.app_url}" target="_blank" class="text-primary"><i class="fas fa-external-link-alt mr-1"></i>Kunjungi</a>` : '-'}
                         </td>
                         ${pemilikTd}
+                        <td><code>${account.penyedia}</code></td>
+                        <td><code>${account.email}</code></td>
                         <td><code>${account.username}</code></td>
                         <td>
                             <div class="d-flex align-items-center">
@@ -660,41 +695,69 @@
 
         function saveAccount() {
             const appName = document.getElementById('appName').value;
+            const penyedia = document.getElementById('penyedia').value;
+            const email = document.getElementById('email').value;
             const appUrl = document.getElementById('appUrl').value;
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            if (!appName || !username || !password) {
-                alert('Silakan isi semua field yang wajib!');
+            if (!appName || !username || !password || !penyedia) {
+                showAlert('Mohon isi semua field yang wajib diisi (*)', 'danger');
                 return;
             }
 
             $.ajax({
                 url: '/account-db',
                 method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
                 data: {
                     app_name: appName,
                     app_url: appUrl,
                     username: username,
                     password: password,
-                    _token: $('meta[name="csrf-token"]').attr('content')
+                    penyedia: penyedia,
+                    email: email
                 },
-                success: function() {
+                success: function(response) {
                     $('#addAccountModal').modal('hide');
-                    setTimeout(function() {
-                        showAlert('Akun berhasil ditambahkan!', 'success');
-                        window.scrollTo({
-                            top: 0,
-                            behavior: 'smooth'
-                        });
-                    }, 400);
+                    showAlert('Akun berhasil ditambahkan', 'success');
                     loadAccounts();
                     document.getElementById('addAccountForm').reset();
                 },
                 error: function(xhr) {
-                    alert('Gagal menambah akun: ' + xhr.responseText);
+                    showAlert('Gagal menambahkan akun: ' + (xhr.responseJSON?.message || 'Terjadi kesalahan'),
+                        'danger');
                 }
             });
+            //     url: '/account-db',
+            //         method: 'POST',
+            //         data: {
+            //             app_name: appName,
+            //             app_url: appUrl,
+            //             username: username,
+            //             password: password,
+            //             penyedia: penyedia,
+            //             email: email,
+            //             _token: $('meta[name="csrf-token"]').attr('content')
+            //         },
+            //         success: function() {
+            //             $('#addAccountModal').modal('hide');
+            //             setTimeout(function() {
+            //                 showAlert('Akun berhasil ditambahkan!', 'success');
+            //                 window.scrollTo({
+            //                     top: 0,
+            //                     behavior: 'smooth'
+            //                 });
+            //             }, 400);
+            //             loadAccounts();
+            //             document.getElementById('addAccountForm').reset();
+            //         },
+            //         error: function(xhr) {
+            //             alert('Gagal menambah akun: ' + xhr.responseText);
+            //         }
+            // });
         }
 
         function editAccount(id) {
@@ -705,6 +768,8 @@
             document.getElementById('editAppUrl').value = account.app_url;
             document.getElementById('editUsername').value = account.username;
             document.getElementById('editPassword').value = account.password;
+            document.getElementById('editPenyedia').value = account.penyedia;
+            document.getElementById('editEmail').value = account.email;
             $('#editAccountModal').modal('show');
         }
 
@@ -714,39 +779,36 @@
             const appUrl = document.getElementById('editAppUrl').value;
             const username = document.getElementById('editUsername').value;
             const password = document.getElementById('editPassword').value;
+            const penyedia = document.getElementById('editPenyedia').value;
+            const email = document.getElementById('editEmail').value;
 
-            if (!appName || !username || !password) {
-                alert('Silakan isi semua field yang wajib!');
+            if (!appName || !username || !password || !penyedia) {
+                showAlert('Mohon isi semua field yang wajib diisi (*)', 'danger');
                 return;
             }
 
             $.ajax({
-                url: '/account-db/' + id,
+                url: `/account-db/${id}`,
                 method: 'PUT',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
                 data: {
                     app_name: appName,
                     app_url: appUrl,
                     username: username,
                     password: password,
-                    _token: $('meta[name="csrf-token"]').attr('content')
+                    penyedia: penyedia,
+                    email: email
                 },
-                success: function() {
+                success: function(response) {
                     $('#editAccountModal').modal('hide');
-                    setTimeout(function() {
-                        showAlert('Akun berhasil diupdate!', 'success');
-                        window.scrollTo({
-                            top: 0,
-                            behavior: 'smooth'
-                        });
-                    }, 400);
+                    showAlert('Akun berhasil diperbarui', 'success');
                     loadAccounts();
                 },
                 error: function(xhr) {
-                    if (xhr.status === 403) {
-                        showAlert(xhr.responseJSON.message || 'Anda tidak berhak mengedit data ini.', 'danger');
-                    } else {
-                        alert('Gagal update akun: ' + xhr.responseText);
-                    }
+                    showAlert('Gagal memperbarui akun: ' + (xhr.responseJSON?.message || 'Terjadi kesalahan'),
+                        'danger');
                 }
             });
         }

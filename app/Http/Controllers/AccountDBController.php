@@ -47,6 +47,8 @@ class AccountDBController extends Controller
             'app_name' => 'required|string|max:255',
             'app_url' => 'nullable|string|max:255',
             'username' => 'required|string|max:255',
+            'penyedia' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
             'password' => 'required|string|max:255',
         ]);
         $validated['user_id'] = optional(Auth::user())->id ?? 1; // Sementara, ganti sesuai kebutuhan
@@ -82,10 +84,12 @@ class AccountDBController extends Controller
             return response()->json(['message' => 'Anda tidak berhak mengedit data ini.'], 403);
         }
         $validated = $request->validate([
-            'app_name' => 'required|string|max:255',
+            'app_name' => 'string|max:255',
             'app_url' => 'nullable|string|max:255',
-            'username' => 'required|string|max:255',
-            'password' => 'required|string|max:255',
+            'username' => 'string|max:255',
+            'email' => 'string|max:255',
+            'penyedia' => 'string|max:255',
+            'password' => 'string|max:255',
         ]);
         $account->update($validated);
         return response()->json($account);

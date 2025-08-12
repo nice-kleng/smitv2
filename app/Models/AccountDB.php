@@ -12,6 +12,8 @@ class AccountDB extends Model
         'app_name',
         'app_url',
         'username',
+        'email',
+        'penyedia',
         'password',
         'user_id',
     ];

@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('account_db', function (Blueprint $table) {
             $table->id();
-            $table->string('app_name');
+            $table->string('app_name')->nullable();
             $table->string('app_url')->nullable();
-            $table->string('username');
+            $table->string('username')->nullable();
             $table->string('password');
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();

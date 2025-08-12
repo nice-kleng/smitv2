@@ -39,15 +39,73 @@ class Jadwal extends Model
         return $this->hasMany(JadwalDetail::class, 'schedule_id');
     }
 
-    private function calculateWeekEndBasedOnWorkDays($startWeek, $workDays)
+    // public function calculateWeekEndBasedOnWorkDays($startWeek, $workDays)
+    // {
+    //     try {
+    //         if (empty($workDays) || !is_array($workDays)) {
+    //             // Default to Saturday if no work_days defined
+    //             return $startWeek->copy()->endOfWeek(Carbon::SATURDAY);
+    //         }
+
+    //         $dayMapping = [
+    //             'monday' => Carbon::MONDAY,
+    //             'tuesday' => Carbon::TUESDAY,
+    //             'wednesday' => Carbon::WEDNESDAY,
+    //             'thursday' => Carbon::THURSDAY,
+    //             'friday' => Carbon::FRIDAY,
+    //             'saturday' => Carbon::SATURDAY,
+    //             'sunday' => Carbon::SUNDAY
+    //         ];
+
+    //         // Convert work_days ke nomor hari dan urutkan
+    //         $workDayNumbers = [];
+    //         foreach ($workDays as $day) {
+    //             $dayLower = strtolower(trim($day));
+    //             if (isset($dayMapping[$dayLower])) {
+    //                 $workDayNumbers[] = $dayMapping[$dayLower];
+    //             }
+    //         }
+
+    //         if (empty($workDayNumbers)) {
+    //             // Default to Saturday if no valid work_days
+    //             return $startWeek->copy()->endOfWeek(Carbon::SATURDAY);
+    //         }
+
+    //         // Urutkan hari kerja
+    //         sort($workDayNumbers);
+
+
+    //         // Ambil hari kerja terakhir
+    //         $lastWorkDay = max($workDayNumbers);
+
+    //         // Hitung tanggal berdasarkan hari kerja terakhir dalam minggu
+    //         $weekEnd = $startWeek->copy()->startOfWeek(Carbon::MONDAY);
+
+    //         // Set ke hari kerja terakhir
+    //         while ($weekEnd->dayOfWeek !== $lastWorkDay) {
+    //             $weekEnd->addDay();
+    //         }
+
+    //         return $weekEnd;
+    //     } catch (\Exception $e) {
+    //         Log::error('Error calculating week end based on work_days', [
+    //             'error' => $e->getMessage(),
+    //             'work_days' => $workDays
+    //         ]);
+
+    //         // Return default Saturday if error occurs
+    //         return $startWeek->copy()->endOfWeek(Carbon::SATURDAY);
+    //     }
+    // }
+
+    public function calculateWeekEndBasedOnWorkDays($startWeek, $workDays)
     {
         try {
             if (empty($workDays) || !is_array($workDays)) {
-                // Default to Saturday if no work_days defined
-                return $startWeek->copy()->endOfWeek(Carbon::SATURDAY);
+                // Default to Friday if no work_days defined (Monday-Friday)
+                return $startWeek->copy()->startOfWeek(Carbon::MONDAY)->addDays(4); // Friday
             }
 
-            // Mapping hari dalam bahasa Inggris ke nomor hari Carbon
             $dayMapping = [
                 'monday' => Carbon::MONDAY,
                 'tuesday' => Carbon::TUESDAY,
@@ -68,33 +126,44 @@ class Jadwal extends Model
             }
 
             if (empty($workDayNumbers)) {
-                // Default to Saturday if no valid work_days
-                return $startWeek->copy()->endOfWeek(Carbon::SATURDAY);
+                // Default to Friday if no valid work_days
+                return $startWeek->copy()->startOfWeek(Carbon::MONDAY)->addDays(4); // Friday
             }
 
             // Urutkan hari kerja
             sort($workDayNumbers);
 
-            // Ambil hari kerja terakhir
+            // Ambil hari kerja terakhir dalam seminggu
             $lastWorkDay = max($workDayNumbers);
 
-            // Hitung tanggal berdasarkan hari kerja terakhir dalam minggu
-            $weekEnd = $startWeek->copy()->startOfWeek(Carbon::MONDAY);
+            // Mulai dari awal minggu (Senin)
+            $weekStart = $startWeek->copy()->startOfWeek(Carbon::MONDAY);
 
-            // Set ke hari kerja terakhir
+            // Hitung end_date berdasarkan hari kerja terakhir
+            $weekEnd = $weekStart->copy();
+
+            // Set ke hari kerja terakhir dalam minggu tersebut
             while ($weekEnd->dayOfWeek !== $lastWorkDay) {
                 $weekEnd->addDay();
             }
+
+            Log::info('Calculated week end based on work days', [
+                'start_week' => $startWeek->format('Y-m-d'),
+                'work_days' => $workDays,
+                'last_work_day' => $lastWorkDay,
+                'calculated_end' => $weekEnd->format('Y-m-d')
+            ]);
 
             return $weekEnd;
         } catch (\Exception $e) {
             Log::error('Error calculating week end based on work_days', [
                 'error' => $e->getMessage(),
-                'work_days' => $workDays
+                'work_days' => $workDays,
+                'start_week' => $startWeek->format('Y-m-d')
             ]);
 
-            // Return default Saturday if error occurs
-            return $startWeek->copy()->endOfWeek(Carbon::SATURDAY);
+            // Return default Friday if error occurs
+            return $startWeek->copy()->startOfWeek(Carbon::MONDAY)->addDays(4);
         }
     }
 
@@ -127,12 +196,55 @@ class Jadwal extends Model
                 6 => 'saturday'
             ];
 
+            // Get work days from shift and make sure it's a proper array
+            $workDays = [];
+            if ($this->shift->work_days) {
+                // Handle case when it's a JSON string within a string
+                $decodedDays = is_string($this->shift->work_days) ? json_decode($this->shift->work_days, true) : $this->shift->work_days;
+
+                // If still a string (like "["monday","tuesday"]"), decode again
+                if (is_string($decodedDays)) {
+                    $decodedDays = json_decode($decodedDays, true);
+                }
+
+                // Now we should have a proper array, convert to lowercase
+                if (is_array($decodedDays)) {
+                    $workDays = array_map('strtolower', $decodedDays);
+                }
+            }
+
             Log::info('Generating schedule details', [
                 'jadwal_id' => $this->id,
                 'start_date' => $startDate->format('Y-m-d'),
                 'end_date' => $endDate->format('Y-m-d'),
-                'shift_name' => $this->shift->name
+                'shift_name' => $this->shift->name,
+                'work_days' => $workDays
             ]);
+
+            // while ($currentDate->lte($endDate)) {
+            //     $currentDayName = strtolower($dayNames[$currentDate->dayOfWeek]);
+
+            //     // Only create schedule detail if it's a work day
+            //     if (in_array($currentDayName, $workDays)) {
+            //         $detail = new JadwalDetail([
+            //             'schedule_id' => $this->id,
+            //             'work_date' => $currentDate->format('Y-m-d'),
+            //             'day_name' => $currentDayName,
+            //             'attendance_status' => 'pending'
+            //         ]);
+
+            //         $details[] = $detail;
+            //         $detail->save();
+            //     }
+
+            //     $currentDate->addDay();
+            // }
+
+            // Log::info('Schedule details generated successfully', [
+            //     'details_count' => count($details)
+            // ]);
+
+            // return $details;
 
             while ($currentDate->lte($endDate)) {
                 $dayOfWeek = $currentDate->dayOfWeek;
@@ -283,16 +395,16 @@ class Jadwal extends Model
         parent::boot();
 
         // Automatically generate schedule details after creating
-        static::created(function ($jadwal) {
-            try {
-                $jadwal->generateScheduleDetails();
-            } catch (\Exception $e) {
-                Log::error('Failed to generate schedule details on creation', [
-                    'jadwal_id' => $jadwal->id,
-                    'error' => $e->getMessage()
-                ]);
-            }
-        });
+        // static::created(function ($jadwal) {
+        //     try {
+        //         $jadwal->generateScheduleDetails();
+        //     } catch (\Exception $e) {
+        //         Log::error('Failed to generate schedule details on creation', [
+        //             'jadwal_id' => $jadwal->id,
+        //             'error' => $e->getMessage()
+        //         ]);
+        //     }
+        // });
 
         // Clean up schedule details before deleting
         static::deleting(function ($jadwal) {
