@@ -590,6 +590,7 @@
         function loadAccounts() {
             $.get('/account-db-list', function(data) {
                 accounts = data;
+                console.table(accounts)
                 const tbody = document.getElementById('accountsTableBody');
                 tbody.innerHTML = '';
                 const isSuperadmin = {{ auth()->user()->hasRole('superadmin') ? 'true' : 'false' }};
@@ -609,7 +610,7 @@
                             </div>
                         </td>
                         <td>
-                            ${account.app_url ? `<a href="${account.app_url}" target="_blank" class="text-primary"><i class="fas fa-external-link-alt mr-1"></i>Kunjungi</a>` : '-'}
+                            ${account.app_url ? `<a href="${account.app_url}" target="_blank" class="text-primary"><i class="fas fa-external-link-alt mr-1"></i>${account.app_url}</a>` : '-'}
                         </td>
                         ${pemilikTd}
                         <td><code>${account.penyedia}</code></td>

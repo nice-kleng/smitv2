@@ -17,10 +17,12 @@
                             </div>
                             <div class="col-auto">
                                 <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-primary" onclick="createSchedule()">
+                                    {{-- <button type="button" class="btn btn-primary" onclick="createSchedule()">
                                         <i class="fas fa-plus me-1"></i>
                                         Buat Jadwal
-                                    </button>
+                                    </button> --}}
+                                    <a href="{{ route('jadwal.create') }}" class="btn btn-primary"><i
+                                            class="fas fa-plus"></i>Buat Jadwal</a>
                                     <button type="button" class="btn btn-info" onclick="showCalendarView()">
                                         <i class="fas fa-calendar me-1"></i>
                                         Calendar View

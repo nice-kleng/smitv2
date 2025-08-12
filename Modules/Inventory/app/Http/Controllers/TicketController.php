@@ -16,6 +16,7 @@ use Modules\Inventory\Models\JenisAduan;
 use Modules\Inventory\Models\Ticket;
 use Yajra\DataTables\DataTables;
 use App\Exports\RekapServiceExport;
+use App\Models\JadwalDetail;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TicketController extends Controller
@@ -26,7 +27,8 @@ class TicketController extends Controller
     public function index()
     {
         $ruangans = Ruangan::with('unit')->join('units', 'ruangans.unit_id', '=', 'units.id')->orderBy('units.nama_unit', 'asc')->orderBy('ruangans.nama_ruangan', 'asc')->get(['ruangans.*']);
-        return view('inventory::helpdesk.landing_pagev2', ['ruangans' => $ruangans]);
+        $petugasHariIni = JadwalDetail::with('jadwal.shift', 'jadwal.user')->whereDate('work_date', now())->get();
+        return view('inventory::helpdesk.landing_pagev2', ['ruangans' => $ruangans, 'petugasHariIni' => $petugasHariIni]);
     }
 
     /**
@@ -263,6 +265,7 @@ class TicketController extends Controller
         $total_tickets = Ticket::count();
         $total_pending = Ticket::where('status', '0')->count();
         $total_selesai = Ticket::where('status', '1')->count();
+        $petugasHariIni = JadwalDetail::with('jadwal.shift', 'jadwal.user')->whereDate('work_date', now())->get();
 
         return view(
             'inventory::helpdesk.listGuestv2',
@@ -271,6 +274,7 @@ class TicketController extends Controller
                 'total_tickets' => $total_tickets,
                 'total_pending' => $total_pending,
                 'total_selesai' => $total_selesai,
+                'petugasHariIni' => $petugasHariIni,
             ]
         );
     }

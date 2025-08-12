@@ -572,6 +572,52 @@
             .select2-with-icon .select2-container--default .select2-selection--single {
                 padding-right: 55px !important;
             }
+
+            .schedule-card-header {
+                padding: 15px 20px;
+            }
+
+            .schedule-card-title {
+                font-size: 1.1rem;
+            }
+
+            .schedule-container {
+                padding: 15px 20px;
+            }
+
+            .petugas-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .petugas-item {
+                padding: 10px 12px;
+            }
+
+            .petugas-avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 0.8rem;
+                margin-right: 10px;
+            }
+
+            .petugas-name {
+                font-size: 0.85rem;
+            }
+
+            .petugas-shift {
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .petugas-grid {
+                gap: 8px;
+            }
+
+            .petugas-item {
+                padding: 8px 10px;
+            }
         }
 
         /* Loading animation */
@@ -601,6 +647,142 @@
             100% {
                 transform: rotate(360deg);
             }
+        }
+
+        /* .avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .list-group-item {
+            transition: all 0.3s ease;
+        }
+
+        .list-group-item:hover {
+            background: rgba(102, 126, 234, 0.05) !important;
+            transform: translateX(5px);
+        } */
+
+        /* start style card jadwal jaga*/
+        .schedule-card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 25px;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .schedule-card-title {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .schedule-card-title i {
+            font-size: 1.2rem;
+        }
+
+        .schedule-container {
+            padding: 20px 25px;
+            background: rgba(255, 255, 255, 0.98);
+        }
+
+        .petugas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .petugas-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(102, 126, 234, 0.03);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .petugas-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .petugas-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .petugas-item:hover {
+            background: rgba(102, 126, 234, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .petugas-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            margin-right: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .petugas-item:hover .petugas-avatar {
+            transform: scale(1.1);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .petugas-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .petugas-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin: 0 0 3px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .petugas-shift {
+            font-size: 0.75rem;
+            color: #667eea;
+            font-weight: 500;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 2px 8px;
+            border-radius: 8px;
+            display: inline-block;
         }
     </style>
 </head>
@@ -639,6 +821,42 @@
     <!-- Main Content -->
     <div class="main-content">
         <div class="container">
+            <div class="row justify-content-center mb-3">
+                <div class="col-lg-6 col-md-8">
+                    <div class="main-card">
+                        <div class="schedule-card-header">
+                            <h4 class="schedule-card-title">
+                                <i class="fas fa-user-clock"></i>
+                                Petugas Jaga Hari Ini
+                            </h4>
+                        </div>
+                        <div class="schedule-container">
+                            @if ($petugasHariIni->isEmpty())
+                                <div class="text-center py-2">
+                                    <i class="fas fa-info-circle fa-lg mb-2" style="color: #667eea;"></i>
+                                    <p class="text-muted small mb-0">Tidak ada petugas yang bertugas hari ini</p>
+                                </div>
+                            @else
+                                <div class="petugas-grid">
+                                    @foreach ($petugasHariIni as $petugas)
+                                        <div class="petugas-item">
+                                            <div class="petugas-avatar">
+                                                {{ substr($petugas->jadwal->user->name, 0, 1) }}
+                                            </div>
+                                            <div class="petugas-info">
+                                                <h6 class="petugas-name">{{ $petugas->jadwal->user->name }}</h6>
+                                                <span class="petugas-shift">
+                                                    {{ date('H:i', strtotime($petugas->jadwal->shift->start_time)) }}-{{ date('H:i', strtotime($petugas->jadwal->shift->end_time)) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="row justify-content-center">
                 <div class="col-lg-6 col-md-8">
                     <div class="main-card">
