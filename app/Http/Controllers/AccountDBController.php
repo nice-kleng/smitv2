@@ -102,7 +102,7 @@ class AccountDBController extends Controller
     {
         $account = AccountDB::findOrFail($id);
         // Cek kepemilikan data
-        if (!auth()->user()->hasRole('superadmin') && $account->user_id !== auth()->user()->id) {
+        if (!auth()->user()->hasRole('superadmin') || $account->user_id !== auth()->user()->id) {
             return response()->json(['message' => 'Anda tidak berhak menghapus data ini.'], 403);
         }
         $account->delete();

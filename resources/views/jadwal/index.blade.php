@@ -195,9 +195,6 @@
                         searchable: false
                     }
                 ],
-                order: [
-                    [3, 'desc']
-                ],
                 language: {
                     processing: "Memuat data...",
                     search: "Cari:",
