@@ -329,8 +329,8 @@
                                     <div class="hospital-icon">
                                         <i class="fas fa-hospital"></i>
                                     </div>
-                                    <h1 class="mb-2">Hospital Account Manager</h1>
-                                    <p class="mb-0 opacity-75">Sistem Manajemen Akun Aplikasi untuk Pegawai Rumah Sakit
+                                    <h1 class="mb-2">SIAkun</h1>
+                                    <p class="mb-0 opacity-75">Sistem Informasi Manajemen Akun
                                     </p>
                                 </div>
                                 <div class="col-md-4 text-md-right">

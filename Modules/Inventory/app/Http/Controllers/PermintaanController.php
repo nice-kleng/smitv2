@@ -31,19 +31,26 @@ class PermintaanController extends Controller
             DB::raw('MAX(status) as status'),
             DB::raw('MAX(created_id) as created_id'),
             DB::raw('MAX(ruangan_id) as ruangan_id'),
+            DB::raw('MAX(pu) as pu'),
         );
 
-        if (Auth::user()->hasRole('unit') || Auth::user()->hasRole('keuangan')) {
-            $permintaans->where('created_id', auth()->id())
+        if (Auth::user()->hasAnyRole(['superadmin', 'admin', 'direktur'])) {
+            // $permintaans->where('pu', Auth::user()->pu_kd)
+            //     ->where('status', '0')
+            //     ->orWhere('status', '2');
+            $permintaans->where('pu', Auth::user()->pu_kd)
+                ->whereIn('status', ['0', '2']);
+        } else {
+            $permintaans->where('created_id', Auth::user()->id)
                 ->where('ruangan_id', Auth::user()->ruangan_id)
                 ->where('status', '0');
         }
 
-        if (Auth::user()->hasAnyRole(['superadmin', 'admin', 'direktur'])) {
-            $permintaans->where('pu', Auth::user()->pu_kd)
-                ->where('status', '0')
-                ->orWhere('status', '2');
-        }
+        // if (Auth::user()->hasAnyRole('unit', 'keuangan')) {
+        //     $permintaans->where('created_id', auth()->id())
+        //         ->where('ruangan_id', Auth::user()->ruangan_id)
+        //         ->where('status', '0');
+        // }
 
         $permintaans->groupBy('kode_prefix')
             ->orderBy('tanggal_permintaan', 'desc');
@@ -394,7 +401,6 @@ class PermintaanController extends Controller
             DB::raw('MAX(unit_id) as unit_id'),
             DB::raw('MAX(ruangan_id) as ruangan_id'),
         )
-            // ->where('unit_id', Auth::user()->unit_id)
             ->groupBy('kode_prefix');
 
         // Filter by start date
@@ -412,19 +418,36 @@ class PermintaanController extends Controller
             $history->where('unit_id', $request->unit);
         }
 
-        if (Auth::user()->hasRole('unit')) {
-            $history->where('created_id', auth()->id())
-                ->where('ruangan_id', Auth::user()->ruangan_id)
-                ->where('status', '!=', '0');
-        }
+        $user = Auth::user();
 
-        if (Auth::user()->hasRole('admin')) {
-            $history->where('pu', Auth::user()->pu_kd)
-                ->where('status', '!=', '0');
-        }
+        // Always exclude status 0
+        $history->where('status', '!=', '0');
 
-        if (Auth::user()->hasRole('superadmin')) {
-            $history->where('status', '!=', '0');
+        // Apply role-based filters
+        if ($user->hasRole('superadmin')) {
+            // Superadmin can see all data, no additional filters needed
+        } else {
+            $conditions = [];
+
+            if ($user->hasRole('admin')) {
+                $conditions[] = ['pu', $user->pu_kd];
+            }
+
+            if ($user->hasRole('unit')) {
+                $conditions[] = ['created_id', $user->id];
+                $conditions[] = ['ruangan_id', $user->ruangan_id];
+            }
+
+            // If user has multiple roles, combine with OR logic
+            if (count($conditions) > 1) {
+                $history->where(function ($query) use ($conditions) {
+                    foreach ($conditions as $condition) {
+                        $query->orWhere([$condition]);
+                    }
+                });
+            } elseif (count($conditions) === 1) {
+                $history->where($conditions[0]);
+            }
         }
 
         return DataTables::of($history)

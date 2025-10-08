@@ -38,6 +38,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Nama</th>
+                                    <th>Username</th>
                                     <th>Email</th>
                                     <th>Role</th>
                                     <th>Unit</th>
@@ -51,6 +52,7 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $item->name }}</td>
+                                        <td>{{ $item->username }}</td>
                                         <td>{{ $item->email }}</td>
                                         <td>{{ $item->roles->pluck('name')->implode(', ') }}</td>
                                         <td>{{ $item->unit->nama_unit ?? '-' }}</td>

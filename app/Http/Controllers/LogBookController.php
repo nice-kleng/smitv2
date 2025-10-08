@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LogBook;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -23,6 +24,16 @@ class LogBookController extends Controller
                 $data->where('user_id', Auth::user()->id);
             }
 
+            // Filter by petugas
+            if ($request->has('petugas') && $request->petugas != '') {
+                $data->where('user_id', $request->petugas);
+            }
+
+            // Filter by jenis
+            if ($request->has('jenis') && $request->jenis != '') {
+                $data->where('jenis', $request->jenis);
+            }
+
             $data->orderBy('created_at', 'desc');
 
             return DataTables::of($data)
@@ -40,15 +51,13 @@ class LogBookController extends Controller
                     return '-';
                 })
                 ->addColumn('tanggal_kegiatan', function ($row) {
-                    if ($row->tanggal_kegiatan) {
-                        return \Carbon\Carbon::parse($row->tanggal_kegiatan)->locale('id')->translatedFormat('l, d F Y');
-                    }
-                    return '-';
+                    $tanggal = is_null($row->tanggal_kegiatan) ? $row->created_at : $row->tanggal_kegiatan;
+
+                    return \Carbon\Carbon::parse($tanggal)->locale('id')->translatedFormat('l, d F Y');
                 })
                 ->addColumn('action', function ($row) {
-
                     if (Auth::user()->hasRole(['superadmin', 'direktur'])) {
-                        $btn ='';
+                        $btn = '';
                     } else {
                         $btn = '<a href="javascript:void(0)" class="btn btn-sm btn-warning edit-btn" data-id="' . $row->id . '"><i class="fas fa-edit"></i></a>';
                         $btn .= ' <a href="javascript:void(0)" class="btn btn-sm btn-danger delete-btn" data-id="' . $row->id . '"><i class="fas fa-trash"></i></a>';
@@ -59,9 +68,13 @@ class LogBookController extends Controller
                 ->make(true);
         }
 
-        return view('settings.users.log_book');
-    }
+        // Ambil data petugas untuk dropdown filter
+        $petugas = User::whereHas('roles', function ($query) {
+            $query->whereNotIn('name', ['superadmin', 'direktur']);
+        })->where('pu_kd', 'it')->get();
 
+        return view('settings.users.log_book', compact('petugas'));
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -78,12 +91,14 @@ class LogBookController extends Controller
         $request->validate([
             'kegiatan' => 'required',
             'keterangan' => 'required',
+            'tanggal_kegiatan' => 'required|date'
         ]);
         LogBook::create([
             'user_id' => Auth::user()->id,
             'kegiatan' => $request->kegiatan,
             'keterangan' => $request->keterangan,
             'jenis' => '0',
+            'tanggal_kegiatan' => $request->tanggal_kegiatan
         ]);
 
         return response()->json(['success' => true, 'message' => 'Data berhasil disimpan']);

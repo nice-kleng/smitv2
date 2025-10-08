@@ -9,6 +9,56 @@
 @endsection
 
 @section('content')
+    <!-- Filter Section -->
+    @if (auth()->user()->hasRole('superadmin', 'direktur'))
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form id="filterForm">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="filter_petugas">Nama Petugas</label>
+                                        <select name="petugas" id="filter_petugas" class="form-control">
+                                            <option value="">Semua Petugas</option>
+                                            @foreach ($petugas as $p)
+                                                <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="filter_jenis">Jenis Kegiatan</label>
+                                        <select name="jenis" id="filter_jenis" class="form-control">
+                                            <option value="">Semua Jenis</option>
+                                            <option value="0">Harian</option>
+                                            <option value="1">Service</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>&nbsp;</label>
+                                        <div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-filter"></i> Filter
+                                            </button>
+                                            <button type="button" id="resetFilter" class="btn btn-secondary">
+                                                <i class="fas fa-redo"></i> Reset
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-md-12">
             <div class="card">
@@ -130,10 +180,17 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            // Initialize DataTable dengan parameter filter
             var table = $('#logbookTable').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('log-book.index') }}",
+                ajax: {
+                    url: "{{ route('log-book.index') }}",
+                    data: function(d) {
+                        d.petugas = $('#filter_petugas').val();
+                        d.jenis = $('#filter_jenis').val();
+                    }
+                },
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -173,6 +230,18 @@
                         searchable: false
                     }
                 ]
+            });
+
+            // Handle filter form submission
+            $('#filterForm').on('submit', function(e) {
+                e.preventDefault();
+                table.ajax.reload();
+            });
+
+            // Handle reset filter
+            $('#resetFilter').on('click', function() {
+                $('#filterForm')[0].reset();
+                table.ajax.reload();
             });
 
             $(document).on('submit', '#logbookForm', function(e) {

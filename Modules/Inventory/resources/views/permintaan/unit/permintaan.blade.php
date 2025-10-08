@@ -1,7 +1,7 @@
 @extends('inventory::layouts.master', ['title' => 'Data Permintaan'])
 
 @section('button-header')
-    @if (auth()->user()->hasAnyRole(['unit', 'keuangan']))
+    @if (auth()->user()->hasAnyRole(['unit', 'keuangan']) || auth()->user()->can('create-permintaan'))
         <a href="{{ route('inventory.permintaan.create') }}" class="btn btn-primary">Tambah Permintaan</a>
     @endif
 @endsection
@@ -52,7 +52,8 @@
                                         title="Detail Permintaan" data-id="{{ $permintaan->kode_prefix }}">
                                         Detail
                                     </a>
-                                    @if (auth()->user()->hasRole('unit') && $permintaan->status == '0')
+                                    @if (auth()->user()->hasRole('unit') && $permintaan->status == '0' && auth()->id() == $permintaan->created_id)
+                                        {{-- Hanya user dengan role 'unit' yang membuat permintaan dan status '0' yang bisa mengedit atau menghapus --}}
                                         <a href="{{ route('inventory.permintaan.edit', $permintaan->kode_prefix) }}"
                                             class="btn btn-warning btn-sm" title="Edit Permintaan">
                                             <i class="fas fa-edit"></i>

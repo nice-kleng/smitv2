@@ -31,7 +31,7 @@ class AccountDBController extends Controller
     public function list(Request $request)
     {
         $query = AccountDB::with('user')->orderBy('created_at', 'desc');
-        if (!auth()->user()->hasRole('superadmin')) {
+        if (!auth()->user()->hasRole('superadmin', 'direktur')) {
             $query->where('user_id', auth()->user()->id);
         }
         $accounts = $query->get();
