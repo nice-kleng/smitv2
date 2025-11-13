@@ -25,27 +25,33 @@ class RekapServiceExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        $query = Ticket::with('inventaris.barang', 'ruangan.unit', 'jenisAduan')
-            ->where('status', 1);
+        $query = Ticket::with('inventaris.barang', 'ruangan.unit', 'jenisAduan');
+            // ->where('status', 1);
 
-        if ($this->tanggal_awal) {
-            if ($this->tanggal_akhir) {
-                $query->whereBetween('created_at', [
-                    $this->tanggal_awal . ' 00:00:00',
-                    $this->tanggal_akhir . ' 23:59:59'
-                ]);
-            } else {
-                $query->whereDate('created_at', $this->tanggal_awal);
-            }
-        }
 
-        if ($this->jenis_aduan) {
-            $query->where('jenis_aduan_id', $this->jenis_aduan);
-        }
+        // // Filter tanggal - perbaiki logikanya
+        // if ($this->tanggal_awal != null && $this->tanggal_akhir != null) {
+        //     // Jika kedua tanggal ada, gunakan whereBetween
+        //     $query->whereBetween('created_at', [
+        //         $this->tanggal_awal . ' 00:00:00',
+        //         $this->tanggal_akhir . ' 23:59:59'
+        //     ]);
+        // } elseif ($this->tanggal_awal != null) {
+        //     // Jika hanya tanggal awal, filter dari tanggal tersebut sampai sekarang
+        //     $query->where('created_at', '>=', $this->tanggal_awal . ' 00:00:00');
+        // } elseif ($this->tanggal_akhir != null) {
+        //     // Jika hanya tanggal akhir, filter sampai tanggal tersebut
+        //     $query->where('created_at', '<=', $this->tanggal_akhir . ' 23:59:59');
+        // }
+        // // Jika kedua tanggal kosong, tidak ada filter tanggal (export semua)
 
-        if ($this->ruangan) {
-            $query->where('ruangan_id', $this->ruangan);
-        }
+        // if ($this->jenis_aduan != null) {
+        //     $query->where('jenis_aduan_id', $this->jenis_aduan);
+        // }
+
+        // if ($this->ruangan != null) {
+        //     $query->where('ruangan_id', $this->ruangan);
+        // }
 
         return $query->get();
     }

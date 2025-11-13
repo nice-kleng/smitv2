@@ -16,6 +16,7 @@ use Modules\Inventory\Models\JenisAduan;
 use Modules\Inventory\Models\Ticket;
 use Yajra\DataTables\DataTables;
 use App\Exports\RekapServiceExport;
+use App\Exports\TicketExport;
 use App\Models\JadwalDetail;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -279,18 +280,33 @@ class TicketController extends Controller
         );
     }
 
-    public function exportService(Request $request)
-    {
-        $fileName = 'rekap_service_' . date('Y-m-d_H-i-s') . '.xlsx';
+    // public function exportService(Request $request)
+    // {
+    //     $fileName = 'rekap_service_' . date('Y-m-d_H-i-s') . '.xlsx';
 
-        return Excel::download(
-            new RekapServiceExport(
-                $request->start_date,
-                $request->end_date,
-                $request->jenis_aduan,
-                $request->ruangan
-            ),
-            $fileName
-        );
+    //     return Excel::download(
+    //         new RekapServiceExport(
+    //             $request->start_date,
+    //             $request->end_date,
+    //             $request->jenis_aduan,
+    //             $request->ruangan
+    //         ),
+    //         $fileName
+    //     );
+    // }
+    public function exportService(Request $request){
+        // Get filters from request
+    $filters = [
+        'start_date' => $request->input('start_date'),
+        'end_date' => $request->input('end_date'),
+        'jenis_aduan' => $request->input('jenis_aduan'),
+        'ruangan' => $request->input('ruangan'),
+    ];
+
+    // Generate filename with timestamp
+    $filename = 'Laporan_Ticket_' . date('YmdHis') . '.xlsx';
+
+    // Return Excel download
+    return Excel::download(new TicketExport($filters), $filename);
     }
 }

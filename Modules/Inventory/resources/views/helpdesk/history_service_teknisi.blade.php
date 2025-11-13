@@ -76,13 +76,27 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
-            // Enable/disable end date based on start date
-            $('#start_date').change(function() {
-                $('#end_date').prop('disabled', !$(this).val());
-                if (!$(this).val()) {
-                    $('#end_date').val('');
-                }
-            });
+            // // Enable/disable end date based on start date
+            // $('#start_date').change(function() {
+            //     $('#end_date').prop('disabled', !$(this).val());
+            //     if (!$(this).val()) {
+            //         $('#end_date').val('');
+            //     }
+            // });
+
+            // // Export button click handler
+            // $('#export-btn').click(function() {
+            //     let url = "{{ route('inventory.helpdesk.ticket.export-service') }}";
+            //     let params = {
+            //         start_date: $('#start_date').val(),
+            //         end_date: $('#end_date').val(),
+            //         jenis_aduan: $('#jenis_aduan').val(),
+            //         ruangan: $('#ruangan').val()
+            //     };
+
+            //     url += '?' + $.param(params);
+            //     window.location.href = url;
+            // });
 
             var table = $('#serviceTable').DataTable({
                 processing: true,
@@ -170,19 +184,41 @@
                 table.draw();
             });
 
-            // Export button click handler
-            $('#export-btn').click(function() {
-                let url = "{{ route('inventory.helpdesk.ticket.epxort-service') }}";
-                let params = {
-                    start_date: $('#start_date').val(),
-                    end_date: $('#end_date').val(),
-                    jenis_aduan: $('#jenis_aduan').val(),
-                    ruangan: $('#ruangan').val()
-                };
+            // Export button handler
+            $('#export-btn').on('click', function() {
+                // Get filter values
+                const startDate = $('#start_date').val();
+                const endDate = $('#end_date').val();
+                const jenisAduan = $('#jenis_aduan').val();
+                const ruangan = $('#ruangan').val();
 
-                url += '?' + $.param(params);
-                window.location.href = url;
+                // Build URL with query parameters
+                let exportUrl = "{{ route('inventory.helpdesk.ticket.export-service') }}";
+                const params = [];
+
+                if (startDate) params.push('start_date=' + startDate);
+                if (endDate) params.push('end_date=' + endDate);
+                if (jenisAduan) params.push('jenis_aduan=' + jenisAduan);
+                if (ruangan) params.push('ruangan=' + ruangan);
+
+                // exportUrl += params.join('&');
+                exportUrl += '?' + $.param(params);
+
+                // Open download in new window
+                window.location.href = exportUrl;
             });
+
+            // Enable end_date only if start_date is selected
+            $('#start_date').on('change', function() {
+                if ($(this).val()) {
+                    $('#end_date').prop('disabled', false);
+                    $('#end_date').attr('min', $(this).val());
+                } else {
+                    $('#end_date').prop('disabled', true);
+                    $('#end_date').val('');
+                }
+            });
+
         });
     </script>
 @endpush

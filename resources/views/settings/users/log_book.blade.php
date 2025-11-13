@@ -10,7 +10,7 @@
 
 @section('content')
     <!-- Filter Section -->
-    @if (auth()->user()->hasRole('superadmin', 'direktur'))
+    @if (auth()->user()->hasAnyRole(['superadmin', 'direktur']))
         <div class="row mb-3">
             <div class="col-md-12">
                 <div class="card">

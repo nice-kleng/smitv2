@@ -46,7 +46,7 @@ class LogBookController extends Controller
                 })
                 ->addColumn('aduan', function ($row) {
                     if ($row->service()->count() > 0) {
-                        return '<a href="javascript:void(0)" class="btn btn-sm btn-info show-service" data-id="' . $row->service_id . '">Lihat</a>';
+                        return '<a href="javascript:void(0)" class="btn btn-sm btn-info show-service" data-id="' . $row->id . '">Lihat</a>';
                     }
                     return '-';
                 })
