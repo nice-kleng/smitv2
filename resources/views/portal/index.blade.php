@@ -20,13 +20,13 @@
 
     <style>
         :root {
-            --portal-primary: #4e73df;
-            --portal-primary-dark: #2e59d9;
-            --portal-gradient-start: #667eea;
-            --portal-gradient-end: #764ba2;
-            --portal-bg: #f0f2f8;
-            --portal-card-shadow: 0 8px 32px rgba(78, 115, 223, 0.08);
-            --portal-card-hover-shadow: 0 16px 48px rgba(78, 115, 223, 0.18);
+            --portal-primary: #10b981;
+            --portal-primary-dark: #059669;
+            --portal-gradient-start: #059669;
+            --portal-gradient-end: #0d9488;
+            --portal-bg: #f0fdf4;
+            --portal-card-shadow: 0 8px 32px rgba(16, 185, 129, 0.08);
+            --portal-card-hover-shadow: 0 16px 48px rgba(16, 185, 129, 0.18);
         }
 
         * {
@@ -116,12 +116,12 @@
         .portal-tabs .nav-link.active {
             background: linear-gradient(135deg, var(--portal-gradient-start), var(--portal-gradient-end));
             color: #fff;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.35);
         }
 
         .portal-tabs .nav-link:hover:not(.active) {
             color: var(--portal-primary);
-            background: rgba(78, 115, 223, 0.06);
+            background: rgba(16, 185, 129, 0.06);
         }
 
         .portal-tabs .badge-count {
@@ -144,7 +144,7 @@
             text-align: center;
             transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             box-shadow: var(--portal-card-shadow);
-            border: 1px solid rgba(78, 115, 223, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.06);
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -190,13 +190,13 @@
         }
 
         .portal-card-icon.icon-internal {
-            background: linear-gradient(135deg, rgba(78, 115, 223, 0.1), rgba(78, 115, 223, 0.05));
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.05));
             color: var(--portal-primary);
         }
 
         .portal-card-icon.icon-external {
-            background: linear-gradient(135deg, rgba(28, 200, 138, 0.1), rgba(28, 200, 138, 0.05));
-            color: #1cc88a;
+            background: linear-gradient(135deg, rgba(13, 148, 136, 0.12), rgba(13, 148, 136, 0.05));
+            color: #0d9488;
         }
 
         .portal-card-icon img {
@@ -231,13 +231,13 @@
         }
 
         .badge-internal {
-            background: rgba(78, 115, 223, 0.1);
+            background: rgba(16, 185, 129, 0.1);
             color: var(--portal-primary);
         }
 
         .badge-external {
-            background: rgba(28, 200, 138, 0.1);
-            color: #1cc88a;
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
         }
 
         .portal-card-actions {
@@ -263,18 +263,18 @@
 
         .btn-open-link:hover {
             color: #fff;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
             transform: translateY(-1px);
         }
 
         .btn-qr {
-            background: rgba(78, 115, 223, 0.08);
-            border: 1px solid rgba(78, 115, 223, 0.15);
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.15);
             color: var(--portal-primary);
         }
 
         .btn-qr:hover {
-            background: rgba(78, 115, 223, 0.15);
+            background: rgba(16, 185, 129, 0.15);
             color: var(--portal-primary-dark);
         }
 
@@ -316,13 +316,13 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             padding: 12px;
             background: #fff;
-            border: 2px solid #f0f2f8;
+            border: 2px solid #d1fae5;
         }
 
         .qr-modal .qr-link-info {
             margin-top: 1rem;
             padding: 0.7rem 1rem;
-            background: #f8f9fc;
+            background: #ecfdf5;
             border-radius: 10px;
             font-size: 0.85rem;
             color: #5a5c69;
@@ -340,13 +340,13 @@
         }
 
         .qr-modal .btn-download-qr:hover {
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
             color: #fff;
         }
 
         /* ===== FOOTER ===== */
         .portal-footer {
-            background: #2d3748;
+            background: #064e3b;
             color: rgba(255, 255, 255, 0.6);
             padding: 1.5rem 0;
             text-align: center;

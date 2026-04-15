@@ -73,6 +73,6 @@ class PortalLink extends Model
      */
     public function getCategoryBadgeAttribute(): string
     {
-        return $this->category === 'internal' ? 'badge-primary' : 'badge-success';
+        return $this->category === 'internal' ? 'badge-success' : 'badge-info';
     }
 }
