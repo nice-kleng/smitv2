@@ -13,7 +13,12 @@ class Stok extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['master_barang_id', 'stok', 'harga', 'keterangan'];
+    protected $fillable = [
+        'master_barang_id',
+        'stok',
+        'harga',
+        'keterangan'
+    ];
 
     // protected static function newFactory(): StokFactory
     // {

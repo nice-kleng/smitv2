@@ -20,7 +20,23 @@ class Permintaan extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['kode_permintaan', 'pu', 'barang_id', 'jumlah', 'jumlah_approve', 'tanggal_permintaan', 'tanggal_approve', 'status', 'keterangan', 'penerima', 'unit_id', 'ruangan_id', 'approve_id', 'created_id', 'updated_id'];
+    protected $fillable = [
+        'kode_permintaan',
+        'pu',
+        'barang_id',
+        'jumlah',
+        'jumlah_approve',
+        'tanggal_permintaan',
+        'tanggal_approve',
+        'status',
+        'keterangan',
+        'penerima',
+        'unit_id',
+        'ruangan_id',
+        'approve_id',
+        'created_id',
+        'updated_id'
+    ];
 
     // protected static function newFactory(): PermintaanFactory
     // {

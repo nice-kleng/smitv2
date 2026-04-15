@@ -18,6 +18,10 @@ class MasterBarang extends Model
      */
     protected $fillable = ['kode_barang', 'nama_barang', 'satuan_id', 'kategori_id', 'pu', 'jenis', 'is_elektronik', 'keterangan'];
 
+    protected $casts = [
+        'is_elektronik' => 'boolean'
+    ];
+
     public function satuan()
     {
         return $this->belongsTo(Satuan::class);
@@ -25,7 +29,7 @@ class MasterBarang extends Model
 
     public function kategori()
     {
-        return $this->belongsTo(KategoriBarang::class);
+        return $this->belongsTo(KategoriBarang::class, 'kategori_id');
     }
 
     public function pengajuan()

@@ -47,4 +47,9 @@ class Pengajuan extends Model
     {
         return $this->belongsTo(User::class, 'updated_id');
     }
+
+    public function transaksi()
+    {
+        return $this->hasMany(Transaksi::class, 'pengajuan_id');
+    }
 }

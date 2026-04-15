@@ -13,7 +13,16 @@ class Transaksi extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['stok_id', 'jumlah', 'keterangan', 'jenis', 'permintaan_id', 'pengajuan_id', 'created_by', 'updated_by'];
+    protected $fillable = [
+        'stok_id',
+        'jumlah',
+        'keterangan',
+        'jenis',
+        'permintaan_id',
+        'pengajuan_id',
+        'created_by',
+        'updated_by'
+    ];
 
     // protected static function newFactory(): TransaksiFactory
     // {
@@ -28,5 +37,10 @@ class Transaksi extends Model
     public function permintaan()
     {
         return $this->belongsTo(Permintaan::class);
+    }
+
+    public function pengajuan()
+    {
+        return $this->belongsTo(Pengajuan::class, 'pengajuan_id');
     }
 }

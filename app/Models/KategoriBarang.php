@@ -22,6 +22,6 @@ class KategoriBarang extends Model
 
     public function masterBarang()
     {
-        return $this->hasMany(MasterBarang::class);
+        return $this->hasMany(MasterBarang::class, 'kategori_id');
     }
 }

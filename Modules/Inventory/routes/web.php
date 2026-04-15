@@ -1,8 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Inventory\Http\Controllers\ClosingStokController;
 use Modules\Inventory\Http\Controllers\InventoryController;
 use Modules\Inventory\Http\Controllers\JenisAduanController;
+use Modules\Inventory\Http\Controllers\LaporanStokController;
 use Modules\Inventory\Http\Controllers\MasterBarangController;
 use Modules\Inventory\Http\Controllers\PengajuanController;
 use Modules\Inventory\Http\Controllers\PermintaanController;
@@ -99,6 +101,33 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
             Route::get('/riwayat-service-teknisi', 'historyServiceTeknisi')->name('ticket.riwayat-service-teknisi');
             Route::get('/export-service', 'exportService')->name('ticket.export-service');
         });
+    });
+
+    // Laporan Stok Routes
+    // Route::prefix('laporan/stok')->name('laporan.stok.')->group(function () {
+    //     Route::get('/', [LaporanStokController::class, 'index'])->name('index');
+    //     Route::get('/preview', [LaporanStokController::class, 'preview'])->name('preview');
+    //     Route::get('/export-excel', [LaporanStokController::class, 'exportExcel'])->name('excel');
+    //     Route::get('/export-pdf', [LaporanStokController::class, 'exportPdf'])->name('pdf');
+    // });
+
+    // Closing Stok Routes
+    Route::prefix('closing')->name('closing.')->group(function () {
+        Route::get('/', [ClosingStokController::class, 'index'])->name('index');
+        Route::get('/create', [ClosingStokController::class, 'create'])->name('create');
+        Route::match(['get', 'post'], '/generate', [ClosingStokController::class, 'generate'])->name('generate');
+        Route::post('/save-draft', [ClosingStokController::class, 'saveDraft'])->name('save-draft');
+        Route::post('/proses-closed', [ClosingStokController::class, 'prosesClosed'])->name('proses-closed');
+        Route::get('/detail/{periode}', [ClosingStokController::class, 'detail'])->name('detail');
+        Route::post('/reopen/{periode}', [ClosingStokController::class, 'reopen'])->name('reopen');
+    });
+
+    // Laporan Stok Routes
+    Route::prefix('laporan/stok')->name('laporan.stok.')->group(function () {
+        Route::get('/', [LaporanStokController::class, 'index'])->name('index');
+        Route::get('/preview', [LaporanStokController::class, 'preview'])->name('preview');
+        Route::get('/export-excel', [LaporanStokController::class, 'exportExcel'])->name('excel');
+        Route::get('/export-pdf', [LaporanStokController::class, 'exportPdf'])->name('pdf');
     });
 });
 

@@ -52,7 +52,7 @@
                                                     <option value="">-- Pilih Stok --</option>
                                                     @foreach ($item->barang->stoks as $stok)
                                                         <option value="{{ $stok->id }}">
-                                                            {{ $stok->stok . '|' . $stok->harga }}
+                                                            {{ $stok->stok . '| Rp.' . $stok->harga }}
                                                         </option>
                                                     @endforeach
                                                 </select>

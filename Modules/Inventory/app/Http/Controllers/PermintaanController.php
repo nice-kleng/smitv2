@@ -442,11 +442,18 @@ class PermintaanController extends Controller
             if (count($conditions) > 1) {
                 $history->where(function ($query) use ($conditions) {
                     foreach ($conditions as $condition) {
-                        $query->orWhere([$condition]);
+                        // $condition is an array like [column, value]
+                        if (is_array($condition) && count($condition) >= 2) {
+                            $query->orWhere($condition[0], $condition[1]);
+                        }
                     }
                 });
             } elseif (count($conditions) === 1) {
-                $history->where($conditions[0]);
+                // single condition: ensure we call where(column, value)
+                $cond = $conditions[0];
+                if (is_array($cond) && count($cond) >= 2) {
+                    $history->where($cond[0], $cond[1]);
+                }
             }
         }
 
