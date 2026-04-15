@@ -8,6 +8,8 @@ use App\Http\Controllers\KategoriBarangController;
 use App\Http\Controllers\LogBookController;
 use App\Http\Controllers\MenuManagementController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PortalController;
+use App\Http\Controllers\PortalLinkController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RuanganController;
@@ -20,6 +22,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('layouts.auth.login');
 })->middleware('guest');
+
+// Portal (Public - No Auth Required)
+Route::get('/portal', [PortalController::class, 'index'])->name('portal.index');
+Route::get('/portal/qr/{portalLink}', [PortalController::class, 'generateQr'])->name('portal.qr');
 
 Route::controller(AuthenticateController::class)->group(function () {
     Route::get('/login', 'login')->name('login');
@@ -85,6 +91,14 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/{permission}', 'update')->name('permission.update');
             Route::delete('/{permission}', 'destroy')->name('permission.destroy');
             Route::post('/generate', 'generateForModule')->name('permission.generate');
+        });
+
+        Route::controller(PortalLinkController::class)->prefix('/portal-links')->group(function () {
+            Route::get('/', 'index')->name('portal-link.index');
+            Route::post('/', 'store')->name('portal-link.store');
+            Route::get('/{id}', 'edit')->name('portal-link.edit');
+            Route::put('/{id}', 'update')->name('portal-link.update');
+            Route::delete('/{id}', 'destroy')->name('portal-link.destroy');
         });
     });
 
