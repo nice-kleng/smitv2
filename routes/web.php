@@ -26,6 +26,8 @@ Route::get('/', function () {
 // Portal (Public - No Auth Required)
 Route::get('/portal', [PortalController::class, 'index'])->name('portal.index');
 Route::get('/portal/qr/{portalLink}', [PortalController::class, 'generateQr'])->name('portal.qr');
+Route::post('/portal/verify-pin', [PortalController::class, 'verifyPin'])->name('portal.verify-pin');
+Route::get('/portal/check-access', [PortalController::class, 'checkAccess'])->name('portal.check-access');
 
 Route::controller(AuthenticateController::class)->group(function () {
     Route::get('/login', 'login')->name('login');

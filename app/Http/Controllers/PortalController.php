@@ -41,4 +41,43 @@ class PortalController extends Controller
             ->header('Content-Type', 'image/png')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
+
+    /**
+     * Verify PIN for external links access (server-side).
+     */
+    public function verifyPin(Request $request)
+    {
+        $request->validate(['pin' => 'required|string']);
+
+        $correctPin = config('portal.external_pin', 'amalsholeh009');
+
+        if ($request->pin === $correctPin) {
+            session([
+                'portal_external_unlocked' => true,
+                'portal_external_unlocked_at' => now()->timestamp
+            ]);
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'PIN salah'], 422);
+    }
+
+    /**
+     * Check if external access is unlocked.
+     */
+    public function checkAccess()
+    {
+        $unlocked = session('portal_external_unlocked', false);
+        $unlockedAt = session('portal_external_unlocked_at', 0);
+        $timeout = 5 * 60; // 5 minutes in seconds
+
+        if ($unlocked && (now()->timestamp - $unlockedAt) > $timeout) {
+            session()->forget(['portal_external_unlocked', 'portal_external_unlocked_at']);
+            $unlocked = false;
+        }
+
+        return response()->json([
+            'unlocked' => $unlocked
+        ]);
+    }
 }

@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Portal Link SIMIT RSI Jombang - Kumpulan link aplikasi dan layanan">
     <meta name="author" content="IT RSI Jombang">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>Portal SIMIT RSI Jombang</title>
 
@@ -490,19 +491,14 @@
         <div class="portal-tabs text-center">
             <ul class="nav nav-pills" id="portalTabs" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link active" data-filter="all" href="javascript:void(0)">
-                        <i class="fas fa-th-large mr-1"></i> Semua
-                        <span class="badge badge-light badge-count">{{ $links->count() }}</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-filter="internal" href="javascript:void(0)">
+                    <a class="nav-link" data-filter="internal" href="javascript:void(0)" id="tabInternal">
                         <i class="fas fa-building mr-1"></i> Internal
                         <span class="badge badge-light badge-count">{{ $internalLinks->count() }}</span>
+                        <i class="fas fa-lock ml-1" id="lockIcon" style="font-size:0.7rem;"></i>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-filter="external" href="javascript:void(0)">
+                    <a class="nav-link active" data-filter="external" href="javascript:void(0)">
                         <i class="fas fa-external-link-alt mr-1"></i> External
                         <span class="badge badge-light badge-count">{{ $externalLinks->count() }}</span>
                     </a>
@@ -620,12 +616,63 @@
         </div>
     </footer>
 
+    {{-- ===== PIN MODAL ===== --}}
+    <div class="modal fade" id="pinModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content" style="border-radius:16px; border:none; overflow:hidden;">
+                <div class="modal-header" style="background:linear-gradient(135deg, var(--portal-gradient-start), var(--portal-gradient-end)); border:none; padding:1.2rem 1.5rem;">
+                    <h5 class="modal-title text-white" style="font-weight:700;">
+                        <i class="fas fa-shield-alt mr-2"></i> Akses Internal
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" id="pinModalClose">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="mb-3">
+                        <div style="width:60px;height:60px;border-radius:50%;background:rgba(16,185,129,0.1);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.8rem;">
+                            <i class="fas fa-key" style="font-size:1.5rem;color:var(--portal-primary);"></i>
+                        </div>
+                        <p class="text-muted mb-0" style="font-size:0.85rem;">Masukkan PIN untuk mengakses<br>link <strong>Internal</strong></p>
+                    </div>
+                    <form id="pinForm">
+                        <div class="form-group mb-3">
+                            <input type="password" class="form-control text-center" id="pinInput"
+                                placeholder="Masukkan PIN" maxlength="20"
+                                style="border-radius:10px; font-size:1.1rem; letter-spacing:3px; padding:0.7rem; border:2px solid #e2e8f0;"
+                                autofocus>
+                            <div id="pinError" class="text-danger mt-2" style="font-size:0.8rem; display:none;">
+                                <i class="fas fa-times-circle mr-1"></i> PIN salah, silakan coba lagi.
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-block" style="background:linear-gradient(135deg, var(--portal-gradient-start), var(--portal-gradient-end)); color:#fff; border:none; border-radius:10px; padding:0.6rem; font-weight:600;">
+                            <i class="fas fa-unlock-alt mr-1"></i> Buka Akses
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="{{ asset('assets/vendor/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
     <script>
         $(document).ready(function() {
+            var internalUnlocked = false;
+
+            // Check initial access status from server
+            $.get("{{ route('portal.check-access') }}", function(res) {
+                internalUnlocked = res.unlocked;
+                if (internalUnlocked) {
+                    $('#lockIcon').removeClass('fa-lock').addClass('fa-lock-open');
+                }
+            });
+
+            // On page load, show only external links (default)
+            filterCards('external', '');
+
             // ===== QR Modal =====
             $('#qrModal').on('show.bs.modal', function(event) {
                 var button = $(event.relatedTarget);
@@ -638,7 +685,6 @@
                 $('#qrLoading').show();
                 $('#qrImage').hide();
 
-                // Load QR image
                 var img = new Image();
                 img.onload = function() {
                     $('#qrImage').attr('src', qrUrl).show();
@@ -654,11 +700,79 @@
 
             // ===== Tab Filter =====
             $('.portal-tabs .nav-link').on('click', function() {
-                $('.portal-tabs .nav-link').removeClass('active');
-                $(this).addClass('active');
+                var btn = $(this);
+                var filter = btn.data('filter');
 
-                var filter = $(this).data('filter');
+                if (filter === 'internal') {
+                    // Always check current status with server for Internal tab
+                    $.get("{{ route('portal.check-access') }}", function(res) {
+                        internalUnlocked = res.unlocked;
+
+                        if (!internalUnlocked) {
+                            $('#lockIcon').removeClass('fa-lock-open').addClass('fa-lock');
+                            $('#pinInput').val('');
+                            $('#pinError').hide();
+                            $('#pinModal').modal('show');
+                            setTimeout(function() { $('#pinInput').focus(); }, 500);
+                        } else {
+                            $('#lockIcon').removeClass('fa-lock').addClass('fa-lock-open');
+                            switchTab(btn, filter);
+                        }
+                    });
+                    return;
+                }
+
+                switchTab(btn, filter);
+            });
+
+            function switchTab(btn, filter) {
+                $('.portal-tabs .nav-link').removeClass('active');
+                btn.addClass('active');
                 filterCards(filter, $('#searchInput').val().toLowerCase());
+            }
+
+            // ===== PIN Form =====
+            $('#pinForm').on('submit', function(e) {
+                e.preventDefault();
+                var pin = $('#pinInput').val();
+
+                $.ajax({
+                    url: "{{ route('portal.verify-pin') }}",
+                    method: 'POST',
+                    data: {
+                        pin: pin,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(res) {
+                        internalUnlocked = true;
+                        $('#pinModal').modal('hide');
+                        $('#lockIcon').removeClass('fa-lock').addClass('fa-lock-open');
+
+                        // Switch to internal tab
+                        $('.portal-tabs .nav-link').removeClass('active');
+                        $('#tabInternal').addClass('active');
+                        filterCards('internal', $('#searchInput').val().toLowerCase());
+                    },
+                    error: function(xhr) {
+                        $('#pinError').show();
+                        $('#pinInput').val('').focus();
+                        $('#pinInput').css('border-color', '#e74a3b');
+                        setTimeout(function() {
+                            $('#pinInput').css('border-color', '#e2e8f0');
+                        }, 1500);
+                    }
+                });
+            });
+
+            // When PIN modal is dismissed, stay on current tab
+            $('#pinModalClose').on('click', function() {
+                // Return to external tab visually if we were trying to access internal and it's still locked
+                if (!internalUnlocked) {
+                    $('.portal-tabs .nav-link').removeClass('active');
+                    $('.portal-tabs .nav-link[data-filter="external"]').addClass('active');
+                    filterCards('external', $('#searchInput').val().toLowerCase());
+                }
+                $('#pinModal').modal('hide');
             });
 
             // ===== Search =====
@@ -673,7 +787,7 @@
                     var itemCategory = $(this).data('category');
                     var itemTitle = $(this).data('title');
 
-                    var categoryMatch = (category === 'all') || (itemCategory === category);
+                    var categoryMatch = (itemCategory === category);
                     var searchMatch = !search || itemTitle.indexOf(search) !== -1;
 
                     if (categoryMatch && searchMatch) {
