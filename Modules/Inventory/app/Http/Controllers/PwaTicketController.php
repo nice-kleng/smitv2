@@ -19,7 +19,7 @@ class PwaTicketController extends Controller
 
     public function show(string $id)
     {
-        $ticket = Ticket::with(['ruangan.unit', 'jenisAduan', 'teknisi'])
+        $ticket = Ticket::with(['ruangan.unit', 'jenisAduan', 'teknisi', 'inventaris'])
             ->findOrFail($id);
 
         return view('inventory::pwa.pengaduan.show', compact('ticket'));

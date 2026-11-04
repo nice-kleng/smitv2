@@ -27,6 +27,7 @@
                             <div class="flex items-center justify-between gap-2">
                                 <span class="truncate font-mono text-sm font-bold" translate="no">{{ $ticket->kd_ticket }}</span>
                                 <span class="shrink-0 rounded-full bg-brand/10 px-2 py-0.5 text-xs font-semibold text-brand">Menunggu</span>
+                                <span class="shrink-0 text-muted" aria-hidden="true">›</span>
                             </div>
                             <p class="truncate text-sm text-muted">{{ $unit }} / {{ $room }}</p>
                             <p class="line-clamp-1 text-sm text-ink">{{ $ticket->detail_aduan }}</p>
