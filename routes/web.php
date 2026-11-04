@@ -11,6 +11,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PortalLinkController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\SatuanController;
@@ -34,6 +35,10 @@ Route::controller(AuthenticateController::class)->group(function () {
     Route::post('/login', 'authenticate')->name('authenticate');
     Route::post('/logout', 'logout')->name('logout');
 });
+
+Route::middleware(['auth', 'permission:manage-data-pengaduan'])
+    ->post('/push/subscription', [PushSubscriptionController::class, 'store'])
+    ->name('push.subscription.store');
 
 Route::middleware(['auth'])->group(function () {
     Route::controller(DashboardController::class)->group(function () {
