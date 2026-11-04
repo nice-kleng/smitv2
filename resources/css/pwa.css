@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        color-scheme: light;
+    }
+
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-paper text-ink antialiased;
+    }
+
+    :focus-visible {
+        outline: 2px solid #C8102E;
+        outline-offset: 2px;
+    }
+
+    a, button, input, select, textarea {
+        @apply touch-manipulation;
+    }
+}
+
+@layer components {
+    .pwa-shell {
+        @apply mx-auto w-full max-w-[560px] px-4;
+    }
+
+    .pwa-card {
+        @apply rounded-xl border border-line bg-surface;
+    }
+
+    .pwa-label {
+        @apply mb-2 block text-[13px] font-semibold text-ink;
+    }
+
+    .pwa-input {
+        @apply block min-h-12 w-full rounded-[10px] border border-line-strong bg-surface px-3 py-3 text-base text-ink placeholder:text-muted focus-visible:border-brand;
+    }
+
+    .pwa-button {
+        @apply inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-brand px-5 text-base font-bold text-white transition-colors duration-150 hover:bg-brand-deep active:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none;
+    }
+
+    .pwa-button-secondary {
+        @apply inline-flex min-h-11 items-center justify-center rounded-[10px] border border-line-strong bg-surface px-4 text-sm font-semibold text-ink;
+    }
+
+    .pwa-muted {
+        @apply text-sm text-muted;
+    }
+
+    .pwa-error {
+        @apply mt-1 text-sm font-medium text-danger;
+    }
+}
