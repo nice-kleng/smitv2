@@ -133,3 +133,93 @@ if (actionForm) {
         }
     });
 }
+
+const pushControl = document.getElementById('push-control');
+if (pushControl) {
+    const vapidKey = document.querySelector('meta[name="vapid-public-key"]')?.content;
+    const enablePush = document.getElementById('enable-push');
+    const pushHelp = document.getElementById('push-help');
+    const toast = document.getElementById('toast');
+    const supported = 'serviceWorker' in navigator
+        && 'PushManager' in window
+        && 'Notification' in window;
+
+    const showToast = (message) => {
+        if (!toast) return;
+        toast.textContent = message;
+        toast.hidden = false;
+    };
+
+    const urlBase64ToUint8Array = (value) => {
+        const padding = '='.repeat((4 - (value.length % 4)) % 4);
+        const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const raw = atob(base64);
+        return Uint8Array.from([...raw].map((character) => character.charCodeAt(0)));
+    };
+
+    const saveSubscription = async (subscription) => {
+        const key = subscription.getKey('p256dh');
+        const auth = subscription.getKey('auth');
+        const response = await fetch('/push/subscription', {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({
+                endpoint: subscription.endpoint,
+                keys: {
+                    p256dh: btoa(String.fromCharCode(...new Uint8Array(key))),
+                    auth: btoa(String.fromCharCode(...new Uint8Array(auth))),
+                },
+                contentEncoding: 'aes128gcm',
+            }),
+        });
+
+        if (!response.ok) throw new Error('subscription rejected');
+    };
+
+    const subscribe = async () => {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        const existing = await registration.pushManager.getSubscription();
+        if (existing) {
+            await saveSubscription(existing);
+            return;
+        }
+
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(vapidKey),
+        });
+        await saveSubscription(subscription);
+    };
+
+    if (!supported || !vapidKey) {
+        pushControl.hidden = true;
+    } else if (Notification.permission === 'granted') {
+        subscribe().catch(() => showToast('Notifikasi belum aktif. Coba lagi.'));
+    } else if (Notification.permission === 'default') {
+        pushControl.hidden = false;
+        enablePush.hidden = false;
+        enablePush.addEventListener('click', async () => {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                enablePush.hidden = true;
+                try {
+                    await subscribe();
+                    showToast('Notifikasi aktif.');
+                } catch (error) {
+                    showToast('Notifikasi belum aktif. Coba lagi.');
+                }
+            } else {
+                enablePush.hidden = true;
+                pushHelp.hidden = false;
+            }
+        });
+    } else {
+        pushControl.hidden = false;
+        enablePush.hidden = true;
+        pushHelp.hidden = false;
+    }
+}
