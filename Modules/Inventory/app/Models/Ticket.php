@@ -49,6 +49,10 @@ class Ticket extends Model
 
         return Attribute::make(
             get: function ($value) use ($keteranganPerbaikan) {
+                if ($value === null) {
+                    return '-';
+                }
+
                 return $keteranganPerbaikan[$value] ?? '-';
             },
         );

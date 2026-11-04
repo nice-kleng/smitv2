@@ -23,12 +23,12 @@
     <header class="sticky top-0 z-40 bg-paper/95 backdrop-blur" style="padding-top: env(safe-area-inset-top);">
         <div class="pwa-shell flex h-14 items-center gap-3">
             @hasSection('back')
-                <a href="@yield('back')" aria-label="Kembali" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-surface text-ink">←</a>
+                <a href="@yield('back')" aria-label="Kembali" class="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-line bg-surface text-ink">←</a>
             @else
                 <img src="{{ asset('img/logo.png') }}" width="32" height="32" alt="Logo">
             @endif
             <h1 class="truncate text-base font-bold">@yield('topbar-title', 'Helpdesk')</h1>
-            <button id="menu-button" type="button" aria-label="Buka menu" aria-haspopup="dialog" aria-controls="menu-sheet" aria-expanded="false" class="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-surface text-ink">☰</button>
+            <button id="menu-button" type="button" aria-label="Buka menu" aria-haspopup="dialog" aria-controls="menu-sheet" aria-expanded="false" class="ml-auto inline-flex h-11 w-11 items-center justify-center rounded-lg border border-line bg-surface text-ink">☰</button>
         </div>
     </header>
 
@@ -39,7 +39,7 @@
     <dialog id="menu-sheet" aria-labelledby="menu-title" class="max-h-[85vh] w-full max-w-md rounded-t-2xl p-0 overscroll-contain">
         <div class="flex items-center justify-between border-b border-line px-4 py-3">
             <h2 id="menu-title" class="text-base font-bold">Menu</h2>
-            <button id="menu-close" type="button" aria-label="Tutup menu" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-surface">✕</button>
+            <button id="menu-close" type="button" aria-label="Tutup menu" class="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-line bg-surface">✕</button>
         </div>
         <div class="space-y-3 p-4">
             @if(auth()->user()->hasRole('teknisi'))

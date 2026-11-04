@@ -76,3 +76,9 @@ it('returns a safe label for an unknown repair code', function () {
 
     expect($ticket->keterangan_perbaikan)->toBe('-');
 });
+
+it('returns a dash for null repair codes', function () {
+    $ticket = Ticket::make(['keterangan_perbaikan' => null]);
+
+    expect($ticket->keterangan_perbaikan)->toBe('-');
+});

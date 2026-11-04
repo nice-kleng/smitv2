@@ -12,16 +12,20 @@ class SendTicketCreatedPush
     public function handle(TicketCreated $event): void
     {
         defer(function () use ($event) {
-            $recipients = User::role('teknisi')
-                ->whereHas('pushSubscriptions')
-                ->get();
+            try {
+                $recipients = User::role('teknisi')
+                    ->whereHas('pushSubscriptions')
+                    ->get();
 
-            foreach ($recipients as $user) {
-                try {
-                    Notification::send($user, new TicketCreatedNotification($event->ticket));
-                } catch (\Throwable $e) {
-                    report($e);
+                foreach ($recipients as $user) {
+                    try {
+                        Notification::send($user, new TicketCreatedNotification($event->ticket));
+                    } catch (\Throwable $e) {
+                        report($e);
+                    }
                 }
+            } catch (\Throwable $e) {
+                report($e);
             }
         });
     }
