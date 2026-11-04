@@ -367,25 +367,12 @@
         </script>
     @endif
 
-    @if (auth()->user()->pu_kd === 'it')
+    @if (auth()->user()->hasRole('teknisi'))
         <script type="module">
             window.Echo.channel('ticket')
                 .listen('.ticket.created', (e) => {
-                    // Cek apakah browser mendukung notifikasi
-                    if ('Notification' in window) {
-                        if (Notification.permission === 'default') {
-                            Notification.requestPermission().then(permission => {
-                                if (permission === 'granted') {
-                                    console.log('test');
-                                    showNotification(e);
-                                }
-                            });
-                        } else if (Notification.permission === 'granted') {
-                            showNotification(e);
-                        }
-                    }
                     var audio = new Audio("{{ asset('/notification.wav') }}");
-                    audio.play();
+                    audio.play().catch(() => {});
                     if (typeof toastr !== 'undefined') {
                         toastr.success(e.message, 'Notifikasi Baru');
                     }
@@ -397,27 +384,6 @@
                         toastr.error('Gagal terhubung ke sistem notifikasi', 'Error');
                     }
                 });
-
-            // Fungsi untuk menampilkan notifikasi
-            function showNotification(e) {
-                const notificationOptions = {
-                    body: e.message || 'Pengaduan baru telah dibuat',
-                    icon: '/favicon.ico',
-                    tag: 'ticket-notification',
-                    requireInteraction: true
-                };
-
-                const notification = new Notification('Pengaduan Baru', notificationOptions);
-
-                // Optional: Handle notification click
-                notification.onclick = function(event) {
-                    event.preventDefault();
-                    window.focus(); // Fokus ke window aplikasi
-                    // Optional: Navigate to ticket page
-                    // window.location.href = '/tickets';
-                    notification.close();
-                };
-            }
         </script>
     @endif
 
