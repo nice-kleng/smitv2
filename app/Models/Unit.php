@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Modules\Inventory\Models\MasterBarang;
 use Modules\Inventory\Models\Pengajuan;
 use Modules\Inventory\Models\Permintaan;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Unit extends Model
 {
     use LogsActivity;
+
     protected $fillable = ['kode_unit', 'nama_unit'];
 
     public function getActivitylogOptions(): LogOptions

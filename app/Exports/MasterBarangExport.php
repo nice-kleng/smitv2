@@ -4,18 +4,18 @@ namespace App\Exports;
 
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Modules\Inventory\Models\MasterBarang;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class MasterBarangExport implements FromCollection, WithHeadings, WithMapping, WithTitle, WithStyles, ShouldAutoSize
+class MasterBarangExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     public function collection()
     {
@@ -49,7 +49,7 @@ class MasterBarangExport implements FromCollection, WithHeadings, WithMapping, W
             $row->kategori->nama_kategori ?? '-',
             $row->jenis ? 'Inventaris' : 'BHP',
             $row->is_elektronik ? 'Ya' : 'Tidak',
-            $row->keterangan ?? '-'
+            $row->keterangan ?? '-',
         ];
     }
 
@@ -65,20 +65,20 @@ class MasterBarangExport implements FromCollection, WithHeadings, WithMapping, W
                 'font' => ['bold' => true],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '4682B4'] // Steel Blue color
+                    'startColor' => ['rgb' => '4682B4'], // Steel Blue color
                 ],
                 'font' => [
-                    'color' => ['rgb' => 'FFFFFF']
+                    'color' => ['rgb' => 'FFFFFF'],
                 ],
             ],
-            'A1:G' . $sheet->getHighestRow() => [
+            'A1:G'.$sheet->getHighestRow() => [
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
                     ],
                 ],
                 'alignment' => [
-                    'vertical' => Alignment::VERTICAL_CENTER
+                    'vertical' => Alignment::VERTICAL_CENTER,
                 ],
             ],
         ];

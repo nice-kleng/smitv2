@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Models\Jadwal;
 use App\Models\JadwalDetail;
-use App\Models\User;
 use App\Models\Shift;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +16,7 @@ class ScheduleService
     {
         try {
             // Validasi input
-            if (empty($staffSchedules) || !is_array($staffSchedules)) {
+            if (empty($staffSchedules) || ! is_array($staffSchedules)) {
                 throw new \Exception('Harap pilih staff dan tentukan shift untuk masing-masing staff');
             }
 
@@ -25,11 +25,11 @@ class ScheduleService
             foreach ($staffSchedules as $schedule) {
                 if (
                     isset($schedule['user_id']) && isset($schedule['shift_id']) &&
-                    !empty($schedule['user_id']) && !empty($schedule['shift_id'])
+                    ! empty($schedule['user_id']) && ! empty($schedule['shift_id'])
                 ) {
                     $cleanedSchedules[] = [
                         'user_id' => (int) $schedule['user_id'],
-                        'shift_id' => (int) $schedule['shift_id']
+                        'shift_id' => (int) $schedule['shift_id'],
                     ];
                 }
             }
@@ -69,7 +69,7 @@ class ScheduleService
                 throw new \Exception('Format tanggal mulai tidak valid');
             }
 
-            if (!is_numeric($months) || $months < 1 || $months > 12) {
+            if (! is_numeric($months) || $months < 1 || $months > 12) {
                 throw new \Exception('Durasi bulan harus antara 1-12');
             }
 
@@ -79,7 +79,7 @@ class ScheduleService
                 'start_date' => $startDate->format('Y-m-d'),
                 'end_date' => $endDate->format('Y-m-d'),
                 'months' => $months,
-                'staff_count' => count($cleanedSchedules)
+                'staff_count' => count($cleanedSchedules),
             ]);
 
             $schedules = [];
@@ -91,7 +91,7 @@ class ScheduleService
             foreach ($cleanedSchedules as $schedule) {
                 $staffShiftMapping[] = [
                     'user_id' => $schedule['user_id'],
-                    'shift_id' => $schedule['shift_id']
+                    'shift_id' => $schedule['shift_id'],
                 ];
             }
 
@@ -196,11 +196,11 @@ class ScheduleService
                     Log::info('Processing week with work days', [
                         'week_start' => $currentWeek->format('Y-m-d'),
                         'shift_id' => $shift->id,
-                        'work_days' => $workDays
+                        'work_days' => $workDays,
                     ]);
 
                     // Create temporary Jadwal instance to use calculateWeekEndBasedOnWorkDays
-                    $tempJadwal = new Jadwal();
+                    $tempJadwal = new Jadwal;
                     $weekEnd = $tempJadwal->calculateWeekEndBasedOnWorkDays($currentWeek, $workDays);
 
                     $weekSchedules = [];
@@ -238,7 +238,7 @@ class ScheduleService
                             ->where('start_date', '<=', $shiftWeekEnd->format('Y-m-d'))
                             ->first();
 
-                        if (!$existingSchedule) {
+                        if (! $existingSchedule) {
                             // Create schedule record with correct end date
                             $jadwalRecord = Jadwal::create([
                                 'user_id' => $userId,
@@ -247,7 +247,7 @@ class ScheduleService
                                 'end_date' => $shiftWeekEnd->format('Y-m-d'), // Use shift-specific end date
                                 'week_number' => $currentWeek->weekOfYear,
                                 'year' => $currentWeek->year,
-                                'status' => 'active'
+                                'status' => 'active',
                             ]);
 
                             // Generate daily schedule details
@@ -259,7 +259,7 @@ class ScheduleService
                                 'week_start' => $currentWeek->format('Y-m-d'),
                                 'week_end' => $shiftWeekEnd->format('Y-m-d'),
                                 'work_days' => $currentWorkDays,
-                                'details_count' => $jadwalRecord->scheduleDetails()->count()
+                                'details_count' => $jadwalRecord->scheduleDetails()->count(),
                             ]);
                         }
 
@@ -267,14 +267,14 @@ class ScheduleService
                             'user_id' => $userId,
                             'user_name' => $staff[$userId]->name,
                             'shift_id' => $shiftId,
-                            'shift_name' => $shifts[$shiftId]->name
+                            'shift_name' => $shifts[$shiftId]->name,
                         ];
                     }
 
                     $schedules[] = [
                         'week' => $currentWeek->format('Y-m-d'),
                         'week_number' => $weekCounter + 1,
-                        'schedules' => $weekSchedules
+                        'schedules' => $weekSchedules,
                     ];
 
                     // Rotate shifts for next week using improved logic
@@ -289,7 +289,7 @@ class ScheduleService
         } catch (\Exception $e) {
             Log::error('Error in generateScheduleForMonths', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
             throw $e;
         }
@@ -304,8 +304,8 @@ class ScheduleService
             // Delete existing details first
             $jadwal->scheduleDetails()->delete();
 
-            if (!$jadwal->shift) {
-                throw new \Exception('Shift tidak ditemukan untuk jadwal ID: ' . $jadwal->id);
+            if (! $jadwal->shift) {
+                throw new \Exception('Shift tidak ditemukan untuk jadwal ID: '.$jadwal->id);
             }
 
             $startDate = Carbon::parse($jadwal->start_date);
@@ -320,7 +320,7 @@ class ScheduleService
                 3 => 'wednesday',
                 4 => 'thursday',
                 5 => 'friday',
-                6 => 'saturday'
+                6 => 'saturday',
             ];
 
             while ($currentDate->lte($endDate)) {
@@ -335,7 +335,7 @@ class ScheduleService
                     'actual_start_time' => null,
                     'actual_end_time' => null,
                     'attendance_status' => 'scheduled',
-                    'notes' => null
+                    'notes' => null,
                 ]);
 
                 $details[] = $detail;
@@ -343,7 +343,7 @@ class ScheduleService
                 Log::debug('Created schedule detail', [
                     'schedule_id' => $jadwal->id,
                     'work_date' => $currentDate->format('Y-m-d'),
-                    'day_name' => $dayName
+                    'day_name' => $dayName,
                 ]);
 
                 $currentDate->addDay();
@@ -354,7 +354,7 @@ class ScheduleService
                 'user_id' => $jadwal->user_id,
                 'details_count' => count($details),
                 'start_date' => $startDate->format('Y-m-d'),
-                'end_date' => $endDate->format('Y-m-d')
+                'end_date' => $endDate->format('Y-m-d'),
             ]);
 
             return $details;
@@ -362,10 +362,10 @@ class ScheduleService
             Log::error('Error generating daily schedule details', [
                 'jadwal_id' => $jadwal->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            throw new \Exception('Gagal membuat detail jadwal harian: ' . $e->getMessage());
+            throw new \Exception('Gagal membuat detail jadwal harian: '.$e->getMessage());
         }
     }
 
@@ -391,7 +391,7 @@ class ScheduleService
         foreach ($currentMapping as $index => $mapping) {
             $newMapping[] = [
                 'user_id' => $mapping['user_id'],
-                'shift_id' => $shiftIds[$index]
+                'shift_id' => $shiftIds[$index],
             ];
         }
 
@@ -419,9 +419,9 @@ class ScheduleService
             Log::error('Error getting schedule by date range', [
                 'start_date' => $startDate,
                 'end_date' => $endDate,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            throw new \Exception('Gagal mengambil data jadwal: ' . $e->getMessage());
+            throw new \Exception('Gagal mengambil data jadwal: '.$e->getMessage());
         }
     }
 
@@ -445,9 +445,9 @@ class ScheduleService
             Log::error('Error getting daily schedule', [
                 'date' => $date,
                 'user_id' => $userId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            throw new \Exception('Gagal mengambil jadwal harian: ' . $e->getMessage());
+            throw new \Exception('Gagal mengambil jadwal harian: '.$e->getMessage());
         }
     }
 
@@ -476,7 +476,7 @@ class ScheduleService
                 'detail_id' => $detailId,
                 'check_in' => $checkInTime,
                 'check_out' => $checkOutTime,
-                'status' => $detail->attendance_status
+                'status' => $detail->attendance_status,
             ]);
 
             return $detail;
@@ -484,9 +484,9 @@ class ScheduleService
             Log::error('Error updating attendance', [
                 'detail_id' => $detailId,
                 'log_service' => true,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            throw new \Exception('Gagal memperbarui kehadiran: ' . $e->getMessage());
+            throw new \Exception('Gagal memperbarui kehadiran: '.$e->getMessage());
         }
     }
 
@@ -505,8 +505,9 @@ class ScheduleService
     {
         $errors = [];
 
-        if (empty($staffSchedules) || !is_array($staffSchedules)) {
+        if (empty($staffSchedules) || ! is_array($staffSchedules)) {
             $errors[] = 'Harap pilih minimal satu staff untuk dijadwalkan';
+
             return $errors;
         }
 
@@ -515,7 +516,7 @@ class ScheduleService
         foreach ($staffSchedules as $schedule) {
             if (
                 isset($schedule['user_id']) && isset($schedule['shift_id']) &&
-                !empty($schedule['user_id']) && !empty($schedule['shift_id'])
+                ! empty($schedule['user_id']) && ! empty($schedule['shift_id'])
             ) {
                 $validSchedules[] = $schedule;
             }
@@ -523,6 +524,7 @@ class ScheduleService
 
         if (empty($validSchedules)) {
             $errors[] = 'Tidak ada data staff dan shift yang valid';
+
             return $errors;
         }
 
@@ -579,10 +581,10 @@ class ScheduleService
             // Prepare initial mapping
             $staffShiftMapping = [];
             foreach ($staffSchedules as $schedule) {
-                if (!empty($schedule['user_id']) && !empty($schedule['shift_id'])) {
+                if (! empty($schedule['user_id']) && ! empty($schedule['shift_id'])) {
                     $staffShiftMapping[] = [
                         'user_id' => (int) $schedule['user_id'],
-                        'shift_id' => (int) $schedule['shift_id']
+                        'shift_id' => (int) $schedule['shift_id'],
                     ];
                 }
             }
@@ -601,7 +603,7 @@ class ScheduleService
                             'user_id' => $userId,
                             'user_name' => $staff[$userId]->name,
                             'shift_id' => $shiftId,
-                            'shift_name' => $shifts[$shiftId]->name
+                            'shift_name' => $shifts[$shiftId]->name,
                         ];
 
                         // Generate daily preview
@@ -616,13 +618,13 @@ class ScheduleService
                                 3 => 'Rabu',
                                 4 => 'Kamis',
                                 5 => 'Jumat',
-                                6 => 'Sabtu'
+                                6 => 'Sabtu',
                             ];
 
                             $userDailyDetails[] = [
                                 'date' => $currentDate->format('Y-m-d'),
                                 'day_name' => $dayNames[$currentDate->dayOfWeek],
-                                'shift_time' => $shifts[$shiftId]->start_time . ' - ' . $shifts[$shiftId]->end_time
+                                'shift_time' => $shifts[$shiftId]->start_time.' - '.$shifts[$shiftId]->end_time,
                             ];
 
                             $currentDate->addDay();
@@ -637,7 +639,7 @@ class ScheduleService
                     'week_end' => $weekEnd->format('Y-m-d'),
                     'week_number' => $i + 1,
                     'schedules' => $weekSchedules,
-                    'daily_details' => $dailyDetails
+                    'daily_details' => $dailyDetails,
                 ];
 
                 // Rotate for next week
@@ -648,8 +650,9 @@ class ScheduleService
             return $preview;
         } catch (\Exception $e) {
             Log::error('Error in preview schedule rotation', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -678,7 +681,7 @@ class ScheduleService
                 'late' => $details->where('attendance_status', 'late')->count(),
                 'early_leave' => $details->where('attendance_status', 'early_leave')->count(),
                 'overtime' => $details->where('attendance_status', 'overtime')->count(),
-                'attendance_rate' => 0
+                'attendance_rate' => 0,
             ];
 
             if ($summary['total_scheduled'] > 0) {
@@ -692,9 +695,9 @@ class ScheduleService
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'user_id' => $userId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            throw new \Exception('Gagal mengambil ringkasan kehadiran: ' . $e->getMessage());
+            throw new \Exception('Gagal mengambil ringkasan kehadiran: '.$e->getMessage());
         }
     }
 
@@ -709,12 +712,12 @@ class ScheduleService
             $updated = [];
 
             foreach ($updates as $update) {
-                if (!isset($update['detail_id'])) {
+                if (! isset($update['detail_id'])) {
                     continue;
                 }
 
                 $detail = JadwalDetail::find($update['detail_id']);
-                if (!$detail) {
+                if (! $detail) {
                     continue;
                 }
 
@@ -742,7 +745,7 @@ class ScheduleService
             DB::commit();
 
             Log::info('Bulk updated schedule details', [
-                'count' => count($updated)
+                'count' => count($updated),
             ]);
 
             return $updated;
@@ -750,10 +753,10 @@ class ScheduleService
             DB::rollback();
 
             Log::error('Error in bulk update schedule details', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
-            throw new \Exception('Gagal memperbarui detail jadwal secara massal: ' . $e->getMessage());
+            throw new \Exception('Gagal memperbarui detail jadwal secara massal: '.$e->getMessage());
         }
     }
 
@@ -778,7 +781,7 @@ class ScheduleService
 
             Log::info('Deleted schedule with details', [
                 'jadwal_id' => $jadwalId,
-                'details_deleted' => $detailsCount
+                'details_deleted' => $detailsCount,
             ]);
 
             return true;
@@ -787,10 +790,10 @@ class ScheduleService
 
             Log::error('Error deleting schedule with details', [
                 'jadwal_id' => $jadwalId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
-            throw new \Exception('Gagal menghapus jadwal dan detailnya: ' . $e->getMessage());
+            throw new \Exception('Gagal menghapus jadwal dan detailnya: '.$e->getMessage());
         }
     }
 }

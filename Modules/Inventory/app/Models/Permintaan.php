@@ -5,8 +5,8 @@ namespace Modules\Inventory\Models;
 use App\Models\Ruangan;
 use App\Models\Unit;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -15,7 +15,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Permintaan extends Model
 {
     use HasFactory, LogsActivity;
-
 
     /**
      * The attributes that are mass assignable.
@@ -35,7 +34,7 @@ class Permintaan extends Model
         'ruangan_id',
         'approve_id',
         'created_id',
-        'updated_id'
+        'updated_id',
     ];
 
     // protected static function newFactory(): PermintaanFactory

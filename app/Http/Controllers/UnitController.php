@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Ruangan;
 use App\Models\Unit;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
-use Illuminate\Http\JsonResponse;
 
 class UnitController extends Controller
 {
@@ -18,11 +17,13 @@ class UnitController extends Controller
         $this->authorize('viewAny');
         if ($request->ajax()) {
             $data = Unit::orderBy('nama_unit', 'asc')->get();
+
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-edit" data-id="' . $row->id . '"><i class="fa fa-edit"></i></a>';
-                    $btn .= '<a href="javascript:void(0)" class="btn btn-danger btn-delete" data-id="' . $row->id . '"><i class="fa fa-trash"></i></a>';
+                    $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-edit" data-id="'.$row->id.'"><i class="fa fa-edit"></i></a>';
+                    $btn .= '<a href="javascript:void(0)" class="btn btn-danger btn-delete" data-id="'.$row->id.'"><i class="fa fa-trash"></i></a>';
+
                     return $btn;
                 })
                 ->rawColumns(['action'])
@@ -73,6 +74,7 @@ class UnitController extends Controller
         // return response()->json($unit);
         try {
             $this->authorize('update', $unit);
+
             return response()->json($unit);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'message' => 'Unit tidak ditemukan', 'status' => 500]);
@@ -86,7 +88,7 @@ class UnitController extends Controller
     {
         $this->authorize('update', $unit);
         $request->validate([
-            'kode_unit' => 'required|string|max:255|unique:units,kode_unit,' . $unit->id,
+            'kode_unit' => 'required|string|max:255|unique:units,kode_unit,'.$unit->id,
             'nama_unit' => 'required|string|max:255',
         ]);
 

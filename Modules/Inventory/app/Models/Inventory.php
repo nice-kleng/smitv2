@@ -4,8 +4,9 @@ namespace Modules\Inventory\Models;
 
 use App\Models\Ruangan;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 // use Modules\Inventory\Database\Factories\InventoryFactory;
 
 class Inventory extends Model
@@ -27,7 +28,7 @@ class Inventory extends Model
         $status = [
             '0' => 'Telah Dihapuskan',
             '1' => 'Perlu Dihapuskan',
-            '2' => 'Aktif'
+            '2' => 'Aktif',
         ];
 
         return $status[$value];

@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
 
         Blade::directive(
             'currency',
-            fn($expression) => "<?php echo 'Rp. ' . number_format($expression, 0, ',', '.'); ?>"
+            fn ($expression) => "<?php echo 'Rp. ' . number_format($expression, 0, ',', '.'); ?>"
         );
 
         Unit::observe(UnitObserver::class);

@@ -3,17 +3,17 @@
 namespace Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Imports\InventoryImport;
 use App\Models\Ruangan;
 use App\Models\Unit;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Modules\Inventory\Models\HistoryInventaris;
-use Modules\Inventory\Models\Inventory;
-use App\Imports\InventoryImport;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use Modules\Inventory\Models\HistoryInventaris;
+use Modules\Inventory\Models\Inventory;
 use Modules\Inventory\Models\MasterBarang;
 
 class InventoryController extends Controller
@@ -96,17 +96,20 @@ class InventoryController extends Controller
                 })
                 ->addColumn('kondisi', function ($row) {
                     $kondisi = $row->historyMutasi->sortByDesc('created_at')->first();
-                    if (!$kondisi) return '<span class="badge badge-secondary">Belum ada kondisi</span>';
+                    if (! $kondisi) {
+                        return '<span class="badge badge-secondary">Belum ada kondisi</span>';
+                    }
 
                     $badges = [
                         'Baik' => 'success',
                         'Kurang Baik' => 'warning',
-                        'Rusak' => 'danger'
+                        'Rusak' => 'danger',
                     ];
 
                     $kondisiText = $kondisi->kondisi;
                     $badgeColor = $badges[$kondisiText] ?? 'secondary';
-                    return '<span class="badge badge-' . $badgeColor . '">' . $kondisiText . '</span>';
+
+                    return '<span class="badge badge-'.$badgeColor.'">'.$kondisiText.'</span>';
                 })
                 ->addColumn('status', function ($row) {
                     // Cek status dari field status (0,1,2) dan penghapus_id
@@ -123,20 +126,23 @@ class InventoryController extends Controller
                                 return '<span class="badge badge-success">Aktif</span>';
                         }
                     }
+
                     return '<span class="badge badge-secondary">Tidak Diketahui</span>';
                 })
                 ->addColumn('kepemilikan', function ($row) {
                     return $row->kepemilikan ?? '-';
                 })
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="' . route('inventory.history-mutasi', $row->id) . '" class="mutasi btn btn-info btn-sm"><i class="fas fa-history"></i> Mutasi</a>';
+                    $btn = '<a href="'.route('inventory.history-mutasi', $row->id).'" class="mutasi btn btn-info btn-sm"><i class="fas fa-history"></i> Mutasi</a>';
 
-                    $btn .= ' <a href="' . route('inventory.edit', $row->id) . '" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit/ce</a>';
+                    $btn .= ' <a href="'.route('inventory.edit', $row->id).'" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit/ce</a>';
+
                     return $btn;
                 })
                 ->rawColumns(['action', 'kondisi', 'status'])
                 ->make(true);
         }
+
         return view('inventory::inventaris.inventaris');
     }
 
@@ -147,6 +153,7 @@ class InventoryController extends Controller
     {
         $barangs = MasterBarang::orderBy('nama_barang', 'asc')->get();
         $ruangans = Ruangan::orderBy('nama_ruangan', 'asc')->get();
+
         return view('inventory::inventaris.form', compact('barangs', 'ruangans'));
     }
 
@@ -169,6 +176,7 @@ class InventoryController extends Controller
         ]);
 
         Inventory::create($request->all());
+
         return redirect()->route('inventory.index')->with('success', 'Data berhasil disimpan');
     }
 
@@ -188,6 +196,7 @@ class InventoryController extends Controller
         $inventaris = Inventory::findOrFail($id);
         $barangs = MasterBarang::orderBy('nama_barang', 'asc')->get();
         $ruangans = Ruangan::orderBy('nama_ruangan', 'asc')->get();
+
         return view('inventory::inventaris.form', compact('inventaris', 'barangs', 'ruangans'));
     }
 
@@ -210,6 +219,7 @@ class InventoryController extends Controller
         ]);
 
         $inventaris->update($request->all());
+
         return redirect()->route('inventory.index')->with('success', 'Data berhasil diupdate');
     }
 
@@ -225,6 +235,7 @@ class InventoryController extends Controller
     {
         $inventaris = Inventory::with('historyMutasi')->findOrFail($id);
         $units = Unit::orderBy('nama_unit', 'asc')->get();
+
         return view('inventory::inventaris.mutasi', compact('inventaris', 'units'));
     }
 
@@ -232,6 +243,7 @@ class InventoryController extends Controller
     {
         $unitId = request('id');
         $ruangan = Ruangan::where('unit_id', $unitId)->get();
+
         return response()->json($ruangan);
     }
 
@@ -257,6 +269,7 @@ class InventoryController extends Controller
             ]);
             HistoryInventaris::create($request->all());
             DB::commit();
+
             return redirect()->back()->with('success', 'Data berhasil disimpan');
         } catch (\Throwable $th) {
             //throw $th;
@@ -269,20 +282,23 @@ class InventoryController extends Controller
     {
         $history = HistoryInventaris::findOrFail($id);
         $history->delete();
+
         return response()->json(['message' => 'Data berhasil dihapus']);
     }
 
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls'
+            'file' => 'required|mimes:xlsx,xls',
         ]);
 
         try {
             Excel::import(new InventoryImport, $request->file('file'));
+
             return redirect()->back()->with('success', 'Data berhasil diimport');
         } catch (\Exception $e) {
             Log::error($e->getMessage());
+
             return redirect()->back()->with('error', 'Terjadi kesalahan saat import data');
         }
     }
@@ -290,6 +306,7 @@ class InventoryController extends Controller
     public function downloadTemplate()
     {
         $path = public_path('templates/inventory_template.xlsx');
+
         return response()->download($path);
     }
 
@@ -353,7 +370,7 @@ class InventoryController extends Controller
             'margin-right' => 0,
             'margin-bottom' => 0,
             'margin-left' => 0,
-            'dpi' => 203
+            'dpi' => 203,
         ]);
 
         return $pdf->stream('label-inventaris.pdf');

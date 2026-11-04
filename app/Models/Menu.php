@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Spatie\Permission\Models\Permission;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Permission\Models\Permission;
 
 class Menu extends Model
 {
@@ -25,12 +25,12 @@ class Menu extends Model
         'permission_name',
         'parent_id',
         'order',
-        'is_active'
+        'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'order' => 'integer'
+        'order' => 'integer',
     ];
 
     // Tambahkan return type declarations

@@ -2,8 +2,9 @@
 
 namespace Modules\Inventory\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 // use Modules\Inventory\Database\Factories\StokFactory;
 
 class Stok extends Model
@@ -17,7 +18,7 @@ class Stok extends Model
         'master_barang_id',
         'stok',
         'harga',
-        'keterangan'
+        'keterangan',
     ];
 
     // protected static function newFactory(): StokFactory

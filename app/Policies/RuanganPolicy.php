@@ -7,7 +7,10 @@ use App\Models\User;
 
 class RuanganPolicy
 {
-    protected $user, $ruangan;
+    protected $user;
+
+    protected $ruangan;
+
     /**
      * Create a new policy instance.
      */

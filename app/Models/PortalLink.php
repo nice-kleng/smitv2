@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Model;
 
 class PortalLink extends Model
 {
@@ -46,7 +45,7 @@ class PortalLink extends Model
     public function getImageUrlAttribute(): ?string
     {
         if ($this->image) {
-            return asset('storage/' . $this->image);
+            return asset('storage/'.$this->image);
         }
 
         return null;

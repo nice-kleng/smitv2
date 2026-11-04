@@ -49,6 +49,7 @@ class MenuManagementController extends Controller
                 ->with('success', 'Menu berhasil ditambahkan');
         } catch (\Exception $e) {
             dd($e);
+
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan saat menyimpan menu');
@@ -61,12 +62,12 @@ class MenuManagementController extends Controller
             'name' => 'required|string|max:255',
             'icon' => 'nullable|string|max:255',
             'route' => 'nullable|string|max:255',
-            'module' => 'required|string|in:' . implode(',', array_keys(Menu::MODULES)),
+            'module' => 'required|string|in:'.implode(',', array_keys(Menu::MODULES)),
             'permission_name' => 'nullable|exists:permissions,name',
             'parent_id' => [
                 'nullable',
                 'exists:menus,id',
-                function ($attribute, $value, $fail) use ($request) {
+                function ($attribute, $value, $fail) {
                     if ($value && Menu::find($value)->parent_id) {
                         $fail('Menu hanya bisa memiliki 1 level parent.');
                     }
@@ -151,15 +152,17 @@ class MenuManagementController extends Controller
             }
 
             DB::commit();
+
             return response()->json([
                 'success' => true,
-                'message' => 'Order updated successfully'
+                'message' => 'Order updated successfully',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

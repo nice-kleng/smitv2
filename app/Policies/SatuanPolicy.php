@@ -7,7 +7,10 @@ use App\Models\User;
 
 class SatuanPolicy
 {
-    protected $user, $satuan;
+    protected $user;
+
+    protected $satuan;
+
     /**
      * Create a new policy instance.
      */

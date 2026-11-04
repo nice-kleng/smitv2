@@ -24,7 +24,7 @@ return new class extends Migration
                 'absent',
                 'late',
                 'early_leave',
-                'overtime'
+                'overtime',
             ])->default('scheduled');
             $table->text('notes')->nullable();
             $table->timestamps();

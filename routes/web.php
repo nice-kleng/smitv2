@@ -117,7 +117,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{unit}', 'edit')->name('unit.edit');
             Route::put('/{unit}', 'update')->name('unit.update');
             Route::delete('/{unit}', 'destroy')->name('unit.destroy');
-            Route::get('/getRuangan/{}', 'getRuangan')->name('unit.getRuangan');;
+            Route::get('/getRuangan/{}', 'getRuangan')->name('unit.getRuangan');
         });
 
         Route::controller(RuanganController::class)->prefix('/ruangan')->group(function () {
@@ -178,8 +178,8 @@ Route::middleware(['auth'])->group(function () {
                     'actual_start_time' => $detail->actual_start_time,
                     'actual_end_time' => $detail->actual_end_time,
                     'notes' => $detail->notes,
-                    'attendance_status' => $detail->attendance_status
-                ]
+                    'attendance_status' => $detail->attendance_status,
+                ],
             ]);
         })->name('jadwal.detail.show');
 
@@ -213,7 +213,7 @@ Route::middleware(['auth'])->group(function () {
             return app(JadwalController::class)->getDailySchedule(
                 new \Illuminate\Http\Request([
                     'date' => now()->format('Y-m-d'),
-                    'user_id' => $userId
+                    'user_id' => $userId,
                 ])
             );
         })->name('user.current');

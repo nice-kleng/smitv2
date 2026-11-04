@@ -32,11 +32,12 @@ class MasterBarangController extends Controller
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
-                    return '<a href="' . route('inventory.master_barang.edit', $row->id) . '" class="btn btn-primary"><i class="fas fa-edit"></i></a>';
+                    return '<a href="'.route('inventory.master_barang.edit', $row->id).'" class="btn btn-primary"><i class="fas fa-edit"></i></a>';
                 })
                 ->rawColumns(['action'])
                 ->make(true);
         }
+
         return view('inventory::master_barang.master_barang');
     }
 
@@ -48,6 +49,7 @@ class MasterBarangController extends Controller
         $satuan = Satuan::orderBy('nama_satuan', 'asc')->get();
         $kategori = KategoriBarang::orderBy('nama_kategori', 'asc')->get();
         $units = Unit::orderBy('nama_unit', 'asc')->get();
+
         return view('inventory::master_barang.form', compact('satuan', 'kategori', 'units'));
     }
 
@@ -94,7 +96,7 @@ class MasterBarangController extends Controller
             }
         }
 
-        if (!empty($stokData)) {
+        if (! empty($stokData)) {
             $master_barang->stoks()->createMany($stokData);
         }
 
@@ -118,6 +120,7 @@ class MasterBarangController extends Controller
         $satuan = Satuan::orderBy('nama_satuan', 'asc')->get();
         $kategori = KategoriBarang::orderBy('nama_kategori', 'asc')->get();
         $units = Unit::orderBy('nama_unit', 'asc')->get();
+
         return view('inventory::master_barang.form', compact('master_barang', 'satuan', 'kategori', 'units'));
     }
 
@@ -178,12 +181,12 @@ class MasterBarangController extends Controller
             }
         }
 
-        if (!empty($stokData)) {
+        if (! empty($stokData)) {
             $master_barang->stoks()->createMany($stokData);
         }
 
         foreach ($existingStok as $stok) {
-            if (!in_array($stok->id, $updatedStokIds)) {
+            if (! in_array($stok->id, $updatedStokIds)) {
                 $stok->delete();
             }
         }
@@ -197,12 +200,14 @@ class MasterBarangController extends Controller
     public function destroy($id)
     {
         MasterBarang::find($id)->delete();
+
         return redirect()->route('inventory.master_barang.index')->with('success', 'Barang berhasil dihapus');
     }
 
     public function getStok($id)
     {
         $stok = MasterBarang::find($id)->stoks;
+
         return response()->json($stok);
     }
 
@@ -214,14 +219,15 @@ class MasterBarangController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls'
+            'file' => 'required|mimes:xlsx,xls',
         ]);
 
         try {
             Excel::import(new MasterBarangImport, $request->file('file'));
+
             return redirect()->back()->with('success', 'Data berhasil diimport!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error: '.$e->getMessage());
         }
     }
 }

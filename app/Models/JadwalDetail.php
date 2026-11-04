@@ -16,13 +16,13 @@ class JadwalDetail extends Model
         'actual_start_time',
         'actual_end_time',
         'attendance_status',
-        'notes'
+        'notes',
     ];
 
     protected $casts = [
         // 'work_date' => 'date',
         'actual_start_time' => 'datetime',
-        'actual_end_time' => 'datetime'
+        'actual_end_time' => 'datetime',
     ];
 
     // protected $dates = [
@@ -57,8 +57,10 @@ class JadwalDetail extends Model
         if ($this->jadwal && $this->jadwal->shift) {
             $startTime = Carbon::parse($this->jadwal->shift->start_time)->format('H:i');
             $endTime = Carbon::parse($this->jadwal->shift->end_time)->format('H:i');
-            return $startTime . ' - ' . $endTime;
+
+            return $startTime.' - '.$endTime;
         }
+
         return '-';
     }
 
@@ -68,10 +70,11 @@ class JadwalDetail extends Model
     public function getFormattedActualTimeAttribute()
     {
         if ($this->actual_start_time && $this->actual_end_time) {
-            return $this->actual_start_time->format('H:i') . ' - ' . $this->actual_end_time->format('H:i');
+            return $this->actual_start_time->format('H:i').' - '.$this->actual_end_time->format('H:i');
         } elseif ($this->actual_start_time) {
-            return $this->actual_start_time->format('H:i') . ' - (Belum checkout)';
+            return $this->actual_start_time->format('H:i').' - (Belum checkout)';
         }
+
         return 'Belum absen';
     }
 
@@ -87,7 +90,7 @@ class JadwalDetail extends Model
             'thursday' => 'Kamis',
             'friday' => 'Jumat',
             'saturday' => 'Sabtu',
-            'sunday' => 'Minggu'
+            'sunday' => 'Minggu',
         ];
 
         return $days[strtolower($this->day_name)] ?? $this->day_name;
@@ -104,7 +107,7 @@ class JadwalDetail extends Model
             'absent' => 'danger',
             'late' => 'warning',
             'early_leave' => 'info',
-            'overtime' => 'primary'
+            'overtime' => 'primary',
         ];
 
         return $classes[$this->attendance_status] ?? 'secondary';
@@ -121,7 +124,7 @@ class JadwalDetail extends Model
             'absent' => 'Tidak Hadir',
             'late' => 'Terlambat',
             'early_leave' => 'Pulang Cepat',
-            'overtime' => 'Lembur'
+            'overtime' => 'Lembur',
         ];
 
         return $statuses[$this->attendance_status] ?? 'Tidak Diketahui';
@@ -132,12 +135,13 @@ class JadwalDetail extends Model
      */
     public function isLate()
     {
-        if (!$this->actual_start_time || !$this->jadwal || !$this->jadwal->shift) {
+        if (! $this->actual_start_time || ! $this->jadwal || ! $this->jadwal->shift) {
             return false;
         }
 
         $workDate = $this->work_date instanceof Carbon ? $this->work_date : Carbon::parse($this->work_date);
-        $shiftStart = Carbon::parse($workDate->format('Y-m-d') . ' ' . $this->jadwal->shift->start_time);
+        $shiftStart = Carbon::parse($workDate->format('Y-m-d').' '.$this->jadwal->shift->start_time);
+
         return $this->actual_start_time->gt($shiftStart);
     }
 
@@ -146,12 +150,13 @@ class JadwalDetail extends Model
      */
     public function isEarlyLeave()
     {
-        if (!$this->actual_end_time || !$this->jadwal || !$this->jadwal->shift) {
+        if (! $this->actual_end_time || ! $this->jadwal || ! $this->jadwal->shift) {
             return false;
         }
 
         $workDate = $this->work_date instanceof Carbon ? $this->work_date : Carbon::parse($this->work_date);
-        $shiftEnd = Carbon::parse($workDate->format('Y-m-d') . ' ' . $this->jadwal->shift->end_time);
+        $shiftEnd = Carbon::parse($workDate->format('Y-m-d').' '.$this->jadwal->shift->end_time);
+
         return $this->actual_end_time->lt($shiftEnd);
     }
 
@@ -160,11 +165,12 @@ class JadwalDetail extends Model
      */
     public function getWorkingHoursAttribute()
     {
-        if (!$this->actual_start_time || !$this->actual_end_time) {
+        if (! $this->actual_start_time || ! $this->actual_end_time) {
             return 0;
         }
 
         $minutes = $this->actual_start_time->diffInMinutes($this->actual_end_time);
+
         return round($minutes / 60, 2); // hasil dibulatkan 2 desimal, misal 4.02
     }
 
@@ -173,7 +179,7 @@ class JadwalDetail extends Model
      */
     public function updateAttendanceStatus()
     {
-        if (!$this->actual_start_time) {
+        if (! $this->actual_start_time) {
             $this->attendance_status = 'absent';
         } elseif ($this->isLate() && $this->isEarlyLeave()) {
             $this->attendance_status = 'late';
@@ -186,6 +192,7 @@ class JadwalDetail extends Model
         }
 
         $this->save();
+
         return $this->attendance_status;
     }
 
@@ -196,6 +203,7 @@ class JadwalDetail extends Model
     {
         $this->actual_start_time = $time ? $time : now();
         $this->updateAttendanceStatus();
+
         return $this->save();
     }
 
@@ -206,6 +214,7 @@ class JadwalDetail extends Model
     {
         $this->actual_end_time = $time ? $time : now();
         $this->updateAttendanceStatus();
+
         return $this->save();
     }
 
@@ -267,7 +276,7 @@ class JadwalDetail extends Model
         // Automatically update attendance status when actual times are set
         static::saving(function ($jadwalDetail) {
             if ($jadwalDetail->isDirty(['actual_start_time', 'actual_end_time'])) {
-                if ($jadwalDetail->actual_start_time && !$jadwalDetail->actual_end_time) {
+                if ($jadwalDetail->actual_start_time && ! $jadwalDetail->actual_end_time) {
                     // Only check-in recorded
                     $jadwalDetail->attendance_status = $jadwalDetail->isLate() ? 'late' : 'present';
                 } elseif ($jadwalDetail->actual_start_time && $jadwalDetail->actual_end_time) {

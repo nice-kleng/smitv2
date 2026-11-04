@@ -2,27 +2,30 @@
 
 namespace App\Exports;
 
-use Modules\Inventory\Models\MasterBarang;
-use Modules\Inventory\Models\StokClosing;
-use Modules\Inventory\Models\Transaksi;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
+use Modules\Inventory\Models\MasterBarang;
+use Modules\Inventory\Models\StokClosing;
+use Modules\Inventory\Models\Transaksi;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class LaporanStokExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithTitle, ShouldAutoSize
+class LaporanStokExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     protected $bulan;
+
     protected $tahun;
+
     protected $kategori;
+
     protected $rowNumber = 0;
 
     public function __construct($bulan, $tahun, $kategori = null)
@@ -83,7 +86,7 @@ class LaporanStokExport implements FromCollection, WithHeadings, WithMapping, Wi
         $laporanData = collect();
 
         foreach ($closings as $closing) {
-            $laporanData->push((object)[
+            $laporanData->push((object) [
                 'kode_barang' => $closing->stok->barang->kode_barang ?? '-',
                 'nama_barang' => $closing->stok->barang->nama_barang ?? '-',
                 'satuan' => $closing->stok->barang->satuan->nama ?? '-',
@@ -156,7 +159,7 @@ class LaporanStokExport implements FromCollection, WithHeadings, WithMapping, Wi
             // Hitung nilai
             $totalNilaiAkhir = $stokAkhirBulanIni * $hargaPerUnit;
 
-            $laporanData->push((object)[
+            $laporanData->push((object) [
                 'kode_barang' => $barang->kode_barang ?? '-',
                 'nama_barang' => $barang->nama_barang ?? '-',
                 'satuan' => $barang->satuan->nama ?? '-',
@@ -179,8 +182,8 @@ class LaporanStokExport implements FromCollection, WithHeadings, WithMapping, Wi
     {
         return [
             ['LAPORAN STOK BARANG'],
-            ['Periode: ' . $this->getIndonesianMonth($this->bulan) . ' ' . $this->tahun],
-            ['Tanggal Cetak: ' . Carbon::now()->translatedFormat('d F Y H:i:s')],
+            ['Periode: '.$this->getIndonesianMonth($this->bulan).' '.$this->tahun],
+            ['Tanggal Cetak: '.Carbon::now()->translatedFormat('d F Y H:i:s')],
             [], // Baris kosong
             [
                 'No',
@@ -193,14 +196,15 @@ class LaporanStokExport implements FromCollection, WithHeadings, WithMapping, Wi
                 'Stok Keluar',
                 'Stok Akhir',
                 'Harga/Unit',
-                'Total Nilai'
-            ]
+                'Total Nilai',
+            ],
         ];
     }
 
     public function map($row): array
     {
         $this->rowNumber++;
+
         return [
             $this->rowNumber,
             $row->kode_barang,
@@ -264,7 +268,7 @@ class LaporanStokExport implements FromCollection, WithHeadings, WithMapping, Wi
 
         // Border untuk data
         $lastRow = $this->rowNumber + 5;
-        $sheet->getStyle('A5:K' . $lastRow)->applyFromArray([
+        $sheet->getStyle('A5:K'.$lastRow)->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,
@@ -274,14 +278,14 @@ class LaporanStokExport implements FromCollection, WithHeadings, WithMapping, Wi
         ]);
 
         // Alignment untuk kolom angka
-        $sheet->getStyle('F6:K' . $lastRow)->applyFromArray([
+        $sheet->getStyle('F6:K'.$lastRow)->applyFromArray([
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
             ],
         ]);
 
         // Format currency untuk kolom harga dan nilai
-        $sheet->getStyle('J6:K' . $lastRow)->applyFromArray([
+        $sheet->getStyle('J6:K'.$lastRow)->applyFromArray([
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_RIGHT,
             ],
@@ -295,7 +299,7 @@ class LaporanStokExport implements FromCollection, WithHeadings, WithMapping, Wi
 
     public function title(): string
     {
-        return 'Laporan Stok ' . $this->getIndonesianMonth($this->bulan) . ' ' . $this->tahun;
+        return 'Laporan Stok '.$this->getIndonesianMonth($this->bulan).' '.$this->tahun;
     }
 
     private function getIndonesianMonth($month)
@@ -312,8 +316,9 @@ class LaporanStokExport implements FromCollection, WithHeadings, WithMapping, Wi
             9 => 'September',
             10 => 'Oktober',
             11 => 'November',
-            12 => 'Desember'
+            12 => 'Desember',
         ];
+
         return $months[$month] ?? '';
     }
 }

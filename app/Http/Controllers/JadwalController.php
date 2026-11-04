@@ -7,10 +7,10 @@ use App\Models\JadwalDetail;
 use App\Models\Shift;
 use App\Models\User;
 use App\Services\ScheduleService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
 use Yajra\DataTables\DataTables;
 
 class JadwalController extends Controller
@@ -76,22 +76,22 @@ class JadwalController extends Controller
                 ->select(['id', 'user_id', 'shift_id', 'start_date', 'end_date', 'week_number', 'year', 'status', 'created_at']);
 
             // Apply filters
-            if ($request->has('date_range') && !empty($request->date_range)) {
+            if ($request->has('date_range') && ! empty($request->date_range)) {
                 $dateRange = explode(' to ', $request->date_range);
                 if (count($dateRange) == 2) {
                     $schedules->whereBetween('start_date', [$dateRange[0], $dateRange[1]]);
                 }
             }
 
-            if ($request->has('staff_id') && !empty($request->staff_id)) {
+            if ($request->has('staff_id') && ! empty($request->staff_id)) {
                 $schedules->where('user_id', $request->staff_id);
             }
 
-            if ($request->has('status') && !empty($request->status)) {
+            if ($request->has('status') && ! empty($request->status)) {
                 $schedules->where('status', $request->status);
             }
 
-            if ($request->has('shift_id') && !empty($request->shift_id)) {
+            if ($request->has('shift_id') && ! empty($request->shift_id)) {
                 $schedules->where('shift_id', $request->shift_id);
             }
 
@@ -104,26 +104,29 @@ class JadwalController extends Controller
                     return $row->shift->name ?? '-';
                 })
                 ->addColumn('period', function ($row) {
-                    return Carbon::parse($row->start_date)->format('d/m/Y') . ' - ' . Carbon::parse($row->end_date)->format('d/m/Y');
+                    return Carbon::parse($row->start_date)->format('d/m/Y').' - '.Carbon::parse($row->end_date)->format('d/m/Y');
                 })
                 ->addColumn('week_info', function ($row) {
-                    return 'Week ' . $row->week_number . ', ' . $row->year;
+                    return 'Week '.$row->week_number.', '.$row->year;
                 })
                 ->addColumn('details_count', function ($row) {
                     $detailsCount = $row->scheduleDetails()->count();
-                    return '<span class="badge badge-info">' . $detailsCount . ' hari</span>';
+
+                    return '<span class="badge badge-info">'.$detailsCount.' hari</span>';
                 })
                 ->addColumn('status_badge', function ($row) {
                     $badgeClass = $row->status === 'active' ? 'success' : 'secondary';
-                    return '<span class="badge badge-' . $badgeClass . '">' . ucfirst($row->status) . '</span>';
+
+                    return '<span class="badge badge-'.$badgeClass.'">'.ucfirst($row->status).'</span>';
                 })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group" role="group">';
-                    $btn .= '<button type="button" class="btn btn-sm btn-info" onclick="viewSchedule(' . $row->id . ')" title="View Details"><i class="fas fa-eye"></i></button>';
-                    $btn .= '<button type="button" class="btn btn-sm btn-primary" onclick="viewScheduleDetails(' . $row->id . ')" title="View Daily Details"><i class="fas fa-calendar-day"></i></button>';
-                    $btn .= '<button type="button" class="btn btn-sm btn-warning" onclick="editSchedule(' . $row->id . ')" title="Edit"><i class="fas fa-edit"></i></button>';
-                    $btn .= '<button type="button" class="btn btn-sm btn-danger" onclick="deleteSchedule(' . $row->id . ')" title="Delete"><i class="fas fa-trash"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-info" onclick="viewSchedule('.$row->id.')" title="View Details"><i class="fas fa-eye"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-primary" onclick="viewScheduleDetails('.$row->id.')" title="View Daily Details"><i class="fas fa-calendar-day"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-warning" onclick="editSchedule('.$row->id.')" title="Edit"><i class="fas fa-edit"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-danger" onclick="deleteSchedule('.$row->id.')" title="Delete"><i class="fas fa-trash"></i></button>';
                     $btn .= '</div>';
+
                     return $btn;
                 })
                 ->rawColumns(['details_count', 'status_badge', 'action'])
@@ -160,7 +163,7 @@ class JadwalController extends Controller
             // Log incoming request for debugging
             Log::info('Schedule creation request', [
                 'request_data' => $request->all(),
-                'user_id' => auth()->id() ?? 'guest'
+                'user_id' => auth()->id() ?? 'guest',
             ]);
 
             // Enhanced validation
@@ -169,7 +172,7 @@ class JadwalController extends Controller
                 'staff_schedules.*.user_id' => 'required|integer|exists:users,id',
                 'staff_schedules.*.shift_id' => 'required|integer|exists:shifts,id',
                 'start_date' => 'required|date|after_or_equal:today',
-                'months' => 'required|integer|min:1|max:12'
+                'months' => 'required|integer|min:1|max:12',
             ], [
                 'staff_schedules.required' => 'Harap pilih minimal satu staff untuk dijadwalkan',
                 'staff_schedules.min' => 'Harap pilih minimal satu staff untuk dijadwalkan',
@@ -185,46 +188,49 @@ class JadwalController extends Controller
                 'months.required' => 'Durasi bulan harus diisi',
                 'months.integer' => 'Durasi bulan harus berupa angka',
                 'months.min' => 'Durasi minimal 1 bulan',
-                'months.max' => 'Durasi maksimal 12 bulan'
+                'months.max' => 'Durasi maksimal 12 bulan',
             ]);
 
             if ($validator->fails()) {
                 Log::warning('Validation failed', ['errors' => $validator->errors()->toArray()]);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Data tidak valid',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
             // Additional business logic validation
             $validationErrors = $this->scheduleService->validateSchedule($request->staff_schedules);
-            if (!empty($validationErrors)) {
+            if (! empty($validationErrors)) {
                 Log::warning('Business validation failed', ['errors' => $validationErrors]);
+
                 return response()->json([
                     'success' => false,
-                    'message' => implode('. ', $validationErrors)
+                    'message' => implode('. ', $validationErrors),
                 ], 422);
             }
 
             // Validate date format
             try {
                 $startDate = Carbon::parse($request->start_date);
-                if ($startDate->isPast() && !$startDate->isToday()) {
+                if ($startDate->isPast() && ! $startDate->isToday()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Tanggal mulai tidak boleh di masa lalu'
+                        'message' => 'Tanggal mulai tidak boleh di masa lalu',
                     ], 422);
                 }
             } catch (\Exception $e) {
                 Log::error('Date parsing error', ['date' => $request->start_date, 'error' => $e->getMessage()]);
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Format tanggal tidak valid'
+                    'message' => 'Format tanggal tidak valid',
                 ], 422);
             }
 
-            $months = (int)$request->months;
+            $months = (int) $request->months;
             // Check for existing schedules in the date range
             $endDate = $startDate->copy()->addMonths($months);
             $staffIds = array_column($request->staff_schedules, 'user_id');
@@ -243,9 +249,10 @@ class JadwalController extends Controller
 
             if ($existingSchedules->count() > 0) {
                 $conflictingStaff = $existingSchedules->pluck('user.name')->unique()->implode(', ');
+
                 return response()->json([
                     'success' => false,
-                    'message' => "Sudah ada jadwal untuk staff: {$conflictingStaff} pada periode yang dipilih"
+                    'message' => "Sudah ada jadwal untuk staff: {$conflictingStaff} pada periode yang dipilih",
                 ], 422);
             }
 
@@ -271,20 +278,20 @@ class JadwalController extends Controller
                 'weeks_generated' => count($schedules),
                 'total_details' => $totalDetails,
                 'start_date' => $request->start_date,
-                'months' => $months
+                'months' => $months,
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Jadwal berhasil dibuat untuk ' . count($request->staff_schedules) . ' staff selama ' . $months . ' bulan dengan ' . $totalDetails . ' detail jadwal harian',
+                'message' => 'Jadwal berhasil dibuat untuk '.count($request->staff_schedules).' staff selama '.$months.' bulan dengan '.$totalDetails.' detail jadwal harian',
                 'data' => $schedules,
                 'summary' => [
                     'total_weeks' => count($schedules),
                     'total_staff' => count($request->staff_schedules),
                     'total_details' => $totalDetails,
                     'start_date' => $startDate->format('d/m/Y'),
-                    'end_date' => $endDate->format('d/m/Y')
-                ]
+                    'end_date' => $endDate->format('d/m/Y'),
+                ],
             ]);
         } catch (\Exception $e) {
             Log::error('Error creating schedule', [
@@ -292,16 +299,16 @@ class JadwalController extends Controller
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'request' => $request->all(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat membuat jadwal: ' . $e->getMessage(),
+                'message' => 'Terjadi kesalahan saat membuat jadwal: '.$e->getMessage(),
                 'debug' => config('app.debug') ? [
                     'file' => $e->getFile(),
-                    'line' => $e->getLine()
-                ] : null
+                    'line' => $e->getLine(),
+                ] : null,
             ], 500);
         }
     }
@@ -319,7 +326,7 @@ class JadwalController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $jadwal,
-                'detailed_schedule' => $jadwal->getDetailedSchedule()
+                'detailed_schedule' => $jadwal->getDetailedSchedule(),
             ]);
         }
 
@@ -345,7 +352,7 @@ class JadwalController extends Controller
                         'attendance_status' => $detail->status_indonesian,
                         'status_class' => $detail->status_badge_class,
                         'notes' => $detail->notes,
-                        'working_hours' => $detail->working_hours
+                        'working_hours' => $detail->working_hours,
                     ];
                 });
 
@@ -357,8 +364,8 @@ class JadwalController extends Controller
                         'staff_name' => $jadwal->user->name,
                         'shift_name' => $jadwal->shift->name,
                         'period' => $jadwal->formatted_period,
-                        'week_info' => $jadwal->week_info
-                    ]
+                        'week_info' => $jadwal->week_info,
+                    ],
                 ]);
             }
 
@@ -366,13 +373,13 @@ class JadwalController extends Controller
         } catch (\Exception $e) {
             Log::error('Error showing schedule details', [
                 'jadwal_id' => $jadwal->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             if (request()->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Gagal mengambil detail jadwal: ' . $e->getMessage()
+                    'message' => 'Gagal mengambil detail jadwal: '.$e->getMessage(),
                 ], 500);
             }
 
@@ -404,14 +411,14 @@ class JadwalController extends Controller
             'shift_id' => 'required|exists:shifts,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'status' => 'required|in:active,inactive,completed'
+            'status' => 'required|in:active,inactive,completed',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data tidak valid',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -419,7 +426,7 @@ class JadwalController extends Controller
             $originalData = [
                 'start_date' => $jadwal->start_date,
                 'end_date' => $jadwal->end_date,
-                'shift_id' => $jadwal->shift_id
+                'shift_id' => $jadwal->shift_id,
             ];
 
             $jadwal->update($request->all());
@@ -432,24 +439,24 @@ class JadwalController extends Controller
                 Log::info('Regenerated schedule details after update', [
                     'jadwal_id' => $jadwal->id,
                     'original_data' => $originalData,
-                    'new_data' => $request->only(['start_date', 'end_date', 'shift_id'])
+                    'new_data' => $request->only(['start_date', 'end_date', 'shift_id']),
                 ]);
             }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Jadwal berhasil diperbarui',
-                'details_updated' => $jadwal->wasChanged(['start_date', 'end_date', 'shift_id'])
+                'details_updated' => $jadwal->wasChanged(['start_date', 'end_date', 'shift_id']),
             ]);
         } catch (\Exception $e) {
             Log::error('Error updating schedule', [
                 'jadwal_id' => $jadwal->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat memperbarui jadwal: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan saat memperbarui jadwal: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -467,17 +474,17 @@ class JadwalController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Jadwal dan {$detailsCount} detail jadwal berhasil dihapus"
+                'message' => "Jadwal dan {$detailsCount} detail jadwal berhasil dihapus",
             ]);
         } catch (\Exception $e) {
             Log::error('Error deleting schedule', [
                 'jadwal_id' => $jadwal->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat menghapus jadwal: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan saat menghapus jadwal: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -490,23 +497,23 @@ class JadwalController extends Controller
         $validator = Validator::make($request->all(), [
             'check_in_time' => 'nullable|date_format:H:i',
             'check_out_time' => 'nullable|date_format:H:i',
-            'notes' => 'nullable|string|max:500'
+            'notes' => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data tidak valid',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         try {
             $checkInTime = $request->check_in_time ?
-                Carbon::parse($detail->work_date)->format('Y-m-d') . ' ' . $request->check_in_time : null;
+                Carbon::parse($detail->work_date)->format('Y-m-d').' '.$request->check_in_time : null;
 
             $checkOutTime = $request->check_out_time ?
-                Carbon::parse($detail->work_date)->format('Y-m-d') . ' ' . $request->check_out_time : null;
+                Carbon::parse($detail->work_date)->format('Y-m-d').' '.$request->check_out_time : null;
 
             $updatedDetail = $this->scheduleService->updateAttendance(
                 $detail->id,
@@ -526,19 +533,19 @@ class JadwalController extends Controller
                     'working_hours' => $updatedDetail->working_hours,
                     'actual_start_time' => $updatedDetail->actual_start_time,
                     'actual_end_time' => $updatedDetail->actual_end_time,
-                ]
+                ],
             ]);
         } catch (\Exception $e) {
             Log::error('Error updating attendance', [
                 'detail_id' => $detail->id,
                 'jadwal_detail' => $detail->toArray(),
                 'checkin_time' => $checkInTime,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat memperbarui kehadiran: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan saat memperbarui kehadiran: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -639,14 +646,14 @@ class JadwalController extends Controller
             'updates.*.check_in_time' => 'nullable|date_format:H:i',
             'updates.*.check_out_time' => 'nullable|date_format:H:i',
             'updates.*.notes' => 'nullable|string|max:500',
-            'updates.*.attendance_status' => 'nullable|in:scheduled,present,absent,late,early_leave,overtime'
+            'updates.*.attendance_status' => 'nullable|in:scheduled,present,absent,late,early_leave,overtime',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data tidak valid',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -655,16 +662,18 @@ class JadwalController extends Controller
             $processedUpdates = [];
             foreach ($request->updates as $update) {
                 $detail = JadwalDetail::find($update['detail_id']);
-                if (!$detail) continue;
+                if (! $detail) {
+                    continue;
+                }
 
                 $processedUpdate = ['detail_id' => $update['detail_id']];
 
-                if (!empty($update['check_in_time'])) {
-                    $processedUpdate['check_in_time'] = $detail->work_date . ' ' . $update['check_in_time'];
+                if (! empty($update['check_in_time'])) {
+                    $processedUpdate['check_in_time'] = $detail->work_date.' '.$update['check_in_time'];
                 }
 
-                if (!empty($update['check_out_time'])) {
-                    $processedUpdate['check_out_time'] = $detail->work_date . ' ' . $update['check_out_time'];
+                if (! empty($update['check_out_time'])) {
+                    $processedUpdate['check_out_time'] = $detail->work_date.' '.$update['check_out_time'];
                 }
 
                 if (isset($update['notes'])) {
@@ -682,7 +691,7 @@ class JadwalController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Berhasil memperbarui ' . count($updatedDetails) . ' data kehadiran',
+                'message' => 'Berhasil memperbarui '.count($updatedDetails).' data kehadiran',
                 'data' => collect($updatedDetails)->map(function ($detail) {
                     return [
                         'id' => $detail->id,
@@ -693,17 +702,17 @@ class JadwalController extends Controller
                         'actual_start_time' => $detail->actual_start_time,
                         'actual_end_time' => $detail->actual_end_time,
                     ];
-                })
+                }),
             ]);
         } catch (\Exception $e) {
             Log::error('Error in bulk update attendance', [
                 'updates_count' => count($request->updates),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat memperbarui kehadiran: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan saat memperbarui kehadiran: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -771,14 +780,14 @@ class JadwalController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'start' => 'required|date',
-                'end' => 'required|date|after_or_equal:start'
+                'end' => 'required|date|after_or_equal:start',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Parameter tidak valid',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
@@ -801,38 +810,39 @@ class JadwalController extends Controller
                     'attendance_status' => $detail->attendance_status ?? 'scheduled',
                     'actual_start_time' => $detail->actual_start_time,
                     'actual_end_time' => $detail->actual_end_time,
-                    'notes' => $detail->notes
+                    'notes' => $detail->notes,
                 ];
             });
 
             return response()->json([
                 'success' => true,
-                'data' => $formattedSchedule
+                'data' => $formattedSchedule,
             ]);
         } catch (\Exception $e) {
             Log::error('Error getting daily schedule for calendar', [
                 'start' => $request->start ?? null,
                 'end' => $request->end ?? null,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengambil data jadwal: ' . $e->getMessage()
+                'message' => 'Gagal mengambil data jadwal: '.$e->getMessage(),
             ], 500);
         }
     }
+
     private function getFormattedShiftTime($shift)
     {
-        if (!$shift) {
+        if (! $shift) {
             return 'N/A';
         }
 
         $startTime = Carbon::parse($shift->start_time)->format('H:i');
         $endTime = Carbon::parse($shift->end_time)->format('H:i');
 
-        return $startTime . ' - ' . $endTime;
+        return $startTime.' - '.$endTime;
     }
 
     /**
@@ -843,14 +853,14 @@ class JadwalController extends Controller
         $validator = Validator::make($request->all(), [
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'user_id' => 'nullable|integer|exists:users,id'
+            'user_id' => 'nullable|integer|exists:users,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data tidak valid',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -866,20 +876,20 @@ class JadwalController extends Controller
                 'data' => $summary,
                 'period' => [
                     'start_date' => Carbon::parse($request->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($request->end_date)->format('d/m/Y')
-                ]
+                    'end_date' => Carbon::parse($request->end_date)->format('d/m/Y'),
+                ],
             ]);
         } catch (\Exception $e) {
             Log::error('Error getting attendance summary', [
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'user_id' => $request->user_id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengambil ringkasan kehadiran: ' . $e->getMessage()
+                'message' => 'Gagal mengambil ringkasan kehadiran: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -894,13 +904,14 @@ class JadwalController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $shifts
+                'data' => $shifts,
             ]);
         } catch (\Exception $e) {
             Log::error('Error getting shifts', ['error' => $e->getMessage()]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengambil data shift'
+                'message' => 'Gagal mengambil data shift',
             ], 500);
         }
     }
@@ -916,14 +927,14 @@ class JadwalController extends Controller
                 'staff_schedules.*.user_id' => 'required|integer|exists:users,id',
                 'staff_schedules.*.shift_id' => 'required|integer|exists:shifts,id',
                 'start_date' => 'required|date',
-                'weeks' => 'integer|min:1|max:12'
+                'weeks' => 'integer|min:1|max:12',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Data tidak valid',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
@@ -940,18 +951,18 @@ class JadwalController extends Controller
                 'summary' => [
                     'total_weeks' => count($preview),
                     'total_staff' => count($request->staff_schedules),
-                    'start_date' => Carbon::parse($request->start_date)->format('d/m/Y')
-                ]
+                    'start_date' => Carbon::parse($request->start_date)->format('d/m/Y'),
+                ],
             ]);
         } catch (\Exception $e) {
             Log::error('Error creating schedule preview', [
                 'error' => $e->getMessage(),
-                'request' => $request->all()
+                'request' => $request->all(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal membuat preview jadwal: ' . $e->getMessage()
+                'message' => 'Gagal membuat preview jadwal: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -965,14 +976,14 @@ class JadwalController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'format' => 'required|in:pdf,excel,csv',
-            'user_id' => 'nullable|integer|exists:users,id'
+            'user_id' => 'nullable|integer|exists:users,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data tidak valid',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -997,7 +1008,7 @@ class JadwalController extends Controller
                     'week_number' => $schedule->week_number,
                     'year' => $schedule->year,
                     'status' => $schedule->status,
-                    'details_count' => $schedule->scheduleDetails->count()
+                    'details_count' => $schedule->scheduleDetails->count(),
                 ];
             });
 
@@ -1008,18 +1019,18 @@ class JadwalController extends Controller
                 'format' => $request->format,
                 'period' => [
                     'start_date' => Carbon::parse($request->start_date)->format('d/m/Y'),
-                    'end_date' => Carbon::parse($request->end_date)->format('d/m/Y')
-                ]
+                    'end_date' => Carbon::parse($request->end_date)->format('d/m/Y'),
+                ],
             ]);
         } catch (\Exception $e) {
             Log::error('Error exporting schedule', [
                 'error' => $e->getMessage(),
-                'request' => $request->all()
+                'request' => $request->all(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengekspor jadwal: ' . $e->getMessage()
+                'message' => 'Gagal mengekspor jadwal: '.$e->getMessage(),
             ], 500);
         }
     }

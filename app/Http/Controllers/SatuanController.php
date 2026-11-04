@@ -16,10 +16,11 @@ class SatuanController extends Controller
     {
         if ($request->ajax()) {
             $satuan = Satuan::orderBy('nama_satuan', 'asc')->get();
+
             return DataTables::of($satuan)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
-                    return '<a href="javascript:void(0)" class="btn btn-primary btn-edit" data-id="' . $row->id . '">Edit</a> <a href="javascript:void(0)" class="btn btn-danger btn-delete" data-id="' . $row->id . '">Delete</a>';
+                    return '<a href="javascript:void(0)" class="btn btn-primary btn-edit" data-id="'.$row->id.'">Edit</a> <a href="javascript:void(0)" class="btn btn-danger btn-delete" data-id="'.$row->id.'">Delete</a>';
                 })
                 ->rawColumns(['action'])
                 ->make(true);
@@ -43,10 +44,11 @@ class SatuanController extends Controller
     {
         try {
             $this->authorize('create', Satuan::class);
-            $satuan = new Satuan();
+            $satuan = new Satuan;
             $satuan->nama_satuan = $request->nama_satuan;
             $satuan->pu = Auth::user()->pu_kd;
             $satuan->save();
+
             return response()->json(['success' => true, 'message' => 'Data berhasil disimpan']);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki izin untuk menghapus ruangan'], 403);
@@ -70,6 +72,7 @@ class SatuanController extends Controller
     {
         try {
             $this->authorize('update', $satuan);
+
             return response()->json(['success' => true, 'data' => $satuan]);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki izin untuk mengubah data satuan'], 403);
@@ -87,6 +90,7 @@ class SatuanController extends Controller
             $this->authorize('update', $satuan);
             $satuan->nama_satuan = $request->nama_satuan;
             $satuan->save();
+
             return response()->json(['success' => true, 'message' => 'Data berhasil diubah']);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki izin untuk mengubah data satuan'], 403);
@@ -103,6 +107,7 @@ class SatuanController extends Controller
         try {
             $this->authorize('delete', $satuan);
             $satuan->delete();
+
             return response()->json(['success' => true, 'message' => 'Data berhasil dihapus']);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki izin untuk menghapus data satuan'], 403);

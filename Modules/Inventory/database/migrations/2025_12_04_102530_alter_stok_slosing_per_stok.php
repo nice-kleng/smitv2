@@ -56,7 +56,7 @@ return new class extends Migration
                 'total_nilai_awal',
                 'total_nilai_masuk',
                 'total_nilai_keluar',
-                'total_nilai_akhir'
+                'total_nilai_akhir',
             ]);
 
             // Restore kolom lama

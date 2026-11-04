@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class SatuanSeeder extends Seeder
@@ -22,7 +21,7 @@ class SatuanSeeder extends Seeder
             ['nama_satuan' => 'Lusin', 'pu' => 'log'],
             ['nama_satuan' => 'Set', 'pu' => 'it'],
             ['nama_satuan' => 'Roll', 'pu' => 'log'],
-            ['nama_satuan' => 'Meter', 'pu' => 'log']
+            ['nama_satuan' => 'Meter', 'pu' => 'log'],
         ];
 
         foreach ($data as $item) {

@@ -2,22 +2,23 @@
 
 namespace App\Exports;
 
-use Modules\Inventory\Models\Ticket;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Modules\Inventory\Models\Ticket;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class TicketExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithTitle, WithEvents
+class TicketExport implements FromCollection, WithEvents, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     protected $filters;
+
     protected $rowNumber = 0;
 
     public function __construct($filters = [])
@@ -34,28 +35,25 @@ class TicketExport implements FromCollection, WithHeadings, WithMapping, WithSty
             ->orderBy('created_at', 'desc');
 
         // Apply filters
-        if (!empty($this->filters['start_date'])) {
+        if (! empty($this->filters['start_date'])) {
             $query->whereDate('created_at', '>=', $this->filters['start_date']);
         }
 
-        if (!empty($this->filters['end_date'])) {
+        if (! empty($this->filters['end_date'])) {
             $query->whereDate('created_at', '<=', $this->filters['end_date']);
         }
 
-        if (!empty($this->filters['jenis_aduan'])) {
+        if (! empty($this->filters['jenis_aduan'])) {
             $query->where('jenis_aduan_id', $this->filters['jenis_aduan']);
         }
 
-        if (!empty($this->filters['ruangan'])) {
+        if (! empty($this->filters['ruangan'])) {
             $query->where('ruangan_id', $this->filters['ruangan']);
         }
 
         return $query->get();
     }
 
-    /**
-     * @return array
-     */
     public function headings(): array
     {
         return [
@@ -70,13 +68,12 @@ class TicketExport implements FromCollection, WithHeadings, WithMapping, WithSty
             'Detail Aduan',
             'Tindakan',
             'Keterangan Perbaikan',
-            'Tanggal Selesai'
+            'Tanggal Selesai',
         ];
     }
 
     /**
-     * @param mixed $ticket
-     * @return array
+     * @param  mixed  $ticket
      */
     public function map($ticket): array
     {
@@ -94,12 +91,11 @@ class TicketExport implements FromCollection, WithHeadings, WithMapping, WithSty
             $ticket->detail_aduan ?? '-',
             $ticket->tindak_lanjut ?? '-',
             $ticket->keterangan_perbaikan ?? '-',
-            $ticket->tanggal_perbaikan ? \Carbon\Carbon::parse($ticket->tanggal_perbaikan)->format('d/m/Y') : '-'
+            $ticket->tanggal_perbaikan ? \Carbon\Carbon::parse($ticket->tanggal_perbaikan)->format('d/m/Y') : '-',
         ];
     }
 
     /**
-     * @param Worksheet $sheet
      * @return array
      */
     public function styles(Worksheet $sheet)
@@ -107,21 +103,15 @@ class TicketExport implements FromCollection, WithHeadings, WithMapping, WithSty
         return [];
     }
 
-    /**
-     * @return string
-     */
     public function title(): string
     {
         return 'Laporan Ticket';
     }
 
-    /**
-     * @return array
-     */
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
                 // Generate dynamic title
@@ -139,7 +129,7 @@ class TicketExport implements FromCollection, WithHeadings, WithMapping, WithSty
                     'font' => [
                         'bold' => true,
                         'size' => 16,
-                        'color' => ['rgb' => '000000']
+                        'color' => ['rgb' => '000000'],
                     ],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -154,11 +144,11 @@ class TicketExport implements FromCollection, WithHeadings, WithMapping, WithSty
                     'font' => [
                         'bold' => true,
                         'size' => 11,
-                        'color' => ['rgb' => 'FFFFFF']
+                        'color' => ['rgb' => 'FFFFFF'],
                     ],
                     'fill' => [
                         'fillType' => Fill::FILL_SOLID,
-                        'startColor' => ['rgb' => '4472C4']
+                        'startColor' => ['rgb' => '4472C4'],
                     ],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -167,7 +157,7 @@ class TicketExport implements FromCollection, WithHeadings, WithMapping, WithSty
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
-                            'color' => ['rgb' => '000000']
+                            'color' => ['rgb' => '000000'],
                         ],
                     ],
                 ]);
@@ -186,21 +176,21 @@ class TicketExport implements FromCollection, WithHeadings, WithMapping, WithSty
                 $lastRow = $this->rowNumber + 3; // +3 karena title(1) + spacing(2) + header(3)
 
                 if ($lastRow > 3) {
-                    $sheet->getStyle('A3:L' . $lastRow)->applyFromArray([
+                    $sheet->getStyle('A3:L'.$lastRow)->applyFromArray([
                         'borders' => [
                             'allBorders' => [
                                 'borderStyle' => Border::BORDER_THIN,
-                                'color' => ['rgb' => '000000']
+                                'color' => ['rgb' => '000000'],
                             ],
                         ],
                     ]);
 
                     // Center align kolom No
-                    $sheet->getStyle('A4:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle('A4:A'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                     // Center align kolom Tanggal Pengaduan dan Tanggal Selesai
-                    $sheet->getStyle('C4:C' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $sheet->getStyle('L4:L' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle('C4:C'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle('L4:L'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
             },
         ];
@@ -208,7 +198,6 @@ class TicketExport implements FromCollection, WithHeadings, WithMapping, WithSty
 
     /**
      * Generate dynamic title based on filters
-     * @return string
      */
     private function generateTitle(): string
     {
@@ -216,17 +205,17 @@ class TicketExport implements FromCollection, WithHeadings, WithMapping, WithSty
         $filterParts = [];
 
         // Add date range if exists
-        if (!empty($this->filters['start_date']) && !empty($this->filters['end_date'])) {
+        if (! empty($this->filters['start_date']) && ! empty($this->filters['end_date'])) {
             $startDate = \Carbon\Carbon::parse($this->filters['start_date'])->format('d/m/Y');
             $endDate = \Carbon\Carbon::parse($this->filters['end_date'])->format('d/m/Y');
             $filterParts[] = "($startDate - $endDate)";
-        } elseif (!empty($this->filters['start_date'])) {
+        } elseif (! empty($this->filters['start_date'])) {
             $startDate = \Carbon\Carbon::parse($this->filters['start_date'])->format('d/m/Y');
             $filterParts[] = "(Dari $startDate)";
         }
 
         // Add ruangan if exists
-        if (!empty($this->filters['ruangan'])) {
+        if (! empty($this->filters['ruangan'])) {
             $ruangan = \App\Models\Ruangan::with('unit')->find($this->filters['ruangan']);
             if ($ruangan) {
                 $filterParts[] = "RUANGAN: {$ruangan->unit->nama_unit}-{$ruangan->nama_ruangan}";
@@ -234,7 +223,7 @@ class TicketExport implements FromCollection, WithHeadings, WithMapping, WithSty
         }
 
         // Add jenis aduan if exists
-        if (!empty($this->filters['jenis_aduan'])) {
+        if (! empty($this->filters['jenis_aduan'])) {
             $jenisAduan = \Modules\Inventory\Models\JenisAduan::find($this->filters['jenis_aduan']);
             if ($jenisAduan) {
                 $filterParts[] = "JENIS ADUAN: {$jenisAduan->nama_jenis}";
@@ -242,8 +231,8 @@ class TicketExport implements FromCollection, WithHeadings, WithMapping, WithSty
         }
 
         // Combine title with filters
-        if (!empty($filterParts)) {
-            $title .= ' ' . implode(' - ', $filterParts);
+        if (! empty($filterParts)) {
+            $title .= ' '.implode(' - ', $filterParts);
         }
 
         return $title;

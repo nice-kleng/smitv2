@@ -10,6 +10,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Satuan extends Model
 {
     use LogsActivity;
+
     protected $fillable = ['nama_satuan', 'pu'];
 
     public function getActivitylogOptions(): LogOptions

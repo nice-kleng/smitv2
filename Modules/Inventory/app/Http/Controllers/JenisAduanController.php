@@ -16,16 +16,19 @@ class JenisAduanController extends Controller
     {
         if ($request->ajax()) {
             $data = JenisAduan::all();
+
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="javascript:void(0)" data-id="' . $row->id . '" class="edit btn btn-primary btn-sm">Edit</a>';
-                    $btn = $btn . ' <a href="javascript:void(0)" data-id="' . $row->id . '" class="delete btn btn-sm btn-danger">Delete</a>';
+                    $btn = '<a href="javascript:void(0)" data-id="'.$row->id.'" class="edit btn btn-primary btn-sm">Edit</a>';
+                    $btn = $btn.' <a href="javascript:void(0)" data-id="'.$row->id.'" class="delete btn btn-sm btn-danger">Delete</a>';
+
                     return $btn;
                 })
                 ->rawColumns(['action'])
                 ->make(true);
         }
+
         return view('inventory::helpdesk.jenis_aduan.jenis_aduan');
     }
 
@@ -43,12 +46,13 @@ class JenisAduanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_jenis' => 'required'
+            'nama_jenis' => 'required',
         ]);
 
         JenisAduan::create(['nama_jenis' => $request->nama_jenis]);
+
         return response()->json([
-            'success' => 'Data berhasil disimpan'
+            'success' => 'Data berhasil disimpan',
         ]);
     }
 
@@ -66,8 +70,9 @@ class JenisAduanController extends Controller
     public function edit($id)
     {
         $jenis = JenisAduan::find($id);
+
         return response()->json([
-            'data' => $jenis
+            'data' => $jenis,
         ]);
     }
 
@@ -77,12 +82,13 @@ class JenisAduanController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nama_jenis' => 'required'
+            'nama_jenis' => 'required',
         ]);
 
         JenisAduan::find($id)->update($request->all());
+
         return response()->json([
-            'success' => 'Data berhasil dihapus'
+            'success' => 'Data berhasil dihapus',
         ]);
     }
 
@@ -92,8 +98,9 @@ class JenisAduanController extends Controller
     public function destroy($id)
     {
         JenisAduan::find($id)->delete();
+
         return response()->json([
-            'success' => 'Data berhasil dihapus'
+            'success' => 'Data berhasil dihapus',
         ]);
     }
 }

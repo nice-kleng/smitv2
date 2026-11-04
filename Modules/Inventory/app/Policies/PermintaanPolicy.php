@@ -33,9 +33,9 @@ class PermintaanPolicy
         return $user->can('manage-permintaan');
     }
 
-    public function update(User $user, Permintaan $permintaan = null)
+    public function update(User $user, ?Permintaan $permintaan = null)
     {
-        if (!$permintaan) {
+        if (! $permintaan) {
             return $user->can('manage-permintaan');
         }
 
@@ -44,9 +44,9 @@ class PermintaanPolicy
             && $permintaan->status == '0';
     }
 
-    public function delete(User $user, Permintaan $permintaan = null)
+    public function delete(User $user, ?Permintaan $permintaan = null)
     {
-        if (!$permintaan) {
+        if (! $permintaan) {
             return $user->can('manage-permintaan');
         }
 
@@ -55,7 +55,7 @@ class PermintaanPolicy
             && $permintaan->status == '0';
     }
 
-    public function approve(User $user, Permintaan $permintaan = null)
+    public function approve(User $user, ?Permintaan $permintaan = null)
     {
         return $user->hasRole('admin') || $user->hasRole('superadmin');
     }

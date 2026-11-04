@@ -22,7 +22,7 @@ class SatuanObserver
             ->by(auth()->user())
             ->withProperties([
                 'old' => $satuan->getOriginal(),
-                'attributes' => $satuan->getAttributes()
+                'attributes' => $satuan->getAttributes(),
             ])
             ->log('Satuan updated');
     }

@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\Unit;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
@@ -22,6 +22,7 @@ class UserManagementController extends Controller
         $users = User::with(['roles', 'ruangan', 'unit'])->get();
         $roles = Role::all();
         $units = Unit::all();
+
         return view('settings.users.index', compact('users', 'roles', 'units'));
     }
 
@@ -38,7 +39,7 @@ class UserManagementController extends Controller
             'roles' => ['required', 'array'],
             'ruangan_id' => ['required', 'exists:ruangans,id'],
             'unit_id' => ['required', 'exists:units,id'],
-            'pu_kd' => ['required', 'string', 'in:' . implode(',', array_keys(User::USER_PU))],
+            'pu_kd' => ['required', 'string', 'in:'.implode(',', array_keys(User::USER_PU))],
         ]);
 
         $user = User::create([
@@ -68,6 +69,7 @@ class UserManagementController extends Controller
         }
 
         $roles = Role::all();
+
         return view('settings.user.form', compact('user', 'roles'));
     }
 
@@ -77,14 +79,14 @@ class UserManagementController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $validated = $request->validate([
-            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $user->id],
+            'username' => ['required', 'string', 'max:255', 'unique:users,username,'.$user->id],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email,' . $user->id],
+            'email' => ['required', 'email', 'unique:users,email,'.$user->id],
             'password' => ['nullable', 'string', 'min:8'],
             'roles' => ['required', 'array'],
             'ruangan_id' => ['required', 'exists:ruangans,id'],
             'unit_id' => ['required', 'exists:units,id'],
-            'pu_kd' => ['required', 'string', 'in:' . implode(',', array_keys(User::USER_PU))],
+            'pu_kd' => ['required', 'string', 'in:'.implode(',', array_keys(User::USER_PU))],
         ]);
 
         $userData = [
@@ -96,7 +98,7 @@ class UserManagementController extends Controller
             'pu_kd' => $validated['pu_kd'],
         ];
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $userData['password'] = Hash::make($validated['password']);
         }
 
@@ -115,11 +117,12 @@ class UserManagementController extends Controller
     {
         if ($user->hasRole('superadmin')) {
             return response()->json([
-                'message' => 'Tidak dapat menghapus user superadmin'
+                'message' => 'Tidak dapat menghapus user superadmin',
             ], 403);
         }
 
         $user->delete();
+
         return response()->json(['message' => 'User berhasil dihapus']);
     }
 
@@ -129,7 +132,7 @@ class UserManagementController extends Controller
     public function getRoles(User $user): JsonResponse
     {
         return response()->json([
-            'roles' => $user->roles->pluck('id')
+            'roles' => $user->roles->pluck('id'),
         ]);
     }
 
@@ -139,10 +142,10 @@ class UserManagementController extends Controller
     public function updateRoles(Request $request, User $user): RedirectResponse
     {
         $validated = $request->validate([
-            'roles' => ['required', 'array']
+            'roles' => ['required', 'array'],
         ]);
 
-        if ($user->hasRole('superadmin') && !in_array('superadmin', $validated['roles'])) {
+        if ($user->hasRole('superadmin') && ! in_array('superadmin', $validated['roles'])) {
             return redirect()->back()->with('error', 'Tidak dapat menghapus role superadmin');
         }
 
@@ -159,6 +162,7 @@ class UserManagementController extends Controller
     public function getPermissions(User $user): View
     {
         $permissions = Permission::all()->groupBy('modules');
+
         return view('settings.users.permissions', compact('user', 'permissions'));
     }
 
@@ -168,7 +172,7 @@ class UserManagementController extends Controller
     public function updatePermissions(Request $request, User $user): RedirectResponse
     {
         $validated = $request->validate([
-            'permissions' => ['required', 'array']
+            'permissions' => ['required', 'array'],
         ]);
 
         $user->syncPermissions($validated['permissions']);

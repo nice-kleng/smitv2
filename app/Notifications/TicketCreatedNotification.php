@@ -9,9 +9,7 @@ use NotificationChannels\WebPush\WebPushMessage;
 
 class TicketCreatedNotification extends Notification
 {
-    public function __construct(public Ticket $ticket)
-    {
-    }
+    public function __construct(public Ticket $ticket) {}
 
     public function via(object $notifiable): array
     {

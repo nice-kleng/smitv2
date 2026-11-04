@@ -7,7 +7,10 @@ use App\Models\User;
 
 class KategoriPolicy
 {
-    protected $kategori, $user;
+    protected $kategori;
+
+    protected $user;
+
     /**
      * Create a new policy instance.
      */

@@ -16,12 +16,12 @@ class Jadwal extends Model
         'week_number',
         'year',
         'status',
-        'notes'
+        'notes',
     ];
 
     protected $casts = [
         'start_date' => 'date',
-        'end_date' => 'date'
+        'end_date' => 'date',
     ];
 
     public function user()
@@ -74,7 +74,6 @@ class Jadwal extends Model
     //         // Urutkan hari kerja
     //         sort($workDayNumbers);
 
-
     //         // Ambil hari kerja terakhir
     //         $lastWorkDay = max($workDayNumbers);
 
@@ -101,7 +100,7 @@ class Jadwal extends Model
     public function calculateWeekEndBasedOnWorkDays($startWeek, $workDays)
     {
         try {
-            if (empty($workDays) || !is_array($workDays)) {
+            if (empty($workDays) || ! is_array($workDays)) {
                 // Default to Friday if no work_days defined (Monday-Friday)
                 return $startWeek->copy()->startOfWeek(Carbon::MONDAY)->addDays(4); // Friday
             }
@@ -113,7 +112,7 @@ class Jadwal extends Model
                 'thursday' => Carbon::THURSDAY,
                 'friday' => Carbon::FRIDAY,
                 'saturday' => Carbon::SATURDAY,
-                'sunday' => Carbon::SUNDAY
+                'sunday' => Carbon::SUNDAY,
             ];
 
             // Convert work_days ke nomor hari dan urutkan
@@ -151,7 +150,7 @@ class Jadwal extends Model
                 'start_week' => $startWeek->format('Y-m-d'),
                 'work_days' => $workDays,
                 'last_work_day' => $lastWorkDay,
-                'calculated_end' => $weekEnd->format('Y-m-d')
+                'calculated_end' => $weekEnd->format('Y-m-d'),
             ]);
 
             return $weekEnd;
@@ -159,7 +158,7 @@ class Jadwal extends Model
             Log::error('Error calculating week end based on work_days', [
                 'error' => $e->getMessage(),
                 'work_days' => $workDays,
-                'start_week' => $startWeek->format('Y-m-d')
+                'start_week' => $startWeek->format('Y-m-d'),
             ]);
 
             // Return default Friday if error occurs
@@ -173,11 +172,12 @@ class Jadwal extends Model
             // Delete existing schedule details first
             $this->scheduleDetails()->delete();
 
-            if (!$this->shift) {
+            if (! $this->shift) {
                 Log::warning('Cannot generate schedule details: shift not found', [
                     'jadwal_id' => $this->id,
-                    'shift_id' => $this->shift_id
+                    'shift_id' => $this->shift_id,
                 ]);
+
                 return false;
             }
 
@@ -193,7 +193,7 @@ class Jadwal extends Model
                 3 => 'wednesday',
                 4 => 'thursday',
                 5 => 'friday',
-                6 => 'saturday'
+                6 => 'saturday',
             ];
 
             // Get work days from shift and make sure it's a proper array
@@ -218,7 +218,7 @@ class Jadwal extends Model
                 'start_date' => $startDate->format('Y-m-d'),
                 'end_date' => $endDate->format('Y-m-d'),
                 'shift_name' => $this->shift->name,
-                'work_days' => $workDays
+                'work_days' => $workDays,
             ]);
 
             // while ($currentDate->lte($endDate)) {
@@ -258,7 +258,7 @@ class Jadwal extends Model
                     'actual_start_time' => null, // Will be filled when employee checks in
                     'actual_end_time' => null,   // Will be filled when employee checks out
                     'attendance_status' => 'scheduled', // Default status
-                    'notes' => null
+                    'notes' => null,
                 ]);
 
                 $details[] = $detail;
@@ -267,7 +267,7 @@ class Jadwal extends Model
 
             Log::info('Schedule details generated successfully', [
                 'jadwal_id' => $this->id,
-                'details_count' => count($details)
+                'details_count' => count($details),
             ]);
 
             return $details;
@@ -275,10 +275,10 @@ class Jadwal extends Model
             Log::error('Error generating schedule details', [
                 'jadwal_id' => $this->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            throw new \Exception('Gagal membuat detail jadwal: ' . $e->getMessage());
+            throw new \Exception('Gagal membuat detail jadwal: '.$e->getMessage());
         }
     }
 
@@ -303,7 +303,7 @@ class Jadwal extends Model
                     'actual_start_time' => $detail->actual_start_time,
                     'actual_end_time' => $detail->actual_end_time,
                     'attendance_status' => $detail->attendance_status,
-                    'notes' => $detail->notes
+                    'notes' => $detail->notes,
                 ];
             });
     }
@@ -344,7 +344,7 @@ class Jadwal extends Model
      */
     public function getFormattedPeriodAttribute()
     {
-        return Carbon::parse($this->start_date)->format('d/m/Y') . ' - ' .
+        return Carbon::parse($this->start_date)->format('d/m/Y').' - '.
             Carbon::parse($this->end_date)->format('d/m/Y');
     }
 
@@ -353,7 +353,7 @@ class Jadwal extends Model
      */
     public function getWeekInfoAttribute()
     {
-        return 'Week ' . $this->week_number . ', ' . $this->year;
+        return 'Week '.$this->week_number.', '.$this->year;
     }
 
     /**
@@ -413,7 +413,7 @@ class Jadwal extends Model
             } catch (\Exception $e) {
                 Log::error('Failed to delete schedule details', [
                     'jadwal_id' => $jadwal->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         });
