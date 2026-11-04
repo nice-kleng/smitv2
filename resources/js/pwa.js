@@ -60,3 +60,76 @@ if (search) {
         applyFilter();
     });
 }
+
+const actionForm = document.getElementById('tindakan-form');
+if (actionForm) {
+    const serviceFields = actionForm.querySelector('[data-service-fields]');
+    const serviceInputs = serviceFields ? [...serviceFields.querySelectorAll('input')] : [];
+    const saveButton = document.getElementById('save-tindakan');
+    const formToast = document.getElementById('form-toast');
+
+    const syncServiceFields = () => {
+        const isService = actionForm.querySelector('input[name="keterangan_perbaikan"]:checked')?.value === '4';
+        if (serviceFields) serviceFields.hidden = !isService;
+        serviceInputs.forEach((input) => { input.disabled = !isService; });
+    };
+
+    actionForm.querySelectorAll('input[name="keterangan_perbaikan"]')
+        .forEach((radio) => radio.addEventListener('change', syncServiceFields));
+    syncServiceFields();
+
+    const showFormError = (message) => {
+        if (!formToast) return;
+        formToast.textContent = message;
+        formToast.hidden = false;
+    };
+
+    actionForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        actionForm.querySelectorAll('[data-error-for]').forEach((element) => {
+            element.textContent = '';
+        });
+        actionForm.querySelectorAll('[aria-invalid="true"]').forEach((element) => {
+            element.removeAttribute('aria-invalid');
+        });
+        saveButton.disabled = true;
+        const originalLabel = saveButton.textContent;
+        saveButton.textContent = 'Menyimpan…';
+
+        try {
+            const response = await fetch(actionForm.action, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: new FormData(actionForm),
+            });
+
+            if (response.status === 422) {
+                const data = await response.json();
+                let firstInvalid = null;
+                Object.entries(data.errors ?? {}).forEach(([field, messages]) => {
+                    const error = actionForm.querySelector(`[data-error-for="${field}"]`);
+                    if (error) error.textContent = messages[0];
+                    const input = actionForm.querySelector(`[name="${field}"]`);
+                    if (input) {
+                        input.setAttribute('aria-invalid', 'true');
+                        firstInvalid ??= input;
+                    }
+                });
+                firstInvalid?.focus();
+                showFormError('Periksa kembali field yang ditandai.');
+                return;
+            }
+
+            if (!response.ok) throw new Error('save failed');
+            window.location.assign(`${actionForm.dataset.detailUrl}?saved=1`);
+        } catch (error) {
+            showFormError('Tindakan gagal disimpan. Periksa koneksi, lalu coba lagi.');
+        } finally {
+            saveButton.disabled = false;
+            saveButton.textContent = originalLabel;
+        }
+    });
+}

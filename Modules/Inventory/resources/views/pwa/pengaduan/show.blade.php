@@ -88,7 +88,7 @@
     @if($ticket->status === '0')
         <div class="fixed bottom-0 inset-x-0 border-t border-line bg-surface pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3">
             <div class="pwa-shell">
-                <a href="#" class="pwa-button">Ambil tindakan</a>
+                <a href="{{ route('inventory.pwa.pengaduan.tindakan', $ticket->id) }}" class="pwa-button">Ambil tindakan</a>
             </div>
         </div>
     @endif

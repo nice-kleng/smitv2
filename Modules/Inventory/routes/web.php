@@ -153,4 +153,5 @@ Route::middleware(['auth', 'permission:manage-data-pengaduan'])
     ->group(function () {
         Route::get('/pengaduan', [PwaTicketController::class, 'index'])->name('pengaduan.index');
         Route::get('/pengaduan/{id}', [PwaTicketController::class, 'show'])->name('pengaduan.show');
+        Route::get('/pengaduan/{id}/tindakan', [PwaTicketController::class, 'tindakan'])->name('pengaduan.tindakan');
     });
