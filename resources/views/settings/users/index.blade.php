@@ -207,7 +207,7 @@
 
                     // Set form action
                     $('#manageRolesForm').attr('action',
-                        `{{ route('settings.users.roles', ':id') }}`.replace(':id', id)
+                        `{{ route('settings.users.roles.update', ':id') }}`.replace(':id', id)
                     );
 
                     $('#manageRolesModal').modal('show');

@@ -76,9 +76,9 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/{user}', 'update')->name('users.update');
             Route::delete('/{user}', 'destroy')->name('users.destroy');
             Route::get('/getRole/{user}', 'getRoles')->name('users.roles');
-            Route::put('/getRole/{user}', 'updateRoles')->name('users.roles');
+            Route::put('/getRole/{user}', 'updateRoles')->name('users.roles.update');
             Route::get('/getPermission/{user}', 'getPermissions')->name('users.permissions');
-            Route::put('/getPermission/{user}', 'updatePermissions')->name('users.permissions');
+            Route::put('/getPermission/{user}', 'updatePermissions')->name('users.permissions.update');
         });
 
         Route::controller(RoleController::class)->prefix('/roles')->group(function () {
