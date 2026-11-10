@@ -19,7 +19,7 @@ class StokSeeder extends Seeder
                     'master_barang_id' => $barang->id,
                     'stok' => rand(1, 100),
                     'harga' => rand(10000, 10000000),
-                    'keterangan' => 'Stok per ' . date('Y-m-d')
+                    'keterangan' => 'Stok per '.date('Y-m-d'),
                 ]);
             }
         }

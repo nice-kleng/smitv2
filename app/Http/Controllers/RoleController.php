@@ -3,20 +3,22 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
     public function index()
     {
         $roles = Role::with('permissions')->get();
+
         return view('settings.role.index', compact('roles'));
     }
 
     public function create()
     {
         $permissions = Permission::orderBy('group_name')->get();
+
         return view('settings.role.form', compact('permissions'));
     }
 
@@ -25,7 +27,7 @@ class RoleController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:roles,name',
             'permissions' => 'required|array',
-            'permissions.*' => 'exists:permissions,name'
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
         $role = Role::create(['name' => $validated['name']]);
@@ -45,6 +47,7 @@ class RoleController extends Controller
         }
 
         $permissions = Permission::orderBy('group_name')->get();
+
         return view('settings.role.form', compact('role', 'permissions'));
     }
 
@@ -57,9 +60,9 @@ class RoleController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+            'name' => 'required|string|max:255|unique:roles,name,'.$role->id,
             'permissions' => 'required|array',
-            'permissions.*' => 'exists:permissions,name'
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
         $role->update(['name' => $validated['name']]);

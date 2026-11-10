@@ -15,7 +15,7 @@ class BarangSeeder extends Seeder
 
         // Get the first letter of each word
         foreach ($words as $word) {
-            if (!empty($word)) {
+            if (! empty($word)) {
                 $initials .= $word[0];
             }
         }
@@ -116,19 +116,19 @@ class BarangSeeder extends Seeder
             $counter = 1;
             $finalCode = $baseInitials;
             while (in_array($finalCode, $usedCodes)) {
-                $finalCode = $baseInitials . $counter;
+                $finalCode = $baseInitials.$counter;
                 $counter++;
             }
             $usedCodes[] = $finalCode;
 
             $data[] = [
                 'kode_barang' => $finalCode,
-                'nama_barang' => $item['nama_barang'] . ' ' . $i,
+                'nama_barang' => $item['nama_barang'].' '.$i,
                 'satuan_id' => $item['satuan_id'],
                 'kategori_id' => $item['kategori_id'],
                 'jenis' => $item['jenis'],
                 'pu' => $item['pu'],
-                'keterangan' => 'Keterangan untuk ' . $item['nama_barang'] . ' ' . $i
+                'keterangan' => 'Keterangan untuk '.$item['nama_barang'].' '.$i,
             ];
         }
 

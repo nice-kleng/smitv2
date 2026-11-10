@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\AccountDB;
 use Illuminate\Http\Request;
-use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
 
 class AccountDBController extends Controller
@@ -31,10 +30,11 @@ class AccountDBController extends Controller
     public function list(Request $request)
     {
         $query = AccountDB::with('user')->orderBy('created_at', 'desc');
-        if (!auth()->user()->hasRole('superadmin', 'direktur')) {
+        if (! auth()->user()->hasRole('superadmin', 'direktur')) {
             $query->where('user_id', auth()->user()->id);
         }
         $accounts = $query->get();
+
         return response()->json($accounts);
     }
 
@@ -53,6 +53,7 @@ class AccountDBController extends Controller
         ]);
         $validated['user_id'] = optional(Auth::user())->id ?? 1; // Sementara, ganti sesuai kebutuhan
         $account = AccountDB::create($validated);
+
         return response()->json($account, 201);
     }
 
@@ -62,6 +63,7 @@ class AccountDBController extends Controller
     public function show($id)
     {
         $account = AccountDB::findOrFail($id);
+
         return response()->json($account);
     }
 
@@ -80,7 +82,7 @@ class AccountDBController extends Controller
     {
         $account = AccountDB::findOrFail($id);
         // Cek kepemilikan data
-        if (!auth()->user()->hasRole('superadmin') && $account->user_id !== auth()->user()->id) {
+        if (! auth()->user()->hasRole('superadmin') && $account->user_id !== auth()->user()->id) {
             return response()->json(['message' => 'Anda tidak berhak mengedit data ini.'], 403);
         }
         $validated = $request->validate([
@@ -92,6 +94,7 @@ class AccountDBController extends Controller
             'password' => 'string|max:255',
         ]);
         $account->update($validated);
+
         return response()->json($account);
     }
 
@@ -102,10 +105,11 @@ class AccountDBController extends Controller
     {
         $account = AccountDB::findOrFail($id);
         // Cek kepemilikan data
-        if (!auth()->user()->hasRole('superadmin') || $account->user_id !== auth()->user()->id) {
+        if (! auth()->user()->hasRole('superadmin') || $account->user_id !== auth()->user()->id) {
             return response()->json(['message' => 'Anda tidak berhak menghapus data ini.'], 403);
         }
         $account->delete();
+
         return response()->json(['success' => true]);
     }
 }

@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Models\Inventory;
 use Modules\Inventory\Models\Pengajuan;
 use Modules\Inventory\Models\Permintaan;
 use Modules\Inventory\Models\Ticket;
-use Modules\Inventory\Models\Transaksi;
 use Spatie\Permission\Models\Role;
 
 class DashboardController extends Controller
@@ -37,7 +36,7 @@ class DashboardController extends Controller
 
         return view('dashboard', [
             'roles' => $roles,
-            'dashboardData' => $dashboardData
+            'dashboardData' => $dashboardData,
         ]);
     }
 
@@ -47,16 +46,16 @@ class DashboardController extends Controller
         $isAdminOrSuperadmin = $user->roles->whereIn('name', ['superadmin', 'direktur'])->isNotEmpty();
 
         // Izinkan superadmin dan admin mengakses semua data
-        if (!$isAdminOrSuperadmin && !$user->roles->contains('name', $role)) {
+        if (! $isAdminOrSuperadmin && ! $user->roles->contains('name', $role)) {
             return [];
         }
 
         switch ($role) {
-                // case 'direktur':
-                //     return [
-                //         'totalUnit' => \App\Models\Unit::count(),
-                //         'logBook' => \App\Models\LogBook::latest()->take(5)->get(),
-                //     ];
+            // case 'direktur':
+            //     return [
+            //         'totalUnit' => \App\Models\Unit::count(),
+            //         'logBook' => \App\Models\LogBook::latest()->take(5)->get(),
+            //     ];
 
             case 'keuangan':
                 $bulanDalamSetahun = [];
@@ -64,7 +63,7 @@ class DashboardController extends Controller
                     $bulanDalamSetahun[$i] = [
                         'bulan' => date('F', mktime(0, 0, 0, $i, 1)),
                         'bulan_angka' => $i,
-                        'total' => 0
+                        'total' => 0,
                     ];
                 }
 
@@ -97,7 +96,7 @@ class DashboardController extends Controller
                 $baseQuery = Permintaan::query();
 
                 // Filter berdasarkan PU jika bukan admin/superadmin
-                if (!$isAdminOrSuperadmin) {
+                if (! $isAdminOrSuperadmin) {
                     $baseQuery->where('pu', $user->pu_kd);
                 }
 
@@ -134,8 +133,8 @@ class DashboardController extends Controller
                         $bulan => [
                             'bulan' => date('F', mktime(0, 0, 0, $bulan, 1)),
                             'bulan_angka' => $bulan,
-                            'total' => 0
-                        ]
+                            'total' => 0,
+                        ],
                     ];
                 })->toArray();
 
@@ -143,7 +142,7 @@ class DashboardController extends Controller
                 $dataPermintaan = Permintaan::selectRaw('MONTH(tanggal_permintaan) as bulan')
                     ->selectRaw('COUNT(DISTINCT kode_permintaan) as total_permintaan')
                     ->whereYear('tanggal_permintaan', now()->year)
-                    ->when(!$isAdminOrSuperadmin, function ($query) use ($user) {
+                    ->when(! $isAdminOrSuperadmin, function ($query) use ($user) {
                         return $query->where('pu', $user->pu_kd);
                     })
                     ->groupBy('bulan')
@@ -181,7 +180,7 @@ class DashboardController extends Controller
                     $bulanDalamSetahun[$i] = [
                         'bulan' => date('F', mktime(0, 0, 0, $i, 1)),
                         'bulan_angka' => $i,
-                        'total' => 0
+                        'total' => 0,
                     ];
                 }
 
@@ -260,9 +259,9 @@ class DashboardController extends Controller
                         ->take(5)
                         ->get(),
 
-                    'totalInventarisRusak' => $inventoryStats->get('0', (object)['total' => 0])->total,
-                    'totalInventarisKurangBaik' => $inventoryStats->get('1', (object)['total' => 0])->total,
-                    'totalInventarisBaik' => $inventoryStats->get('2', (object)['total' => 0])->total,
+                    'totalInventarisRusak' => $inventoryStats->get('0', (object) ['total' => 0])->total,
+                    'totalInventarisKurangBaik' => $inventoryStats->get('1', (object) ['total' => 0])->total,
+                    'totalInventarisBaik' => $inventoryStats->get('2', (object) ['total' => 0])->total,
 
                     'grafikKerusakan' => array_values($bulanDalamSetahun),
                     'detailKondisiByKategori' => $detailKondisiByKategori,
@@ -273,14 +272,13 @@ class DashboardController extends Controller
                 $permintaanApproved = Permintaan::where('ruangan_id', Auth::user()->ruangan_id)->where('status', '3')->count();
                 $permintaanRejected = Permintaan::where('ruangan_id', Auth::user()->ruangan_id)->where('status', '1')->count();
 
-
                 $grafik = Permintaan::query();
                 $bulanDalamSetahun = [];
                 for ($i = 1; $i <= 12; $i++) {
                     $bulanDalamSetahun[$i] = [
                         'bulan' => date('F', mktime(0, 0, 0, $i, 1)),
                         'bulan_angka' => $i,
-                        'total' => 0
+                        'total' => 0,
                     ];
                 }
 

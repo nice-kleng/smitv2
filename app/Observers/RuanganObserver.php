@@ -23,7 +23,7 @@ class RuanganObserver
             ->performedOn($ruangan)
             ->withProperties([
                 'old' => $ruangan->getOriginal(),
-                'attributes' => $ruangan->getAttributes()
+                'attributes' => $ruangan->getAttributes(),
             ])
             ->log('Ruangan updated');
     }

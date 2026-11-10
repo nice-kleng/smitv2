@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Permission;
 
 class PermissionController extends Controller
 {
@@ -32,7 +32,7 @@ class PermissionController extends Controller
             'name' => 'required|string|max:255|unique:permissions,name',
             'modules' => 'required|string|max:255',
             'group_name' => 'required|string|max:255',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
         ]);
 
         try {
@@ -53,18 +53,18 @@ class PermissionController extends Controller
         $validated = $request->validate([
             'module' => 'required|string',
             'actions' => 'required|array',
-            'actions.*' => 'string'
+            'actions.*' => 'string',
         ]);
 
         try {
             $created = 0;
             foreach ($validated['actions'] as $action) {
-                $name = $action . '-' . Str::slug($validated['module']);
+                $name = $action.'-'.Str::slug($validated['module']);
                 Permission::firstOrCreate(
                     ['name' => $name],
                     [
                         'group_name' => $validated['module'],
-                        'description' => ucfirst($action) . ' ' . ucfirst($validated['module'])
+                        'description' => ucfirst($action).' '.ucfirst($validated['module']),
                     ]
                 );
                 $created++;
@@ -72,7 +72,7 @@ class PermissionController extends Controller
 
             return redirect()
                 ->route('settings.permission.index')
-                ->with('success', $created . ' permission berhasil dibuat');
+                ->with('success', $created.' permission berhasil dibuat');
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -91,10 +91,10 @@ class PermissionController extends Controller
     public function update(Request $request, Permission $permission)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:permissions,name,' . $permission->id,
+            'name' => 'required|string|max:255|unique:permissions,name,'.$permission->id,
             'modules' => 'required|string|max:255',
             'group_name' => 'required|string|max:255',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
         ]);
 
         try {

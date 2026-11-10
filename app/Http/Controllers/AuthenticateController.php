@@ -20,12 +20,17 @@ class AuthenticateController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+
             if (Auth::user()->hasRole('umum')) {
                 return redirect()->intended(route('account-db.index'));
-            } else {
-                $request->session()->regenerate();
-                return redirect()->intended('/dashboard');
             }
+
+            if (Auth::user()->hasRole('teknisi')) {
+                return redirect()->intended(route('inventory.pwa.pengaduan.index'));
+            }
+
+            return redirect()->intended('/dashboard');
         }
 
         return back()->withErrors([
@@ -35,9 +40,11 @@ class AuthenticateController extends Controller
 
     public function logout(Request $request)
     {
+        $request->user()?->pushSubscriptions()->delete();
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/login');
     }
 }

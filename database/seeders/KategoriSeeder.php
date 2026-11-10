@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class KategoriSeeder extends Seeder
@@ -27,7 +26,7 @@ class KategoriSeeder extends Seeder
             ['nama_kategori' => 'Peralatan Listrik', 'pu' => 'it'],
             ['nama_kategori' => 'Perlengkapan Keamanan', 'pu' => 'log'],
             ['nama_kategori' => 'Mesin Kantor', 'pu' => 'it'],
-            ['nama_kategori' => 'Perlengkapan Dapur', 'pu' => 'log']
+            ['nama_kategori' => 'Perlengkapan Dapur', 'pu' => 'log'],
         ];
 
         foreach ($data as $item) {

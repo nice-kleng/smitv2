@@ -64,6 +64,7 @@ class PermintaanController extends Controller
     public function create()
     {
         $barangs = MasterBarang::orderBy('nama_barang', 'asc')->get();
+
         return view('inventory::permintaan.unit.form', ['barangs' => $barangs]);
     }
 
@@ -79,7 +80,7 @@ class PermintaanController extends Controller
 
         DB::beginTransaction();
         try {
-            $kode_permintaan = 'PM' . date('YmdHis');
+            $kode_permintaan = 'PM'.date('YmdHis');
 
             foreach ($request->barang_id as $key => $barang) {
                 $barangMaster = MasterBarang::find($barang);
@@ -87,8 +88,8 @@ class PermintaanController extends Controller
                 //     return redirect()->route('inventory.permintaan.index')->with('error', 'Stok ' . $barangMaster->nama_barang . ' tidak mencukupi');
                 // }
 
-                $permintaan = new Permintaan();
-                $permintaan->kode_permintaan = $kode_permintaan . '-' . str_pad($key + 1, 3, '0', STR_PAD_LEFT);
+                $permintaan = new Permintaan;
+                $permintaan->kode_permintaan = $kode_permintaan.'-'.str_pad($key + 1, 3, '0', STR_PAD_LEFT);
                 $permintaan->pu = $barangMaster->pu;
                 $permintaan->barang_id = $barang;
                 $permintaan->jumlah = $request->jumlah[$key];
@@ -103,10 +104,12 @@ class PermintaanController extends Controller
             }
 
             DB::commit();
+
             return redirect()->route('inventory.permintaan.index')->with('success', 'Permintaan berhasil disimpan');
         } catch (\Throwable $th) {
             DB::rollBack();
             dd($th);
+
             return redirect()->route('inventory.permintaan.index')->with('error', 'Permintaan gagal disimpan');
         }
     }
@@ -119,8 +122,9 @@ class PermintaanController extends Controller
         $permintaan = Permintaan::with(['barang', 'ruangan.unit'])
             ->where('kode_permintaan', 'like', "%$id%")
             ->get();
+
         return response()->json([
-            'data' => $permintaan
+            'data' => $permintaan,
         ]);
     }
 
@@ -136,9 +140,10 @@ class PermintaanController extends Controller
             ->where('kode_permintaan', 'like', "%$id%")
             ->get();
         $barangs = MasterBarang::orderBy('nama_barang', 'asc')->get();
+
         return view('inventory::permintaan.unit.form', [
             'barangs' => $barangs,
-            'permintaan' => $permintaan
+            'permintaan' => $permintaan,
         ]);
     }
 
@@ -163,8 +168,8 @@ class PermintaanController extends Controller
             foreach ($request->barang_id as $key => $barang) {
                 $barangMaster = MasterBarang::find($barang);
 
-                $permintaan = new Permintaan();
-                $permintaan->kode_permintaan = $id . '-' . str_pad($key + 1, 3, '0', STR_PAD_LEFT);
+                $permintaan = new Permintaan;
+                $permintaan->kode_permintaan = $id.'-'.str_pad($key + 1, 3, '0', STR_PAD_LEFT);
                 $permintaan->pu = $barangMaster->pu;
                 $permintaan->barang_id = $barang;
                 $permintaan->jumlah = $request->jumlah[$key];
@@ -179,9 +184,11 @@ class PermintaanController extends Controller
             }
 
             DB::commit();
+
             return redirect()->route('inventory.permintaan.index')->with('success', 'Permintaan berhasil diupdate');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return redirect()->route('inventory.permintaan.index')->with('error', 'Permintaan gagal diupdate');
         }
     }
@@ -196,9 +203,11 @@ class PermintaanController extends Controller
         try {
             Permintaan::where('kode_permintaan', 'like', "%$id%")->delete();
             DB::commit();
+
             return redirect()->route('inventory.permintaan.index')->with('success', 'Permintaan berhasil dihapus');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return redirect()->route('inventory.permintaan.index')->with('error', 'Permintaan gagal dihapus');
         }
     }
@@ -213,7 +222,7 @@ class PermintaanController extends Controller
 
         return view('inventory::permintaan.admin.form_approval', [
             'permintaan' => $permintaan,
-            'kode' => $id
+            'kode' => $id,
         ]);
     }
 
@@ -238,7 +247,7 @@ class PermintaanController extends Controller
             foreach ($request->permintaan_id as $key => $item) {
                 $permintaan = Permintaan::findOrFail($item);
 
-                if (in_array((string)$key, $approved_items)) {
+                if (in_array((string) $key, $approved_items)) {
                     if (empty($request->stok_id[$key]) || empty($request->jumlah_approve[$key])) {
                         return redirect()->route('inventory.permintaan.index')->with('error', 'Stok dan jumlah harus diisi untuk item yang disetujui');
                     }
@@ -261,7 +270,7 @@ class PermintaanController extends Controller
                     $permintaan->approve_id = Auth::user()->id;
                     $permintaan->save();
 
-                    event('eloquent.approved: ' . get_class($permintaan), [$permintaan]);
+                    event('eloquent.approved: '.get_class($permintaan), [$permintaan]);
 
                     Transaksi::create([
                         'stok_id' => $stok->id,
@@ -270,25 +279,27 @@ class PermintaanController extends Controller
                         'permintaan_id' => $permintaan->id,
                         'jenis' => '0',
                         'created_by' => Auth::user()->id,
-                        'updated_by' => Auth::user()->id
+                        'updated_by' => Auth::user()->id,
                     ]);
                 } else {
                     $permintaan->update([
                         'status' => '1',
                         'tanggal_approve' => date('Y-m-d'),
                         'approve_id' => Auth::user()->id,
-                        'keterangan' => $request->keterangan[$key] ?? ''
+                        'keterangan' => $request->keterangan[$key] ?? '',
                     ]);
                 }
             }
 
             DB::commit();
+
             return redirect()
                 ->route('inventory.permintaan.index')
                 ->with('success', 'Permintaan berhasil diproses');
         } catch (\Exception $e) {
             DB::rollBack();
             dd($e);
+
             return redirect()
                 ->back()
                 ->with('error', $e->getMessage());
@@ -305,9 +316,8 @@ class PermintaanController extends Controller
             ->where('status', '2')
             ->get();
 
-
         return response()->json([
-            'data' => view('inventory::permintaan.unit.table_response', ['permintaan' => $permintaan, 'prefix' => $prefix])->render()
+            'data' => view('inventory::permintaan.unit.table_response', ['permintaan' => $permintaan, 'prefix' => $prefix])->render(),
         ]);
     }
 
@@ -343,7 +353,7 @@ class PermintaanController extends Controller
                         $kdBarang = $barang->kode_barang;
                         $tahun_pengadaan = date('Y');
 
-                        $inventory = new Inventory();
+                        $inventory = new Inventory;
                         $inventory->kode_barang = "$kdUnit/$isElektronik/$kdBarang/$nobarang/$kdRuangan/$tahun_pengadaan";
                         $inventory->no_barang = $nobarang;
                         $inventory->barang_id = $barang_id;
@@ -366,17 +376,19 @@ class PermintaanController extends Controller
                             'tanggal_mutasi' => date('Y-m-d'),
                             'keterangan' => 'Pengambilan barang',
                             'created_id' => Auth::user()->id,
-                            'updated_id' => Auth::user()->id
+                            'updated_id' => Auth::user()->id,
                         ]);
                     }
                 }
             }
             DB::commit();
+
             return redirect()->route('inventory.permintaan.index')->with('success', 'Pengambilan barang berhasil diproses');
         } catch (\Throwable $th) {
             //throw $th;
             DB::rollBack();
             dd($th);
+
             return redirect()->route('inventory.permintaan.index')->with('error', 'Pengambilan barang gagal diproses');
         }
     }
@@ -384,10 +396,10 @@ class PermintaanController extends Controller
     /** *
      * Riwayat permintaan
      */
-
     public function history(Request $request)
     {
         $units = Unit::orderBy('nama_unit', 'asc')->get();
+
         return view('inventory::permintaan.unit.history', ['units' => $units]);
     }
 
@@ -471,11 +483,13 @@ class PermintaanController extends Controller
                 ];
                 $badge = $statusMap[$row->status]['badge'];
                 $text = $statusMap[$row->status]['text'];
-                return '<span class="badge badge-' . $badge . '">' . Str::ucfirst($text) . '</span>';
+
+                return '<span class="badge badge-'.$badge.'">'.Str::ucfirst($text).'</span>';
             })
             ->addColumn('action', function ($row) {
-                $btn = '<a href="javascript:void(0)" class="btn btn-info btn-sm btndetail" title="Detail Permintaan" data-id="' . $row->kode_prefix . '">Detail</a> ';
-                $btn .= '<a href="' . route('inventory.permintaan.unduh-form-permintaan', $row->kode_prefix) . '" class="btn btn-success btn-sm" target="_blank" title="Cetak Form Permintaan"><i class="fas fa-file-pdf"></i></a>';
+                $btn = '<a href="javascript:void(0)" class="btn btn-info btn-sm btndetail" title="Detail Permintaan" data-id="'.$row->kode_prefix.'">Detail</a> ';
+                $btn .= '<a href="'.route('inventory.permintaan.unduh-form-permintaan', $row->kode_prefix).'" class="btn btn-success btn-sm" target="_blank" title="Cetak Form Permintaan"><i class="fas fa-file-pdf"></i></a>';
+
                 return $btn;
             })
             ->rawColumns(['status_format', 'action'])
@@ -495,7 +509,7 @@ class PermintaanController extends Controller
 
             $pdf = PDF::loadView('inventory::permintaan.pdf.form_permintaan', [
                 'permintaan' => $permintaan,
-                'kode' => $kode
+                'kode' => $kode,
             ]);
 
             $pdf->setPaper('a4', 'landscape');
@@ -505,11 +519,12 @@ class PermintaanController extends Controller
                 'isRemoteEnabled' => true,
             ]);
 
-            return $pdf->stream('form_permintaan_' . $kode . '.pdf');
+            return $pdf->stream('form_permintaan_'.$kode.'.pdf');
         } catch (\Exception $e) {
-            Log::error('PDF Generation Error: ' . $e->getMessage());
+            Log::error('PDF Generation Error: '.$e->getMessage());
             dd($e);
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengunduh PDF: ' . $e->getMessage());
+
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengunduh PDF: '.$e->getMessage());
         }
     }
 
@@ -519,7 +534,7 @@ class PermintaanController extends Controller
         $initials = '';
 
         foreach ($words as $word) {
-            if (!empty($word)) {
+            if (! empty($word)) {
                 $initials .= $word[0];
             }
         }

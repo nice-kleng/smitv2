@@ -3,16 +3,19 @@
 namespace App\Exports;
 
 use Carbon\Carbon;
-use Modules\Inventory\Models\Ticket;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Modules\Inventory\Models\Ticket;
 
 class RekapServiceExport implements FromCollection, WithHeadings, WithMapping
 {
     protected $tanggal_awal;
+
     protected $tanggal_akhir;
+
     protected $jenis_aduan;
+
     protected $ruangan;
 
     public function __construct($tanggal_awal, $tanggal_akhir, $jenis_aduan, $ruangan)
@@ -26,8 +29,7 @@ class RekapServiceExport implements FromCollection, WithHeadings, WithMapping
     public function collection()
     {
         $query = Ticket::with('inventaris.barang', 'ruangan.unit', 'jenisAduan');
-            // ->where('status', 1);
-
+        // ->where('status', 1);
 
         // // Filter tanggal - perbaiki logikanya
         // if ($this->tanggal_awal != null && $this->tanggal_akhir != null) {
@@ -68,7 +70,7 @@ class RekapServiceExport implements FromCollection, WithHeadings, WithMapping
             'Nama Barang',
             'Jenis Aduan',
             'Keterangan Perbaikan',
-            'Tanggal Selesai'
+            'Tanggal Selesai',
         ];
     }
 
@@ -87,7 +89,7 @@ class RekapServiceExport implements FromCollection, WithHeadings, WithMapping
             $ticket->inventaris ? $ticket->inventaris->barang->nama_barang : '-',
             $ticket->jenisAduan ? $ticket->jenisAduan->nama_jenis : '-',
             $ticket->keterangan_perbaikan,
-            $ticket->tanggal_perbaikan ? Carbon::parse($ticket->tanggal_perbaikan)->isoFormat('D MMMM Y HH:mm') : '-'
+            $ticket->tanggal_perbaikan ? Carbon::parse($ticket->tanggal_perbaikan)->isoFormat('D MMMM Y HH:mm') : '-',
         ];
     }
 }

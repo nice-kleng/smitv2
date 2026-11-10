@@ -8,6 +8,7 @@ use Modules\Inventory\Http\Controllers\LaporanStokController;
 use Modules\Inventory\Http\Controllers\MasterBarangController;
 use Modules\Inventory\Http\Controllers\PengajuanController;
 use Modules\Inventory\Http\Controllers\PermintaanController;
+use Modules\Inventory\Http\Controllers\PwaTicketController;
 use Modules\Inventory\Http\Controllers\TicketController;
 
 /*
@@ -91,16 +92,27 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
     });
 
     Route::group(['prefix' => 'helpdesk', 'as' => 'helpdesk.'], function () {
-        Route::resource('/jenis-aduan', JenisAduanController::class)->names('jenis-aduan');
+        Route::resource('/jenis-aduan', JenisAduanController::class)
+            ->names('jenis-aduan')
+            ->middleware('permission:manage-jenis-pengaduan');
 
         Route::controller(TicketController::class)->prefix('pengaduan')->group(function () {
-            Route::get('/', 'listTicket')->name('ticket.index');
-            Route::get('/show-detail/{id}', 'show')->name('ticket.show-detail');
-            Route::get('/getTindakan/{id}', 'getTindakan')->name('ticket.get-tindakan');
-            Route::put('/tindakan/{id}', 'tindakan')->name('ticket.tindakan');
-            Route::get('/rekap-service-luar', 'rekapServiceLuar')->name('ticket.rekapService');
-            Route::get('/riwayat-service-teknisi', 'historyServiceTeknisi')->name('ticket.riwayat-service-teknisi');
-            Route::get('/export-service', 'exportService')->name('ticket.export-service');
+            Route::middleware('permission:manage-data-pengaduan')->group(function () {
+                Route::get('/', 'listTicket')->name('ticket.index');
+                Route::get('/show-detail/{id}', 'show')->name('ticket.show-detail');
+                Route::get('/getTindakan/{id}', 'getTindakan')->name('ticket.get-tindakan');
+                Route::put('/tindakan/{id}', 'tindakan')->name('ticket.tindakan');
+            });
+
+            Route::get('/rekap-service-luar', 'rekapServiceLuar')
+                ->name('ticket.rekapService')
+                ->middleware('permission:manage-rekap-service');
+            Route::get('/riwayat-service-teknisi', 'historyServiceTeknisi')
+                ->name('ticket.riwayat-service-teknisi')
+                ->middleware('permission:riwayat-service-teknisi');
+            Route::get('/export-service', 'exportService')
+                ->name('ticket.export-service')
+                ->middleware('permission:riwayat-service-teknisi');
         });
     });
 
@@ -135,3 +147,12 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
 Route::get('/helpdesk', [TicketController::class, 'index'])->name('helpdesk.index');
 Route::post('/helpdesk', [TicketController::class, 'store'])->name('helpdesk.store-ticket');
 Route::get('/helpdesk/antrean', [TicketController::class, 'antrean'])->name('helpdesk.antrean');
+
+Route::middleware(['auth', 'permission:manage-data-pengaduan'])
+    ->prefix('pwa/helpdesk')
+    ->as('inventory.pwa.')
+    ->group(function () {
+        Route::get('/pengaduan', [PwaTicketController::class, 'index'])->name('pengaduan.index');
+        Route::get('/pengaduan/{id}', [PwaTicketController::class, 'show'])->name('pengaduan.show');
+        Route::get('/pengaduan/{id}/tindakan', [PwaTicketController::class, 'tindakan'])->name('pengaduan.tindakan');
+    });

@@ -4,9 +4,9 @@ namespace Modules\Inventory\Models;
 
 use App\Models\KategoriBarang;
 use App\Models\Satuan;
-use App\Models\Unit;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 // use Modules\Inventory\Database\Factories\MasterBarangFactory;
 
 class MasterBarang extends Model
@@ -19,7 +19,7 @@ class MasterBarang extends Model
     protected $fillable = ['kode_barang', 'nama_barang', 'satuan_id', 'kategori_id', 'pu', 'jenis', 'is_elektronik', 'keterangan'];
 
     protected $casts = [
-        'is_elektronik' => 'boolean'
+        'is_elektronik' => 'boolean',
     ];
 
     public function satuan()

@@ -3,14 +3,12 @@
 namespace Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Modules\Inventory\Models\MasterBarang;
-use Modules\Inventory\Models\Pengajuan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Modules\Inventory\Models\MasterBarang;
+use Modules\Inventory\Models\Pengajuan;
 use Modules\Inventory\Models\Stok;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -81,6 +79,7 @@ class PengajuanController extends Controller
     public function create()
     {
         $masterBarang = MasterBarang::orderBy('nama_barang', 'asc')->get();
+
         return view('inventory::pengajuan.unit.form', ['masterBarang' => $masterBarang]);
     }
 
@@ -95,13 +94,13 @@ class PengajuanController extends Controller
         ]);
 
         try {
-            $baseKode = 'PGJ-' . date('dmyhis');
+            $baseKode = 'PGJ-'.date('dmyhis');
 
             $pengajuans = [];
             foreach ($request->barang_id as $key => $barangId) {
                 // $kode = $baseKode . str_pad($key, 3, '0', STR_PAD_LEFT);
                 $pengajuans[] = [
-                    'kode_pengajuan' => $baseKode . str_pad($key + 1, 3, '0', STR_PAD_LEFT),
+                    'kode_pengajuan' => $baseKode.str_pad($key + 1, 3, '0', STR_PAD_LEFT),
                     'unit_id' => Auth::user()->unit_id,
                     'pu' => Auth::user()->pu_kd,
                     'barang_id' => $barangId,
@@ -119,6 +118,7 @@ class PengajuanController extends Controller
             }
 
             Pengajuan::insert($pengajuans);
+
             return redirect()->route('inventory.pengajuan.index')->with('success', 'Pengajuan berhasil disimpan');
         } catch (\Throwable $th) {
             dd($th);
@@ -142,9 +142,10 @@ class PengajuanController extends Controller
     {
         $pengajuan = Pengajuan::where('kode_pengajuan', 'like', "%$kode%")->get();
         $masterBarang = MasterBarang::orderBy('nama_barang', 'asc')->get();
+
         return view('inventory::pengajuan.unit.form', [
             'pengajuan' => $pengajuan,
-            'masterBarang' => $masterBarang
+            'masterBarang' => $masterBarang,
         ]);
     }
 
@@ -165,13 +166,13 @@ class PengajuanController extends Controller
                 $pengajuan->delete();
             }
 
-            $baseKode = 'PGJ-' . date('dmyhis');
+            $baseKode = 'PGJ-'.date('dmyhis');
 
             $newPengajuans = [];
             foreach ($request->barang_id as $key => $barangId) {
                 // $kode_new = $baseKode . str_pad($key + 1, 3, '0', STR_PAD_LEFT);
                 $newPengajuans[] = [
-                    'kode_pengajuan' => $baseKode . str_pad($key + 1, 3, '0', STR_PAD_LEFT),
+                    'kode_pengajuan' => $baseKode.str_pad($key + 1, 3, '0', STR_PAD_LEFT),
                     'unit_id' => Auth::user()->unit_id,
                     'pu' => Auth::user()->pu_kd,
                     'barang_id' => $barangId,
@@ -190,10 +191,12 @@ class PengajuanController extends Controller
 
             Pengajuan::insert($newPengajuans);
             DB::commit();
+
             return redirect()->route('inventory.pengajuan.index')->with('success', 'Pengajuan berhasil diperbarui');
         } catch (\Throwable $th) {
             DB::rollBack();
             dd($th);
+
             return redirect()->route('inventory.pengajuan.index')->with('error', 'Pengajuan gagal diperbarui');
         }
     }
@@ -205,6 +208,7 @@ class PengajuanController extends Controller
     {
         $pengajuan = Pengajuan::find($id);
         $pengajuan->delete();
+
         return redirect()->route('inventory.pengajuan.index')->with('success', 'Pengajuan berhasil dihapus');
     }
 
@@ -222,7 +226,7 @@ class PengajuanController extends Controller
 
         return view('inventory::pengajuan.keuangan.form_approval', [
             'pengajuans' => $pengajuans,
-            'kode' => $kode
+            'kode' => $kode,
         ]);
     }
 
@@ -259,17 +263,19 @@ class PengajuanController extends Controller
                     'updated_id' => Auth::user()->id,
                     'approved_at' => now(),
                     'approved_by' => Auth::user()->id,
-                    'keterangan_peninjauan' => $request->keterangan_approved[$pengajuan->id] ?? ''
+                    'keterangan_peninjauan' => $request->keterangan_approved[$pengajuan->id] ?? '',
                 ]);
             }
 
             DB::commit();
+
             return redirect()->route('inventory.pengajuan.index')
                 ->with('success', 'Pengajuan berhasil diproses');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return redirect()->route('inventory.pengajuan.index')
-                ->with('error', 'Gagal memproses pengajuan: ' . $e->getMessage());
+                ->with('error', 'Gagal memproses pengajuan: '.$e->getMessage());
         }
     }
 
@@ -294,22 +300,22 @@ class PengajuanController extends Controller
 
             $importedData = [];
             foreach ($rows as $row) {
-                if (!empty($row[0])) { // Check if id_barang is not empty
+                if (! empty($row[0])) { // Check if id_barang is not empty
                     $importedData[] = [
                         'id_barang' => $row[0],
                         'jumlah' => $row[1] ?? 0,
                         'harga' => $row[2] ?? 0,
-                        'keterangan' => $row[3] ?? ''
+                        'keterangan' => $row[3] ?? '',
                     ];
                 }
             }
 
             return response()->json([
                 'success' => true,
-                'data' => $importedData
+                'data' => $importedData,
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error processing file: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Error processing file: '.$e->getMessage()], 500);
         }
     }
 
@@ -343,15 +349,16 @@ class PengajuanController extends Controller
         DB::beginTransaction();
         try {
             foreach ($request->stok_id as $key => $stok_id) {
-                if (!$stok_id) {
+                if (! $stok_id) {
                     continue;
                 }
 
                 $pengajuan = Pengajuan::find($request->id[$key]);
                 $stok = Stok::find($stok_id);
-                if (!$stok) {
+                if (! $stok) {
                     DB::rollBack();
-                    return redirect()->back()->with('error', 'Stok ID ' . $stok_id . ' tidak ditemukan!');
+
+                    return redirect()->back()->with('error', 'Stok ID '.$stok_id.' tidak ditemukan!');
                 }
 
                 $pengajuan->update([
@@ -366,12 +373,14 @@ class PengajuanController extends Controller
             }
 
             DB::commit();
+
             return redirect()->route('inventory.pengajuan.index')
                 ->with('success', 'Barang berhasil diterima');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return redirect()->route('inventory.pengajuan.index')
-                ->with('error', 'Gagal memproses pengajuan: ' . $th->getMessage());
+                ->with('error', 'Gagal memproses pengajuan: '.$th->getMessage());
         }
     }
 }

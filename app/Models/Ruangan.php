@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Modules\Inventory\Models\Pengajuan;
 use Modules\Inventory\Models\Permintaan;
 use Spatie\Activitylog\LogOptions;
 

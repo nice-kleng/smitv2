@@ -3,12 +3,10 @@
 namespace App\Imports;
 
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Modules\Inventory\Models\HistoryInventaris;
 use Modules\Inventory\Models\Inventory;
-use Modules\Inventory\Models\MasterBarang;
 
 class InventoryImport implements ToModel, WithHeadingRow
 {
@@ -36,7 +34,7 @@ class InventoryImport implements ToModel, WithHeadingRow
 
     public function model(array $row)
     {
-        $inventory =  Inventory::create([
+        $inventory = Inventory::create([
             'kode_barang' => $row['kode_inventaris'],
             'no_barang' => $row['no_barang'] ?? null,
             'barang_id' => $row['barang_id'],
@@ -50,7 +48,7 @@ class InventoryImport implements ToModel, WithHeadingRow
             'tahun_pengadaan' => $row['tahun_pengadaan'],
             'status' => $row['status'] ?? '2',
             'catatan' => $row['catatan'] ?? null,
-            'kepemilikan' => $row['kepemilikan'] ?? null
+            'kepemilikan' => $row['kepemilikan'] ?? null,
         ]);
 
         return new HistoryInventaris([
@@ -61,7 +59,7 @@ class InventoryImport implements ToModel, WithHeadingRow
             'tanggal_mutasi' => now(),
             'keterangan' => 'Import Data',
             'created_id' => auth()->id(),
-            'updated_id' => auth()->id()
+            'updated_id' => auth()->id(),
         ]);
     }
 }

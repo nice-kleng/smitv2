@@ -17,17 +17,20 @@ class RuanganController extends Controller
         $this->authorize('viewAny');
         if ($request->ajax()) {
             $data = Ruangan::with('unit')->orderBy('nama_ruangan', 'asc')->get();
+
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-edit" data-id="' . $row->id . '"><i class="fa fa-edit"></i></a>';
-                    $btn .= '<a href="javascript:void(0)" class="btn btn-danger btn-delete" data-id="' . $row->id . '"><i class="fa fa-trash"></i></a>';
+                    $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-edit" data-id="'.$row->id.'"><i class="fa fa-edit"></i></a>';
+                    $btn .= '<a href="javascript:void(0)" class="btn btn-danger btn-delete" data-id="'.$row->id.'"><i class="fa fa-trash"></i></a>';
+
                     return $btn;
                 })
                 ->rawColumns(['action'])
                 ->make(true);
         }
         $units = Unit::orderBy('nama_unit', 'asc')->get();
+
         return view('master.ruangan', compact('units'));
     }
 
@@ -52,6 +55,7 @@ class RuanganController extends Controller
                 'nama_ruangan' => 'required|string|max:255',
             ]);
             Ruangan::create($request->all());
+
             return response()->json(['success' => true, 'message' => 'Ruangan berhasil ditambahkan']);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'message' => 'Akses tidak diizinkan', 500]);
@@ -73,6 +77,7 @@ class RuanganController extends Controller
     {
         try {
             $this->authorize('updated', $ruangan);
+
             return response()->json(['success' => true, 'data' => $ruangan]);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'message' => 'Akses tidak diizinkan', 500]);
@@ -88,10 +93,11 @@ class RuanganController extends Controller
             $this->authorize('update', $ruangan);
             $request->validate([
                 'unit_id' => 'required|exists:units,id',
-                'kode_ruangan' => 'required|string|max:255|unique:ruangans,kode_ruangan,' . $ruangan->id,
+                'kode_ruangan' => 'required|string|max:255|unique:ruangans,kode_ruangan,'.$ruangan->id,
                 'nama_ruangan' => 'required|string|max:255',
             ]);
             $ruangan->update($request->all());
+
             return response()->json(['success' => true, 'message' => 'Ruangan berhasil diubah']);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'message' => 'Akses tidak diizinkan', 500]);
@@ -106,6 +112,7 @@ class RuanganController extends Controller
         try {
             $this->authorize('delete', $ruangan);
             $ruangan->delete();
+
             return response()->json(['success' => true, 'message' => 'Ruangan berhasil dihapus']);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'message' => 'Akses tidak diizinkan', 500]);

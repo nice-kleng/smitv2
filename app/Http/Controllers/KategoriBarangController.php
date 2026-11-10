@@ -21,16 +21,19 @@ class KategoriBarangController extends Controller
                     $query->where('pu', Auth::user()->pu_kd);
                 }
             )->orderBy('nama_kategori', 'asc')->get();
+
             return DataTables::of($kategori)
                 ->addIndexColumn()
                 ->addColumn('action', function ($kategori) {
-                    $btn = "<a href='javascript:void(0)' class='btn btn-warning btn-sm btn-edit' data-id='" . $kategori->id . "'><i class='fa fa-edit'></i></a>";
-                    $btn .= " <a href='javascript:void(0)' class='btn btn-danger btn-sm btn-delete' data-id='" . $kategori->id . "'><i class='fas fa-trash'></i></a>";
+                    $btn = "<a href='javascript:void(0)' class='btn btn-warning btn-sm btn-edit' data-id='".$kategori->id."'><i class='fa fa-edit'></i></a>";
+                    $btn .= " <a href='javascript:void(0)' class='btn btn-danger btn-sm btn-delete' data-id='".$kategori->id."'><i class='fas fa-trash'></i></a>";
+
                     return $btn;
                 })
                 ->rawColumns(['action'])
                 ->make(true);
         }
+
         return view('master.kategori');
     }
 
@@ -53,6 +56,7 @@ class KategoriBarangController extends Controller
             ]);
             $request->merge(['pu' => Auth::user()->pu_kd]);
             KategoriBarang::create($request->all());
+
             return redirect()->route('master.kategoriBarang.index')->with('success', 'Kategori berhasil ditambahkan');
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             return redirect()->route('master.kategoriBarang.index')->with('error', 'Anda tidak memiliki izin untuk menambahkan kategori barang');
@@ -76,6 +80,7 @@ class KategoriBarangController extends Controller
     {
         try {
             $this->authorize('update', $kategoriBarang);
+
             return response()->json(['success' => true, 'data' => $kategoriBarang]);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki izin untuk mengubah kategori barang'], 403);
@@ -93,6 +98,7 @@ class KategoriBarangController extends Controller
             $this->authorize('update', $kategoriBarang);
             $kategoriBarang->nama_kategori = $request->nama_kategori;
             $kategoriBarang->save();
+
             return redirect()->route('master.kategoriBarang.index')->with('success', 'Kategori berhasil diubah');
         } catch (\Throwable $th) {
             return redirect()->route('master.kategoriBarang.index')->with('error', 'Kategori gagal diubah');
@@ -109,6 +115,7 @@ class KategoriBarangController extends Controller
         try {
             $this->authorize('delete', $kategoriBarang);
             $kategoriBarang->delete();
+
             return response()->json(['success' => true, 'message' => 'Kategori berhasil dihapus']);
         } catch (\Throwable $th) {
             return response()->json(['success' => false, 'message' => 'Kategori gagal dihapus', 'error' => $th->getMessage()]);

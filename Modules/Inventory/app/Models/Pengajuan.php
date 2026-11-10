@@ -2,11 +2,11 @@
 
 namespace Modules\Inventory\Models;
 
-use App\Models\Ruangan;
 use App\Models\Unit;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 // use Modules\Inventory\Database\Factories\PengajuanFactory;
 
 class Pengajuan extends Model

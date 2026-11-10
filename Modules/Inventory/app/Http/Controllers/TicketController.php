@@ -3,22 +3,23 @@
 namespace Modules\Inventory\Http\Controllers;
 
 use App\Events\TicketCreated;
+use App\Exports\RekapServiceExport;
+use App\Exports\TicketExport;
 use App\Http\Controllers\Controller;
+use App\Models\JadwalDetail;
 use App\Models\LogBook;
 use App\Models\Ruangan;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use Modules\Inventory\Models\HistoryService;
 use Modules\Inventory\Models\Inventory;
 use Modules\Inventory\Models\JenisAduan;
 use Modules\Inventory\Models\Ticket;
 use Yajra\DataTables\DataTables;
-use App\Exports\RekapServiceExport;
-use App\Exports\TicketExport;
-use App\Models\JadwalDetail;
-use Maatwebsite\Excel\Facades\Excel;
 
 class TicketController extends Controller
 {
@@ -29,6 +30,7 @@ class TicketController extends Controller
     {
         $ruangans = Ruangan::with('unit')->join('units', 'ruangans.unit_id', '=', 'units.id')->orderBy('units.nama_unit', 'asc')->orderBy('ruangans.nama_ruangan', 'asc')->get(['ruangans.*']);
         $petugasHariIni = JadwalDetail::with('jadwal.shift', 'jadwal.user')->whereDate('work_date', now())->get();
+
         return view('inventory::helpdesk.landing_pagev2', ['ruangans' => $ruangans, 'petugasHariIni' => $petugasHariIni]);
     }
 
@@ -50,7 +52,7 @@ class TicketController extends Controller
             'detail_aduan' => 'required',
         ]);
 
-        $kd_ticket = 'T' . date('Ymd') . str_pad(Ticket::whereDate('created_at', now()->toDateString())->count() + 1, 4, '0', STR_PAD_LEFT);
+        $kd_ticket = 'T'.date('Ymd').str_pad(Ticket::whereDate('created_at', now()->toDateString())->count() + 1, 4, '0', STR_PAD_LEFT);
         $request->merge(['kd_ticket' => $kd_ticket]);
 
         $ticket = Ticket::create($request->all());
@@ -67,6 +69,7 @@ class TicketController extends Controller
     public function show($id)
     {
         $ticket = Ticket::find($id);
+
         return response()->json($ticket);
     }
 
@@ -100,6 +103,7 @@ class TicketController extends Controller
         $userIt = \App\Models\User::where('pu_kd', 'it')->get();
         if ($request->ajax()) {
             $tickets = Ticket::with('ruangan.unit', 'teknisi', 'jenisAduan')->where('status', '0')->get();
+
             return DataTables::of($tickets)
                 ->addIndexColumn()
                 ->addColumn('tanggal_pengaduan', function ($row) {
@@ -113,6 +117,7 @@ class TicketController extends Controller
                     if (!auth()->user()->hasRole(['direktur'])) {
                         $btn .= ' <a href="javascript:void(0)" class="btn btn-success btn-sm tindakan" data-id="' . $row->id . '">Tindakan</a>';
                     }
+
                     return $btn;
                 })
                 ->rawColumns(['action', 'status'])
@@ -148,68 +153,74 @@ class TicketController extends Controller
                     'nama_barang' => $item->barang->nama_barang,
                     'nama_alias' => $item->nama_alias,
                 ];
-            })
+            }),
         ]);
     }
 
     public function tindakan(Request $request, string $id)
     {
+        $validated = $request->validate([
+            'inventaris_id' => 'required_if:keterangan_perbaikan,4|nullable|exists:inventories,id',
+            'jenis_aduan_id' => 'required|exists:jenis_aduans,id',
+            'tindak_lanjut' => 'required',
+            'keterangan_perbaikan' => 'required|in:1,2,3,4',
+            'tempat_service' => 'required_if:keterangan_perbaikan,4|nullable|string|max:255',
+            'kerusakan' => 'required_if:keterangan_perbaikan,4|nullable|string',
+            'biaya' => 'nullable|numeric|min:0',
+            'teknisi_id' => 'nullable|exists:users,id',
+        ]);
+
         DB::beginTransaction();
         try {
-            $request->validate([
-                'jenis_aduan_id' => 'required|exists:jenis_aduans,id',
-                'tindak_lanjut' => 'required',
-                'keterangan_perbaikan' => 'required',
-                'teknisi_id' => 'nullable|exists:users,id',
-            ]);
-
             $ticket = Ticket::findOrFail($id);
             $ticket->update([
-                'inventaris_id' => $request->inventaris_id ?? null,
-                'jenis_aduan_id' => $request->jenis_aduan_id,
-                'tindak_lanjut' => $request->tindak_lanjut,
-                'keterangan_perbaikan' => $request->keterangan_perbaikan,
+                'inventaris_id' => $validated['inventaris_id'] ?? null,
+                'jenis_aduan_id' => $validated['jenis_aduan_id'],
+                'tindak_lanjut' => $validated['tindak_lanjut'],
+                'keterangan_perbaikan' => $validated['keterangan_perbaikan'],
                 'status' => '1',
-                'teknisi_id' => $request->teknisi_id ?? Auth::user()->id,
+                'teknisi_id' => $validated['teknisi_id'] ?? Auth::user()->id,
                 'tanggal_perbaikan' => now(),
             ]);
 
             LogBook::create([
                 'user_id' => Auth::user()->id,
-                'kegiatan' => 'Menangani aduan ' . $ticket->kd_ticket,
-                'keterangan' => 'Menangani aduan ' . $ticket->kd_ticket,
+                'kegiatan' => 'Menangani aduan '.$ticket->kd_ticket,
+                'keterangan' => 'Menangani aduan '.$ticket->kd_ticket,
                 'jenis' => '1',
                 'service_id' => $ticket->id,
             ]);
 
-            if ($request->keterangan_perbaikan == '4') {
+            if ($validated['keterangan_perbaikan'] == '4') {
                 HistoryService::create([
-                    'inventaris_id' => $request->inventaris_id,
-                    'tempat_service' => $request->tempat_service,
-                    'kerusakan' => $request->kerusakan,
-                    'biaya' => $request->biaya ?? 0,
-                    'tanggal_perbaikan' => date('Y-m-d'),
+                    'inventaris_id' => $validated['inventaris_id'],
+                    'tempat_service' => $validated['tempat_service'],
+                    'kerusakan' => $validated['kerusakan'],
+                    'biaya' => $validated['biaya'] ?? 0,
                 ]);
             }
 
             DB::commit();
+
             return response()->json([
                 'success' => true,
-                'message' => 'Tindakan berhasil disimpan.'
+                'message' => 'Tindakan berhasil disimpan.',
             ]);
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
+            report($th);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal disimpan.'
-            ]);
+                'message' => 'Tindakan gagal disimpan. Coba lagi.',
+            ], 500);
         }
     }
 
     public function rekapServiceLuar()
     {
         $historyService = HistoryService::with('inventory.barang')->get();
+
         return view('inventory::helpdesk.rekap_service', ['data' => $historyService]);
     }
 
@@ -219,7 +230,7 @@ class TicketController extends Controller
             $query = Ticket::with('inventaris.barang', 'ruangan.unit')
                 ->where('status', '1');
 
-            if (!Auth::user()->hasRole('superadmin')) {
+            if (! Auth::user()->hasRole('superadmin')) {
                 $query->where('teknisi_id', Auth::user()->id);
             }
 
@@ -227,8 +238,8 @@ class TicketController extends Controller
             if ($request->start_date) {
                 if ($request->end_date) {
                     $query->whereBetween('created_at', [
-                        $request->start_date . ' 00:00:00',
-                        $request->end_date . ' 23:59:59'
+                        $request->start_date.' 00:00:00',
+                        $request->end_date.' 23:59:59',
                     ]);
                 } else {
                     $query->whereDate('created_at', $request->start_date);
@@ -258,7 +269,7 @@ class TicketController extends Controller
 
         return view('inventory::helpdesk.history_service_teknisi', [
             'jenisAduan' => $jenisAduan,
-            'ruangans' => $ruangans
+            'ruangans' => $ruangans,
         ]);
     }
 
@@ -296,19 +307,20 @@ class TicketController extends Controller
     //         $fileName
     //     );
     // }
-    public function exportService(Request $request){
+    public function exportService(Request $request)
+    {
         // Get filters from request
-    $filters = [
-        'start_date' => $request->input('start_date'),
-        'end_date' => $request->input('end_date'),
-        'jenis_aduan' => $request->input('jenis_aduan'),
-        'ruangan' => $request->input('ruangan'),
-    ];
+        $filters = [
+            'start_date' => $request->input('start_date'),
+            'end_date' => $request->input('end_date'),
+            'jenis_aduan' => $request->input('jenis_aduan'),
+            'ruangan' => $request->input('ruangan'),
+        ];
 
-    // Generate filename with timestamp
-    $filename = 'Laporan_Ticket_' . date('YmdHis') . '.xlsx';
+        // Generate filename with timestamp
+        $filename = 'Laporan_Ticket_'.date('YmdHis').'.xlsx';
 
-    // Return Excel download
-    return Excel::download(new TicketExport($filters), $filename);
+        // Return Excel download
+        return Excel::download(new TicketExport($filters), $filename);
     }
 }

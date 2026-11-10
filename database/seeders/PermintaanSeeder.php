@@ -2,13 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Modules\Inventory\Models\Permintaan;
-use Modules\Inventory\Models\MasterBarang;
-use App\Models\Unit;
-use App\Models\Ruangan;
-use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
+use Modules\Inventory\Models\MasterBarang;
+use Modules\Inventory\Models\Permintaan;
 
 class PermintaanSeeder extends Seeder
 {
@@ -24,7 +21,7 @@ class PermintaanSeeder extends Seeder
             $tanggal_permintaan = Carbon::now()->subDays(rand(1, 30));
 
             Permintaan::create([
-                'kode_permintaan' => 'REQ-' . date('Ymd') . str_pad($i, 4, '0', STR_PAD_LEFT),
+                'kode_permintaan' => 'REQ-'.date('Ymd').str_pad($i, 4, '0', STR_PAD_LEFT),
                 // 'pu' => ['log', 'it'][array_rand(['log', 'it'])],
                 'pu' => 'it',
                 'barang_id' => $barang->random(),
@@ -33,8 +30,8 @@ class PermintaanSeeder extends Seeder
                 'tanggal_permintaan' => $tanggal_permintaan,
                 'tanggal_approve' => $status >= 2 ? $tanggal_permintaan->addDays(rand(1, 5)) : null,
                 'status' => '3',
-                'keterangan' => 'Sample permintaan barang #' . $i,
-                'penerima' => $status == 3 ? 'Penerima ' . $i : null,
+                'keterangan' => 'Sample permintaan barang #'.$i,
+                'penerima' => $status == 3 ? 'Penerima '.$i : null,
                 'unit_id' => 5,
                 'ruangan_id' => 6,
                 'approve_id' => $status >= 2 ? rand(2, 3) : null,

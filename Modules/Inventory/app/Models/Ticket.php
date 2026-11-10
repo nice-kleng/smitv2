@@ -5,9 +5,10 @@ namespace Modules\Inventory\Models;
 use App\Models\LogBook;
 use App\Models\Ruangan;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 // use Modules\Inventory\Database\Factories\TicketFactory;
 
 class Ticket extends Model
@@ -36,7 +37,6 @@ class Ticket extends Model
     //     // return TicketFactory::new();
     // }
 
-
     public function keteranganPerbaikan(): Attribute
     {
         $keteranganPerbaikan = [
@@ -49,7 +49,11 @@ class Ticket extends Model
 
         return Attribute::make(
             get: function ($value) use ($keteranganPerbaikan) {
-                return $keteranganPerbaikan[$value];
+                if ($value === null) {
+                    return '-';
+                }
+
+                return $keteranganPerbaikan[$value] ?? '-';
             },
         );
     }

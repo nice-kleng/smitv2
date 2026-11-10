@@ -2,8 +2,9 @@
 
 namespace Modules\Inventory\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 // use Modules\Inventory\Database\Factories\TransaksiFactory;
 
 class Transaksi extends Model
@@ -21,7 +22,7 @@ class Transaksi extends Model
         'permintaan_id',
         'pengajuan_id',
         'created_by',
-        'updated_by'
+        'updated_by',
     ];
 
     // protected static function newFactory(): TransaksiFactory

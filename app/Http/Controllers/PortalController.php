@@ -35,11 +35,11 @@ class PortalController extends Controller
             ->margin(2)
             ->generate($portalLink->url);
 
-        $filename = 'qr-' . \Illuminate\Support\Str::slug($portalLink->title) . '.png';
+        $filename = 'qr-'.\Illuminate\Support\Str::slug($portalLink->title).'.png';
 
         return response($qrCode)
             ->header('Content-Type', 'image/png')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
     }
 
     /**
@@ -54,8 +54,9 @@ class PortalController extends Controller
         if ($request->pin === $correctPin) {
             session([
                 'portal_external_unlocked' => true,
-                'portal_external_unlocked_at' => now()->timestamp
+                'portal_external_unlocked_at' => now()->timestamp,
             ]);
+
             return response()->json(['success' => true]);
         }
 
@@ -77,7 +78,7 @@ class PortalController extends Controller
         }
 
         return response()->json([
-            'unlocked' => $unlocked
+            'unlocked' => $unlocked,
         ]);
     }
 }

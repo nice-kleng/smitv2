@@ -4,8 +4,9 @@ namespace Modules\Inventory\Models;
 
 use App\Models\Ruangan;
 use App\Models\Unit;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 // use Modules\Inventory\Database\Factories\HistoryInventarisFactory;
 
 class HistoryInventaris extends Model
@@ -22,7 +23,7 @@ class HistoryInventaris extends Model
         $kondisi = [
             '0' => 'Rusak',
             '1' => 'Kurang Baik',
-            '2' => 'Baik'
+            '2' => 'Baik',
         ];
 
         return $kondisi[$value] ?? 'Tidak Diketahui';

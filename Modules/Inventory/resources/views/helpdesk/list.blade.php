@@ -1,5 +1,11 @@
 @extends('inventory::layouts.master', ['title' => 'Data Laporan Pengaduan Unit'])
 
+@section('button-header')
+    <a href="{{ route('inventory.pwa.pengaduan.index') }}" class="btn btn-outline-danger btn-sm">
+        <i class="fas fa-mobile-alt"></i> Mode HP
+    </a>
+@endsection
+
 @section('content')
     <div class="row">
         <div class="col-md-12">

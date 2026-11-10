@@ -21,29 +21,33 @@ class PortalLinkController extends Controller
                 ->addIndexColumn()
                 ->addColumn('preview', function ($row) {
                     if ($row->image) {
-                        return '<img src="' . $row->image_url . '" alt="' . $row->title . '" class="img-thumbnail" style="max-height:40px;">';
+                        return '<img src="'.$row->image_url.'" alt="'.$row->title.'" class="img-thumbnail" style="max-height:40px;">';
                     }
-                    return '<i class="' . $row->display_icon . ' fa-2x text-primary"></i>';
+
+                    return '<i class="'.$row->display_icon.' fa-2x text-primary"></i>';
                 })
                 ->addColumn('category_badge', function ($row) {
-                    return '<span class="badge ' . $row->category_badge . '">' . $row->category_label . '</span>';
+                    return '<span class="badge '.$row->category_badge.'">'.$row->category_label.'</span>';
                 })
                 ->addColumn('status_badge', function ($row) {
                     if ($row->is_active) {
                         return '<span class="badge badge-success">Aktif</span>';
                     }
+
                     return '<span class="badge badge-secondary">Nonaktif</span>';
                 })
                 ->addColumn('short_url', function ($row) {
                     $url = $row->url;
                     if (strlen($url) > 50) {
-                        $url = substr($url, 0, 50) . '...';
+                        $url = substr($url, 0, 50).'...';
                     }
-                    return '<a href="' . $row->url . '" target="_blank" class="text-primary">' . $url . '</a>';
+
+                    return '<a href="'.$row->url.'" target="_blank" class="text-primary">'.$url.'</a>';
                 })
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="javascript:void(0)" class="btn btn-sm btn-primary btn-edit mr-1" data-id="' . $row->id . '" title="Edit"><i class="fas fa-edit"></i></a>';
-                    $btn .= '<a href="javascript:void(0)" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></a>';
+                    $btn = '<a href="javascript:void(0)" class="btn btn-sm btn-primary btn-edit mr-1" data-id="'.$row->id.'" title="Edit"><i class="fas fa-edit"></i></a>';
+                    $btn .= '<a href="javascript:void(0)" class="btn btn-sm btn-danger btn-delete" data-id="'.$row->id.'" title="Hapus"><i class="fas fa-trash"></i></a>';
+
                     return $btn;
                 })
                 ->rawColumns(['preview', 'category_badge', 'status_badge', 'short_url', 'action'])
@@ -102,7 +106,7 @@ class PortalLinkController extends Controller
                 'category' => $portalLink->category,
                 'order' => $portalLink->order,
                 'is_active' => $portalLink->is_active,
-            ]
+            ],
         ]);
     }
 

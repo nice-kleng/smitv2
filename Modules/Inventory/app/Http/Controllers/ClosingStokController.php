@@ -4,15 +4,14 @@ namespace Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\KategoriBarang;
-use Illuminate\Http\Request;
-use Modules\Inventory\Models\StokClosing;
-use Modules\Inventory\Models\MasterBarang;
-use Modules\Inventory\Models\Stok;
-use Modules\Inventory\Models\Transaksi;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Modules\Inventory\Models\Stok;
+use Modules\Inventory\Models\StokClosing;
+use Modules\Inventory\Models\Transaksi;
 
 class ClosingStokController extends Controller
 {
@@ -34,6 +33,7 @@ class ClosingStokController extends Controller
         // Transform untuk mendapatkan relasi closedBy
         $closings->getCollection()->transform(function ($item) {
             $item->closedBy = $item->closed_by ? \App\Models\User::find($item->closed_by) : null;
+
             return $item;
         });
 
@@ -86,7 +86,7 @@ class ClosingStokController extends Controller
 
         return view('inventory::closing.form', [
             'periode' => $periode,
-            'periodeFormat' => $this->getIndonesianMonth($request->bulan) . ' ' . $request->tahun,
+            'periodeFormat' => $this->getIndonesianMonth($request->bulan).' '.$request->tahun,
             'data' => $data,
             'bulan' => $request->bulan,
             'tahun' => $request->tahun,
@@ -128,6 +128,7 @@ class ClosingStokController extends Controller
             if ($existing) {
                 // Jika sudah ada, ambil dari database
                 $data[] = $existing;
+
                 continue;
             }
 
@@ -161,7 +162,7 @@ class ClosingStokController extends Controller
             $totalNilaiKeluar = $stokKeluar * $hargaPerUnit;
             $totalNilaiAkhir = $stokAkhirSistem * $hargaPerUnit;
 
-            $data[] = (object)[
+            $data[] = (object) [
                 'id' => null,
                 'stok_id' => $stok->id,
                 'stok' => $stok,
@@ -207,13 +208,13 @@ class ClosingStokController extends Controller
                 $stokId = $item['stok_id'];
 
                 // Ambil data yang sudah digenerate
-                if (!isset($dataMap[$stokId])) {
+                if (! isset($dataMap[$stokId])) {
                     continue;
                 }
 
                 $generated = $dataMap[$stokId];
 
-                $stokFisik = isset($item['stok_fisik']) && $item['stok_fisik'] !== '' ? (int)$item['stok_fisik'] : null;
+                $stokFisik = isset($item['stok_fisik']) && $item['stok_fisik'] !== '' ? (int) $item['stok_fisik'] : null;
                 $selisih = null;
                 $totalNilaiAkhir = $generated->total_nilai_akhir;
 
@@ -258,8 +259,9 @@ class ClosingStokController extends Controller
                 ->with('tahun', $request->tahun);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return redirect()->route('inventory.closing.index')
-                ->with('error', 'Gagal menyimpan draft: ' . $e->getMessage());
+                ->with('error', 'Gagal menyimpan draft: '.$e->getMessage());
         }
     }
 
@@ -285,13 +287,13 @@ class ClosingStokController extends Controller
             foreach ($request->items as $item) {
                 $stokId = $item['stok_id'];
 
-                if (!isset($dataMap[$stokId])) {
+                if (! isset($dataMap[$stokId])) {
                     continue;
                 }
 
                 $generated = $dataMap[$stokId];
 
-                $stokFisik = isset($item['stok_fisik']) && $item['stok_fisik'] !== '' ? (int)$item['stok_fisik'] : null;
+                $stokFisik = isset($item['stok_fisik']) && $item['stok_fisik'] !== '' ? (int) $item['stok_fisik'] : null;
                 $selisih = null;
                 $totalNilaiAkhir = $generated->total_nilai_akhir;
 
@@ -339,6 +341,7 @@ class ClosingStokController extends Controller
 
             if ($itemsWithoutKeterangan > 0) {
                 DB::rollBack();
+
                 return redirect()->route('inventory.closing.generate')
                     ->with('error', "Ada {$itemsWithoutKeterangan} stok dengan selisih yang belum diberi keterangan!")
                     ->with('bulan', $request->bulan)
@@ -352,13 +355,15 @@ class ClosingStokController extends Controller
             }
 
             DB::commit();
+
             return redirect()->route('inventory.closing.index')
                 ->with('success', "Closing stok periode {$request->periode} berhasil diproses! ({$itemsSaved} items)");
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Closing error: ' . $e->getMessage());
+            Log::error('Closing error: '.$e->getMessage());
+
             return redirect()->route('inventory.closing.index')
-                ->with('error', 'Gagal proses closing: ' . $e->getMessage());
+                ->with('error', 'Gagal proses closing: '.$e->getMessage());
         }
     }
 
@@ -432,10 +437,12 @@ class ClosingStokController extends Controller
             }
 
             DB::commit();
+
             return redirect()->back()->with('success', "Periode {$periode} berhasil dibuka kembali!");
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Gagal membuka kembali: ' . $e->getMessage());
+
+            return redirect()->back()->with('error', 'Gagal membuka kembali: '.$e->getMessage());
         }
     }
 
@@ -453,8 +460,9 @@ class ClosingStokController extends Controller
             9 => 'September',
             10 => 'Oktober',
             11 => 'November',
-            12 => 'Desember'
+            12 => 'Desember',
         ];
+
         return $months[$month] ?? '';
     }
 }

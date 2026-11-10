@@ -10,6 +10,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class KategoriBarang extends Model
 {
     use LogsActivity;
+
     protected $fillable = ['nama_kategori', 'pu'];
 
     public function getActivitylogOptions(): LogOptions

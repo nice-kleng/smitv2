@@ -20,7 +20,7 @@ class LogBookController extends Controller
             $data = LogBook::with('staf');
 
             // Cek role menggunakan Spatie hasRole
-            if (!Auth::user()->hasRole(['superadmin', 'direktur'])) {
+            if (! Auth::user()->hasRole(['superadmin', 'direktur'])) {
                 $data->where('user_id', Auth::user()->id);
             }
 
@@ -46,8 +46,9 @@ class LogBookController extends Controller
                 })
                 ->addColumn('aduan', function ($row) {
                     if ($row->service()->count() > 0) {
-                        return '<a href="javascript:void(0)" class="btn btn-sm btn-info show-service" data-id="' . $row->id . '">Lihat</a>';
+                        return '<a href="javascript:void(0)" class="btn btn-sm btn-info show-service" data-id="'.$row->id.'">Lihat</a>';
                     }
+
                     return '-';
                 })
                 ->addColumn('tanggal_kegiatan', function ($row) {
@@ -59,9 +60,10 @@ class LogBookController extends Controller
                     if (Auth::user()->hasRole(['superadmin', 'direktur'])) {
                         $btn = '';
                     } else {
-                        $btn = '<a href="javascript:void(0)" class="btn btn-sm btn-warning edit-btn" data-id="' . $row->id . '"><i class="fas fa-edit"></i></a>';
-                        $btn .= ' <a href="javascript:void(0)" class="btn btn-sm btn-danger delete-btn" data-id="' . $row->id . '"><i class="fas fa-trash"></i></a>';
+                        $btn = '<a href="javascript:void(0)" class="btn btn-sm btn-warning edit-btn" data-id="'.$row->id.'"><i class="fas fa-edit"></i></a>';
+                        $btn .= ' <a href="javascript:void(0)" class="btn btn-sm btn-danger delete-btn" data-id="'.$row->id.'"><i class="fas fa-trash"></i></a>';
                     }
+
                     return $btn;
                 })
                 ->rawColumns(['aduan', 'action'])
@@ -75,6 +77,7 @@ class LogBookController extends Controller
 
         return view('settings.users.log_book', compact('petugas'));
     }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -91,14 +94,14 @@ class LogBookController extends Controller
         $request->validate([
             'kegiatan' => 'required',
             'keterangan' => 'required',
-            'tanggal_kegiatan' => 'required|date'
+            'tanggal_kegiatan' => 'required|date',
         ]);
         LogBook::create([
             'user_id' => Auth::user()->id,
             'kegiatan' => $request->kegiatan,
             'keterangan' => $request->keterangan,
             'jenis' => '0',
-            'tanggal_kegiatan' => $request->tanggal_kegiatan
+            'tanggal_kegiatan' => $request->tanggal_kegiatan,
         ]);
 
         return response()->json(['success' => true, 'message' => 'Data berhasil disimpan']);
@@ -111,12 +114,14 @@ class LogBookController extends Controller
     {
         try {
             $logBook = LogBook::with(['service.jenisAduan'])->findOrFail($id);
+
             return response()->json($logBook);
         } catch (\Exception $e) {
-            Log::error('Error fetching log book data: ' . $e->getMessage());
+            Log::error('Error fetching log book data: '.$e->getMessage());
+
             return response()->json([
                 'error' => true,
-                'message' => 'Terjadi kesalahan saat mengambil data'
+                'message' => 'Terjadi kesalahan saat mengambil data',
             ], 500);
         }
     }
@@ -127,6 +132,7 @@ class LogBookController extends Controller
     public function edit(string $id)
     {
         $logBook = LogBook::find($id);
+
         return response()->json($logBook);
     }
 
@@ -144,6 +150,7 @@ class LogBookController extends Controller
             'kegiatan' => $request->kegiatan,
             'keterangan' => $request->keterangan,
         ]);
+
         return response()->json(['success' => true, 'message' => 'Data berhasil diubah']);
     }
 
@@ -153,6 +160,7 @@ class LogBookController extends Controller
     public function destroy(string $id)
     {
         LogBook::find($id)->delete();
+
         return response()->json(['success' => true, 'message' => 'Data berhasil dihapus']);
     }
 }

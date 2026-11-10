@@ -4,15 +4,14 @@ namespace Modules\Inventory\Http\Controllers;
 
 use App\Exports\LaporanStokExport;
 use App\Http\Controllers\Controller;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use Modules\Inventory\Models\MasterBarang;
 use Modules\Inventory\Models\StokClosing;
 use Modules\Inventory\Models\Transaksi;
-use Maatwebsite\Excel\Facades\Excel;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 
 class LaporanStokController extends Controller
 {
@@ -44,7 +43,7 @@ class LaporanStokController extends Controller
         $tahun = $request->tahun;
 
         $bulanName = $this->getIndonesianMonth($bulan);
-        $filename = 'Laporan_Stok_' . $bulanName . '_' . $tahun . '.xlsx';
+        $filename = 'Laporan_Stok_'.$bulanName.'_'.$tahun.'.xlsx';
 
         return Excel::download(new LaporanStokExport($bulan, $tahun, $request->kategori), $filename);
     }
@@ -63,7 +62,7 @@ class LaporanStokController extends Controller
             ->setPaper('a4', 'landscape');
 
         $bulanName = $this->getIndonesianMonth($request->bulan);
-        $filename = 'Laporan_Stok_' . $bulanName . '_' . $request->tahun . '.pdf';
+        $filename = 'Laporan_Stok_'.$bulanName.'_'.$request->tahun.'.pdf';
 
         return $pdf->stream($filename);
     }
@@ -143,7 +142,7 @@ class LaporanStokController extends Controller
             'laporan' => $laporanData,
             'bulan' => $bulan,
             'tahun' => $tahun,
-            'periode' => $this->getIndonesianMonth($bulan) . ' ' . $tahun,
+            'periode' => $this->getIndonesianMonth($bulan).' '.$tahun,
             'tanggal_cetak' => Carbon::now()->translatedFormat('d F Y H:i:s'),
             'is_from_closing' => true,
             'closed_at' => $closings->first()->closed_at ?? null,
@@ -229,7 +228,7 @@ class LaporanStokController extends Controller
             'laporan' => $laporanData,
             'bulan' => $bulan,
             'tahun' => $tahun,
-            'periode' => $this->getIndonesianMonth($bulan) . ' ' . $tahun,
+            'periode' => $this->getIndonesianMonth($bulan).' '.$tahun,
             'tanggal_cetak' => Carbon::now()->translatedFormat('d F Y H:i:s'),
             'is_from_closing' => false,
         ];
@@ -249,8 +248,9 @@ class LaporanStokController extends Controller
             9 => 'September',
             10 => 'Oktober',
             11 => 'November',
-            12 => 'Desember'
+            12 => 'Desember',
         ];
+
         return $months[$month] ?? '';
     }
 }

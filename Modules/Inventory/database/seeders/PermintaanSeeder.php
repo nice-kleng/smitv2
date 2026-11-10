@@ -2,10 +2,10 @@
 
 namespace Modules\Inventory\Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Modules\Inventory\Models\Permintaan;
 use Faker\Factory as Faker;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Modules\Inventory\Models\Permintaan;
 
 class PermintaanSeeder extends Seeder
 {
@@ -26,7 +26,7 @@ class PermintaanSeeder extends Seeder
         // Generate 50 kode permintaan unik
         $kodePermintaans = [];
         for ($i = 0; $i < 50; $i++) {
-            $kodePermintaans[] = 'REQ-' . date('Ymd') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
+            $kodePermintaans[] = 'REQ-'.date('Ymd').'-'.str_pad($i + 1, 4, '0', STR_PAD_LEFT);
         }
 
         // Generate data permintaan

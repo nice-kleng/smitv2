@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Shift;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ShiftSeeder extends Seeder
@@ -15,7 +14,7 @@ class ShiftSeeder extends Seeder
             'start_time' => '08:00:00',
             'end_time' => '17:00:00',
             'work_days' => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-            'description' => 'Shift pagi Senin-Jumat'
+            'description' => 'Shift pagi Senin-Jumat',
         ]);
 
         Shift::create([
@@ -23,7 +22,7 @@ class ShiftSeeder extends Seeder
             'start_time' => '10:00:00',
             'end_time' => '17:00:00',
             'work_days' => ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-            'description' => 'Shift middle Senin-Sabtu mulai jam 10:00'
+            'description' => 'Shift middle Senin-Sabtu mulai jam 10:00',
         ]);
     }
 }

@@ -11,7 +11,7 @@ class KategoriObserver
     {
         activity()
             ->performedOn($kategori)
-            ->by(Auth::user()->id ?? 1)
+            ->by(Auth::user())
             ->withProperties(['attributes' => $kategori->getAttributes()])
             ->log('Kategori dibuat');
     }
@@ -20,7 +20,7 @@ class KategoriObserver
     {
         activity()
             ->performedOn($kategori)
-            ->by(Auth::user()->id ?? 1)
+            ->by(Auth::user())
             ->withProperties([
                 'old' => $kategori->getOriginal(),
                 'attributes' => $kategori->getAttributes(),
@@ -32,7 +32,7 @@ class KategoriObserver
     {
         activity()
             ->performedOn($kategori)
-            ->by(Auth::user()->id ?? 1)
+            ->by(Auth::user())
             ->log('Satuan dihapus');
     }
 }

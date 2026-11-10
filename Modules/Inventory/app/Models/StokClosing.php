@@ -3,8 +3,8 @@
 namespace Modules\Inventory\Models;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -32,7 +32,7 @@ class StokClosing extends Model
         'closed_at',
         'reopened_by',
         'reopened_at',
-        'reopen_reason'
+        'reopen_reason',
     ];
 
     protected $casts = [
@@ -122,11 +122,12 @@ class StokClosing extends Model
             '09' => 'September',
             '10' => 'Oktober',
             '11' => 'November',
-            '12' => 'Desember'
+            '12' => 'Desember',
         ];
 
         [$year, $month] = explode('-', $this->periode);
-        return $months[$month] . ' ' . $year;
+
+        return $months[$month].' '.$year;
     }
 
     public function getHasSelisihAttribute()
@@ -154,6 +155,7 @@ class StokClosing extends Model
     public function hitungStokAkhir()
     {
         $this->stok_akhir_sistem = $this->stok_awal + $this->stok_masuk - $this->stok_keluar;
+
         return $this->stok_akhir_sistem;
     }
 
@@ -162,6 +164,7 @@ class StokClosing extends Model
         if ($this->stok_fisik !== null) {
             $this->selisih = $this->stok_fisik - $this->stok_akhir_sistem;
         }
+
         return $this->selisih;
     }
 

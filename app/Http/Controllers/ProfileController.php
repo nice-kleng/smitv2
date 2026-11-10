@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ruangan;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use App\Models\Unit;
-use App\Models\Ruangan;
 
 class ProfileController extends Controller
 {
@@ -92,7 +92,7 @@ class ProfileController extends Controller
 
         $user = Auth::user();
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return back()->withErrors(['current_password' => 'Password saat ini salah.']);
         }
 
