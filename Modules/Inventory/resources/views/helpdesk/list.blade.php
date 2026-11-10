@@ -42,18 +42,28 @@
                     @csrf
                     <div class="modal-body">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="inventaris_id">Pilih Barang</label>
                                     <select name="inventaris_id" id="inventaris_id" class="form-control"></select>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="jenis_aduan_id">Jenis Aduan</label>
                                     <select name="jenis_aduan_id" id="jenis_aduan_id" class="form-control">
                                         @foreach ($jenisaduan as $item)
                                             <option value="{{ $item->id }}">{{ $item->nama_jenis }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="teknisi_id">Pilih Teknisi</label>
+                                    <select name="teknisi_id" id="teknisi_id" class="form-control">
+                                        @foreach ($userIt as $user)
+                                            <option value="{{ $user->id }}" {{ $user->id == auth()->user()->id ? 'selected' : '' }}>{{ $user->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>

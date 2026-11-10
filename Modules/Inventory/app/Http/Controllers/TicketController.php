@@ -97,6 +97,7 @@ class TicketController extends Controller
     public function listTicket(Request $request)
     {
         $jenisAduan = JenisAduan::orderBy('nama_jenis', 'asc')->get();
+        $userIt = \App\Models\User::where('pu_kd', 'it')->get();
         if ($request->ajax()) {
             $tickets = Ticket::with('ruangan.unit', 'teknisi', 'jenisAduan')->where('status', '0')->get();
             return DataTables::of($tickets)
@@ -109,7 +110,7 @@ class TicketController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $btn = '<a href="javascript:void(0)" class="btn btn-info btn-sm detail" data-id="' . $row->id . '">View</a>';
-                    if (!auth()->user()->hasRole(['superadmin', 'direktur'])) {
+                    if (!auth()->user()->hasRole(['direktur'])) {
                         $btn .= ' <a href="javascript:void(0)" class="btn btn-success btn-sm tindakan" data-id="' . $row->id . '">Tindakan</a>';
                     }
                     return $btn;
@@ -117,7 +118,7 @@ class TicketController extends Controller
                 ->rawColumns(['action', 'status'])
                 ->make(true);
         }
-        return view('inventory::helpdesk.list', ['jenisaduan' => $jenisAduan]);
+        return view('inventory::helpdesk.list', ['jenisaduan' => $jenisAduan, 'userIt' => $userIt]);
     }
 
     // public function detail(string $id)
@@ -159,6 +160,7 @@ class TicketController extends Controller
                 'jenis_aduan_id' => 'required|exists:jenis_aduans,id',
                 'tindak_lanjut' => 'required',
                 'keterangan_perbaikan' => 'required',
+                'teknisi_id' => 'nullable|exists:users,id',
             ]);
 
             $ticket = Ticket::findOrFail($id);
@@ -168,7 +170,7 @@ class TicketController extends Controller
                 'tindak_lanjut' => $request->tindak_lanjut,
                 'keterangan_perbaikan' => $request->keterangan_perbaikan,
                 'status' => '1',
-                'teknisi_id' => Auth::user()->id,
+                'teknisi_id' => $request->teknisi_id ?? Auth::user()->id,
                 'tanggal_perbaikan' => now(),
             ]);
 
