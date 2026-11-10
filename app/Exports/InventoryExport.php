@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -18,9 +19,40 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class InventoryExport implements FromCollection, WithHeadings, WithMapping, WithTitle, WithStyles, ShouldAutoSize
 {
+    protected array $filters = [];
+
+    public function __construct(array $filters = [])
+    {
+        $this->filters = $filters;
+    }
+
     public function collection()
     {
         $query = Inventory::with('barang.kategori', 'ruangan.unit', 'historyMutasi');
+
+        // Filter unit
+        if (!empty($this->filters['unit_id'])) {
+            $ruanganIds = \App\Models\Ruangan::where('unit_id', $this->filters['unit_id'])->pluck('id');
+            $query->whereIn('ruangan_id', $ruanganIds);
+        }
+
+        // Filter ruangan
+        if (!empty($this->filters['ruangan_id'])) {
+            $query->where('ruangan_id', $this->filters['ruangan_id']);
+        }
+
+        // Filter kondisi (berdasarkan history mutasi terbaru per inventaris)
+        if (!empty($this->filters['kondisi'])) {
+            $latestHistoryIds = HistoryInventaris::selectRaw('MAX(id) as id')
+                ->groupBy('inventory_id')
+                ->pluck('id');
+
+            $filteredInventoryIds = HistoryInventaris::whereIn('id', $latestHistoryIds)
+                ->where('kondisi', $this->filters['kondisi'])
+                ->pluck('inventory_id');
+
+            $query->whereIn('id', $filteredInventoryIds);
+        }
 
         if (Auth::user()->hasAnyRole(['superadmin', 'admin'])) {
             $query->whereHas('barang', function ($q) {

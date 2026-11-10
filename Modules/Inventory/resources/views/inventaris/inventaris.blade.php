@@ -3,8 +3,8 @@
 @section('content')
     <div class="card">
         <div class="card-header justify-content-between d-sm-flex">
-            <a href="{{ route('inventory.export') }}" class="btn btn-success" title="Export Data Inventaris"><i class="fa fa-file-excel"></i>
-                Export</a>
+            <button type="button" class="btn btn-success" id="btnExport" title="Export Data Inventaris"><i class="fa fa-file-excel"></i>
+                Export</button>
             @if (auth()->user()->hasAnyRole(['superadmin', 'admin']))
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#importModal">
                     <i class="fa fa-file-import"></i> Import
@@ -299,6 +299,24 @@
 
                 window.open(url, '_blank');
                 $('#cetakLabelModal').modal('hide');
+            });
+
+            $('#btnExport').click(function() {
+                let url = "{{ route('inventory.export') }}";
+                let params = [];
+                if ($('#filterUnit').val()) {
+                    params.push('unit_id=' + encodeURIComponent($('#filterUnit').val()));
+                }
+                if ($('#filterRuangan').val()) {
+                    params.push('ruangan_id=' + encodeURIComponent($('#filterRuangan').val()));
+                }
+                if ($('#filterKondisi').val()) {
+                    params.push('kondisi=' + encodeURIComponent($('#filterKondisi').val()));
+                }
+                if (params.length > 0) {
+                    url += '?' + params.join('&');
+                }
+                window.location = url;
             });
         });
     </script>

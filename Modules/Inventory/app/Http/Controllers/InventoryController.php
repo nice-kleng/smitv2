@@ -294,9 +294,9 @@ class InventoryController extends Controller
         return response()->download($path);
     }
 
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new InventoryExport, 'inventaris.xlsx');
+        return Excel::download(new InventoryExport($request->only(['unit_id', 'ruangan_id', 'kondisi'])), 'inventaris.xlsx');
     }
 
     // public function cetakLabelInventaris(Request $request)
