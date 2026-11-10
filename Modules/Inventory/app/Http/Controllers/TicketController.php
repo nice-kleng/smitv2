@@ -114,7 +114,7 @@ class TicketController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $btn = '<a href="javascript:void(0)" class="btn btn-info btn-sm detail" data-id="'.$row->id.'">View</a>';
-                    if (! auth()->user()->hasRole(['superadmin', 'direktur'])) {
+                    if (! auth()->user()->hasRole(['direktur'])) {
                         $btn .= ' <a href="javascript:void(0)" class="btn btn-success btn-sm tindakan" data-id="'.$row->id.'">Tindakan</a>';
                     }
 
