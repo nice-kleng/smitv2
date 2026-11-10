@@ -19,13 +19,13 @@
         /* Setting untuk ukuran label 50mm x 25mm (umum untuk label kecil) */
         .label {
             width: 104mm;
-            /* Maksimum lebar printer ZD220 */
             height: 25mm;
-            /* Tinggi label yang umum */
-            display: inline-block;
+            display: block;
             background: white;
             margin: 0;
             page-break-after: always;
+            page-break-inside: avoid;
+            overflow: hidden;
         }
 
         .qr-info-container {
@@ -33,50 +33,46 @@
             background: white;
             height: 100%;
             width: 100%;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
+            border-collapse: collapse;
+            table-layout: fixed;
         }
 
-        .barcode-container {
+        .qr-info-container td {
+            vertical-align: middle;
+        }
+
+        .barcode-cell {
+            width: 22mm;
             padding: 1mm;
             text-align: center;
-            width: 22mm;
-            flex: 0 0 22mm;
         }
 
-        .barcode-container svg,
-        .barcode-container img {
+        .barcode-cell img {
             width: 20mm;
             height: 20mm;
+            display: block;
+            margin: 0 auto;
         }
 
-        .info-container {
+        .info-cell {
             padding: 1mm 2mm;
-            flex: 1;
         }
 
         .info-row {
-            margin: 1mm 0;
+            margin: 0;
             font-size: 8pt;
-            display: flex;
+            line-height: 1.3;
         }
 
         .label-text {
             color: #000;
             display: inline-block;
             width: 10mm;
-            font-weight: normal;
         }
 
         .separator {
             display: inline-block;
             margin: 0 1mm;
-        }
-
-        .value-text {
-            display: inline-block;
-            font-weight: normal;
         }
 
         @media print {
@@ -103,23 +99,25 @@
 <body>
     @foreach ($data as $item)
         <div class="label">
-            <div class="qr-info-container">
-                <div class="barcode-container">
-                    <img src="data:image/png;base64,{!! DNS2D::getBarcodePNG(route('inventory.track', $item->id), 'QRCODE', 6, 6) !!}" alt="QR">
-                </div>
-                <div class="info-container">
-                    <div class="info-row">
-                        <span class="label-text">Nama</span>
-                        <span class="separator">:</span>
-                        <span class="value-text">{{ $item->barang->nama_barang }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label-text">No</span>
-                        <span class="separator">:</span>
-                        <span class="value-text">{{ $item->kode_barang }}</span>
-                    </div>
-                </div>
-            </div>
+            <table class="qr-info-container">
+                <tr>
+                    <td class="barcode-cell">
+                        <img src="data:image/png;base64,{!! DNS2D::getBarcodePNG(route('inventory.track', $item->id), 'QRCODE', 6, 6) !!}" alt="QR">
+                    </td>
+                    <td class="info-cell">
+                        <div class="info-row">
+                            <span class="label-text">Nama</span>
+                            <span class="separator">:</span>
+                            <span class="value-text">{{ $item->barang->nama_barang }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label-text">No</span>
+                            <span class="separator">:</span>
+                            <span class="value-text">{{ $item->kode_barang }}</span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
     @endforeach
 </body>
