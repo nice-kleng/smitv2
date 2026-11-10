@@ -279,7 +279,8 @@
 
             $('#btnProsesLabel').click(function() {
                 let metode = $('#metodeCetak').val();
-                let url = "{{ route('inventory.cetak-label') }}";
+                let tipe = $('input[name="tipeCetak"]:checked').val();
+                let params = ['tipe=' + encodeURIComponent(tipe)];
 
                 if (metode === 'selected') {
                     let rows_selected = table.column(0).checkboxes.selected();
@@ -288,15 +289,14 @@
                         return;
                     }
 
-                    // Konversi ke array
                     let ids = [];
                     $.each(rows_selected, function(index, rowId) {
                         ids.push(rowId);
                     });
-
-                    url += '?ids=' + ids.join(',') + '&tipe=' + $('input[name="tipeCetak"]:checked').val();
+                    params.push('ids=' + encodeURIComponent(ids.join(',')));
                 }
 
+                let url = "{{ route('inventory.cetak-label') }}?" + params.join('&');
                 window.open(url, '_blank');
                 $('#cetakLabelModal').modal('hide');
             });

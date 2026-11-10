@@ -347,8 +347,8 @@ class InventoryController extends Controller
     {
         $query = Inventory::with('barang');
 
-        if ($request->has('ids')) {
-            $query->whereIn('id', explode(',', $request->ids));
+        if ($request->filled('ids')) {
+            $query->whereIn('id', array_filter(explode(',', $request->ids)));
         }
 
         if (Auth::user()->hasAnyRole(['superadmin', 'admin'])) {
@@ -359,24 +359,21 @@ class InventoryController extends Controller
             $data = $query->where('ruangan_id', Auth::user()->ruangan_id)->get();
         }
 
-        // Opsi 1: Output langsung untuk browser - bagus untuk testing
-        if ($request->has('preview') && $request->preview == 'true') {
+        $isPreview = $request->get('tipe') === 'preview' || $request->boolean('preview');
+        if ($isPreview) {
             return view('inventory::inventaris.cetak-label', compact('data'));
         }
 
-        // Opsi 2: Menggunakan dompdf dengan setting ukuran A4 tapi tanpa margin
         $pdf = PDF::loadView('inventory::inventaris.cetak-label', compact('data'));
-
-        // Setting A4 karena sepertinya printer Anda diset untuk itu berdasarkan screenshot
-        $pdf->setPaper('A4', 'portrait');
-
-        // Setting margin minimal untuk memaksimalkan area cetak
+        // Label 104mm x 25mm (thermal, mis. Zebra ZD220)
+        $pdf->setPaper([0, 0, 294.8, 70.87], 'portrait');
         $pdf->setOption([
             'margin-top' => 0,
             'margin-right' => 0,
             'margin-bottom' => 0,
             'margin-left' => 0,
             'dpi' => 203,
+            'isRemoteEnabled' => true,
         ]);
 
         return $pdf->stream('label-inventaris.pdf');
