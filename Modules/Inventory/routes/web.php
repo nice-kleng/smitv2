@@ -41,6 +41,7 @@ Route::group(['middleware' => 'auth', 'prefix' => '/inventory', 'as' => 'invento
 
         Route::post('/import', 'import')->name('import');
         Route::get('/template', 'downloadTemplate')->name('template');
+        Route::get('/export', 'export')->name('export');
 
         Route::get('/cetak-label', 'cetakLabelInventaris')->name('cetak-label');
     });

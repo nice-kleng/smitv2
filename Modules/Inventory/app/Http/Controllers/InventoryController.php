@@ -15,6 +15,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Modules\Inventory\Models\MasterBarang;
+use App\Exports\InventoryExport;
 
 class InventoryController extends Controller
 {
@@ -291,6 +292,11 @@ class InventoryController extends Controller
     {
         $path = public_path('templates/inventory_template.xlsx');
         return response()->download($path);
+    }
+
+    public function export()
+    {
+        return Excel::download(new InventoryExport, 'inventaris.xlsx');
     }
 
     // public function cetakLabelInventaris(Request $request)

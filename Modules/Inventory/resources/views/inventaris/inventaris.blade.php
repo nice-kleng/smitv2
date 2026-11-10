@@ -3,7 +3,7 @@
 @section('content')
     <div class="card">
         <div class="card-header justify-content-between d-sm-flex">
-            <a href="" class="btn btn-success" title="Export Data Inventaris"><i class="fa fa-file-excel"></i>
+            <a href="{{ route('inventory.export') }}" class="btn btn-success" title="Export Data Inventaris"><i class="fa fa-file-excel"></i>
                 Export</a>
             @if (auth()->user()->hasAnyRole(['superadmin', 'admin']))
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#importModal">
