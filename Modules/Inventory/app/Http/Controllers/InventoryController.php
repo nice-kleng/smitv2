@@ -365,15 +365,10 @@ class InventoryController extends Controller
         }
 
         $pdf = PDF::loadView('inventory::inventaris.cetak-label', compact('data'));
-        // Label 104mm x 25mm (thermal, mis. Zebra ZD220)
         $pdf->setPaper([0, 0, 294.8, 70.87], 'portrait');
         $pdf->setOption([
-            'margin-top' => 0,
-            'margin-right' => 0,
-            'margin-bottom' => 0,
-            'margin-left' => 0,
-            'dpi' => 203,
             'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true,
         ]);
 
         return $pdf->stream('label-inventaris.pdf');
