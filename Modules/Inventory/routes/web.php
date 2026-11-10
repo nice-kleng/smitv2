@@ -148,6 +148,9 @@ Route::get('/helpdesk', [TicketController::class, 'index'])->name('helpdesk.inde
 Route::post('/helpdesk', [TicketController::class, 'store'])->name('helpdesk.store-ticket');
 Route::get('/helpdesk/antrean', [TicketController::class, 'antrean'])->name('helpdesk.antrean');
 
+// Public tracking inventaris (QR code)
+Route::get('/inventory/track/{id}', [InventoryController::class, 'track'])->name('inventory.track');
+
 Route::middleware(['auth', 'permission:manage-data-pengaduan'])
     ->prefix('pwa/helpdesk')
     ->as('inventory.pwa.')

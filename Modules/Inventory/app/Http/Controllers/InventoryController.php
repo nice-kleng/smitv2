@@ -398,6 +398,25 @@ class InventoryController extends Controller
     //         $data = $query->where('ruangan_id', Auth::user()->ruangan_id)->get();
     //     }
 
+    public function track($id)
+    {
+        $inventaris = Inventory::with([
+            'barang.kategori',
+            'ruangan.unit',
+            'historyMutasi.unit',
+            'historyMutasi.ruangan',
+        ])->findOrFail($id);
+
+        $riwayat = $inventaris->historyMutasi->sort(function ($a, $b) {
+            $cmp = strcmp($b->tanggal_mutasi ?? '', $a->tanggal_mutasi ?? '');
+            return $cmp !== 0 ? $cmp : ($b->id <=> $a->id);
+        })->values();
+
+        $kondisiTerakhir = $riwayat->first();
+
+        return view('inventory::inventaris.track', compact('inventaris', 'riwayat', 'kondisiTerakhir'));
+    }
+
     //     if ($request->has('tipe') && $request->tipe == 'preview') {
     //         return view('inventory::inventaris.cetak-label', compact('data'));
     //     }

@@ -34,23 +34,26 @@
             height: 100%;
             width: 100%;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            align-items: center;
         }
 
         .barcode-container {
-            padding: 2mm;
+            padding: 1mm;
             text-align: center;
-            max-width: 100%;
-            overflow: hidden;
+            width: 22mm;
+            flex: 0 0 22mm;
         }
 
-        .barcode-container svg {
-            max-width: 100%;
-            height: 10mm;
+        .barcode-container svg,
+        .barcode-container img {
+            width: 20mm;
+            height: 20mm;
         }
 
         .info-container {
             padding: 1mm 2mm;
+            flex: 1;
         }
 
         .info-row {
@@ -102,7 +105,7 @@
         <div class="label">
             <div class="qr-info-container">
                 <div class="barcode-container">
-                    {!! DNS1D::getBarcodeHTML($item->kode_barang, 'C39', 1.3, 80) !!}
+                    {!! DNS2D::getBarcodeSVG(route('inventory.track', $item->id), 'QRCODE', 3, 3) !!}
                 </div>
                 <div class="info-container">
                     <div class="info-row">
