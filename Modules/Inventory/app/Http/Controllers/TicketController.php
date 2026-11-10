@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\JadwalDetail;
 use App\Models\LogBook;
 use App\Models\Ruangan;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -99,6 +100,7 @@ class TicketController extends Controller
     public function listTicket(Request $request)
     {
         $jenisAduan = JenisAduan::orderBy('nama_jenis', 'asc')->get();
+        $userIt = User::where('pu_kd', 'it')->get();
         if ($request->ajax()) {
             $tickets = Ticket::with('ruangan.unit', 'teknisi', 'jenisAduan')->where('status', '0')->get();
 
@@ -122,7 +124,7 @@ class TicketController extends Controller
                 ->make(true);
         }
 
-        return view('inventory::helpdesk.list', ['jenisaduan' => $jenisAduan]);
+        return view('inventory::helpdesk.list', ['jenisaduan' => $jenisAduan, 'userIt' => $userIt]);
     }
 
     // public function detail(string $id)
@@ -166,6 +168,7 @@ class TicketController extends Controller
             'tempat_service' => 'required_if:keterangan_perbaikan,4|nullable|string|max:255',
             'kerusakan' => 'required_if:keterangan_perbaikan,4|nullable|string',
             'biaya' => 'nullable|numeric|min:0',
+            'teknisi_id' => 'nullable|exists:users,id',
         ]);
 
         DB::beginTransaction();
@@ -177,7 +180,7 @@ class TicketController extends Controller
                 'tindak_lanjut' => $validated['tindak_lanjut'],
                 'keterangan_perbaikan' => $validated['keterangan_perbaikan'],
                 'status' => '1',
-                'teknisi_id' => Auth::user()->id,
+                'teknisi_id' => $validated['teknisi_id'] ?? Auth::user()->id,
                 'tanggal_perbaikan' => now(),
             ]);
 
