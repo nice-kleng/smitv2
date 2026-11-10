@@ -105,7 +105,7 @@
         <div class="label">
             <div class="qr-info-container">
                 <div class="barcode-container">
-                    {!! DNS2D::getBarcodeSVG(route('inventory.track', $item->id), 'QRCODE', 3, 3) !!}
+                    <img src="data:image/png;base64,{!! DNS2D::getBarcodePNG(route('inventory.track', $item->id), 'QRCODE', 6, 6) !!}" alt="QR">
                 </div>
                 <div class="info-container">
                     <div class="info-row">
