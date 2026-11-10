@@ -4,15 +4,16 @@
 <head>
     <title>Label Inventaris</title>
     <style>
-        @page {
-            margin: 0;
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: Arial, sans-serif;
+        }
+
+        @page {
+            size: 104mm 25mm;
+            margin: 0;
         }
 
         html, body {
@@ -28,13 +29,12 @@
             background: white;
             margin: 0;
             padding: 0;
-            page-break-after: always;
-            page-break-inside: avoid;
             overflow: hidden;
+            page-break-inside: avoid;
         }
 
-        .label:last-child {
-            page-break-after: auto;
+        .label + .label {
+            page-break-before: always;
         }
 
         .qr-info-container {
