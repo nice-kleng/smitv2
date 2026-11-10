@@ -4,6 +4,10 @@
 <head>
     <title>Label Inventaris</title>
     <style>
+        @page {
+            margin: 0;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -11,39 +15,44 @@
             font-family: Arial, sans-serif;
         }
 
-        body {
-            padding: 0;
+        html, body {
             margin: 0;
+            padding: 0;
+            width: 104mm;
         }
 
-        /* Setting untuk ukuran label 50mm x 25mm (umum untuk label kecil) */
         .label {
             width: 104mm;
             height: 25mm;
             display: block;
             background: white;
             margin: 0;
+            padding: 0;
             page-break-after: always;
             page-break-inside: avoid;
             overflow: hidden;
         }
 
+        .label:last-child {
+            page-break-after: auto;
+        }
+
         .qr-info-container {
             border: 1px solid #000;
             background: white;
-            height: 100%;
             width: 100%;
+            height: 100%;
             border-collapse: collapse;
             table-layout: fixed;
         }
 
         .qr-info-container td {
             vertical-align: middle;
+            padding: 0;
         }
 
         .barcode-cell {
             width: 22mm;
-            padding: 1mm;
             text-align: center;
         }
 
@@ -55,13 +64,15 @@
         }
 
         .info-cell {
-            padding: 1mm 2mm;
+            padding: 0 2mm;
         }
 
         .info-row {
             margin: 0;
             font-size: 8pt;
-            line-height: 1.3;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         .label-text {
@@ -75,23 +86,8 @@
             margin: 0 1mm;
         }
 
-        @media print {
-            @page {
-                size: 104mm 25mm;
-                /* Ukuran sesuai dengan label */
-                margin: 0;
-            }
-
-            html,
-            body {
-                width: 104mm;
-                height: 25mm;
-            }
-
-            .label {
-                page-break-after: always;
-                margin: 0;
-            }
+        .value-text {
+            display: inline-block;
         }
     </style>
 </head>
