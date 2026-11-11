@@ -249,6 +249,11 @@
 
         .empty-state { text-align: center; color: var(--muted); padding: 32px 16px; }
 
+        .pagination .page-link { color: var(--accent); border-color: var(--border); }
+        .pagination .page-item.active .page-link { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .pagination .page-link:focus { box-shadow: var(--focus); }
+        .pagination .page-item.disabled .page-link { color: var(--muted); }
+
         @media (max-width: 768px) {
             .page { padding: 16px 12px 32px; }
             .page-header { padding: 16px; }
@@ -331,6 +336,12 @@
                                     <!-- Data akan diisi oleh JavaScript -->
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-top" id="paginationWrapper">
+                            <small class="text-muted mb-2 mb-sm-0" id="paginationInfo"></small>
+                            <nav aria-label="Navigasi halaman akun">
+                                <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+                            </nav>
                         </div>
                     </div>
                 </div>
@@ -500,64 +511,172 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Hapus array accounts, ganti dengan AJAX
         let accounts = [];
+        let filteredAccounts = [];
+        let currentPage = 1;
+        const perPage = 10;
 
         function loadAccounts() {
             $.get('/account-db-list', function(data) {
-                accounts = data;
-                console.table(accounts)
-                const tbody = document.getElementById('accountsTableBody');
-                tbody.innerHTML = '';
-                const isSuperadmin = {{ auth()->user()->hasRole('superadmin') ? 'true' : 'false' }};
-                const colCount = isSuperadmin ? 9 : 8;
-                if (!accounts.length) {
-                    tbody.innerHTML = `<tr><td colspan="${colCount}" class="empty-state">Belum ada akun tersimpan. Tambah akun pertama untuk mulai.</td></tr>`;
-                    updateTotalAccounts();
-                    return;
-                }
-                accounts.forEach(account => {
-                    let pemilikTd = '';
-                    if (isSuperadmin) {
-                        pemilikTd = `<td>${(account.user && account.user.name) ? account.user.name : '-'}</td>`;
-                    }
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>
-                            <div class="app-cell">
-                                <div class="app-icon">${(account.app_name || '?').charAt(0).toUpperCase()}</div>
-                                <strong>${account.app_name || '-'}</strong>
-                            </div>
-                        </td>
-                        <td>
-                            ${account.app_url ? `<a href="${account.app_url}" target="_blank" rel="noopener" class="text-link"><i class="fas fa-external-link-alt mr-1" aria-hidden="true"></i>Buka</a>` : '-'}
-                        </td>
-                        ${pemilikTd}
-                        <td>${account.penyedia || '-'}</td>
-                        <td>${account.email || '-'}</td>
-                        <td><code>${account.username || '-'}</code></td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <input type="password" value="${account.password || ''}" class="form-control form-control-sm border-0 bg-light" readonly style="max-width: 120px;" aria-label="Password">
-                                <button class="btn btn-sm btn-outline-secondary ml-2" type="button" onclick="togglePasswordVisibility(this)" aria-label="Tampilkan password">
-                                    <i class="fas fa-eye" aria-hidden="true"></i>
-                                </button>
-                            </div>
-                        </td>
-                        <td><small class="text-muted">${formatDate(account.created_at)}</small></td>
-                        <td>
-                            <button class="btn btn-sm btn-warning-custom mr-1" type="button" onclick="editAccount(${account.id})" aria-label="Edit akun">
-                                <i class="fas fa-edit" aria-hidden="true"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger-custom" type="button" onclick="deleteAccount(${account.id})" aria-label="Hapus akun">
-                                <i class="fas fa-trash" aria-hidden="true"></i>
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-                updateTotalAccounts();
+                accounts = data || [];
+                applyFilter();
             });
+        }
+
+        function getSearchTerm() {
+            return (document.getElementById('searchInput').value || '').toLowerCase().trim();
+        }
+
+        function applyFilter(resetPage = true) {
+            const term = getSearchTerm();
+            if (!term) {
+                filteredAccounts = accounts.slice();
+            } else {
+                filteredAccounts = accounts.filter(account => {
+                    const owner = (account.user && account.user.name) ? account.user.name : '';
+                    const haystack = [
+                        account.app_name, account.app_url, account.penyedia,
+                        account.email, account.username, owner
+                    ].join(' ').toLowerCase();
+                    return haystack.includes(term);
+                });
+            }
+            if (resetPage) currentPage = 1;
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('accountsTableBody');
+            tbody.innerHTML = '';
+            const isSuperadmin = {{ auth()->user()->hasRole('superadmin') ? 'true' : 'false' }};
+            const colCount = isSuperadmin ? 9 : 8;
+            updateTotalAccounts();
+
+            if (!filteredAccounts.length) {
+                const msg = accounts.length ? 'Tidak ada akun yang cocok dengan pencarian.' : 'Belum ada akun tersimpan. Tambah akun pertama untuk mulai.';
+                tbody.innerHTML = `<tr><td colspan="${colCount}" class="empty-state">${msg}</td></tr>`;
+                renderPagination(0);
+                return;
+            }
+
+            const totalPages = Math.max(1, Math.ceil(filteredAccounts.length / perPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * perPage;
+            const pageItems = filteredAccounts.slice(start, start + perPage);
+
+            pageItems.forEach(account => {
+                let pemilikTd = '';
+                if (isSuperadmin) {
+                    pemilikTd = `<td>${(account.user && account.user.name) ? account.user.name : '-'}</td>`;
+                }
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div class="app-cell">
+                            <div class="app-icon">${(account.app_name || '?').charAt(0).toUpperCase()}</div>
+                            <strong>${account.app_name || '-'}</strong>
+                        </div>
+                    </td>
+                    <td>
+                        ${account.app_url ? `<a href="${account.app_url}" target="_blank" rel="noopener" class="text-link"><i class="fas fa-external-link-alt mr-1" aria-hidden="true"></i>Buka</a>` : '-'}
+                    </td>
+                    ${pemilikTd}
+                    <td>${account.penyedia || '-'}</td>
+                    <td>${account.email || '-'}</td>
+                    <td><code>${account.username || '-'}</code></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <input type="password" value="${account.password || ''}" class="form-control form-control-sm border-0 bg-light" readonly style="max-width: 120px;" aria-label="Password">
+                            <button class="btn btn-sm btn-outline-secondary ml-2" type="button" onclick="togglePasswordVisibility(this)" aria-label="Tampilkan password">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td><small class="text-muted">${formatDate(account.created_at)}</small></td>
+                    <td>
+                        <button class="btn btn-sm btn-warning-custom mr-1" type="button" onclick="editAccount(${account.id})" aria-label="Edit akun">
+                            <i class="fas fa-edit" aria-hidden="true"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger-custom" type="button" onclick="deleteAccount(${account.id})" aria-label="Hapus akun">
+                            <i class="fas fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            renderPagination(filteredAccounts.length);
+        }
+
+        function renderPagination(totalItems) {
+            const pagination = document.getElementById('pagination');
+            const info = document.getElementById('paginationInfo');
+            const wrapper = document.getElementById('paginationWrapper');
+            pagination.innerHTML = '';
+
+            if (!totalItems) {
+                info.textContent = '';
+                wrapper.style.display = 'none';
+                return;
+            }
+
+            wrapper.style.display = '';
+            const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * perPage + 1;
+            const end = Math.min(currentPage * perPage, totalItems);
+            info.textContent = `Menampilkan ${start}-${end} dari ${totalItems} akun`;
+
+            if (totalPages <= 1) return;
+
+            const addItem = (label, page, disabled = false, active = false, aria = '') => {
+                const li = document.createElement('li');
+                li.className = `page-item${disabled ? ' disabled' : ''}${active ? ' active' : ''}`;
+                const a = document.createElement('a');
+                a.className = 'page-link';
+                a.href = '#';
+                if (aria) a.setAttribute('aria-label', aria);
+                a.textContent = label;
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (disabled || active) return;
+                    currentPage = page;
+                    renderTable();
+                });
+                li.appendChild(a);
+                pagination.appendChild(li);
+            };
+
+            addItem('‹', currentPage - 1, currentPage === 1, false, 'Sebelumnya');
+
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            if (currentPage <= 3) endPage = Math.min(5, totalPages);
+            if (currentPage >= totalPages - 2) startPage = Math.max(1, totalPages - 4);
+
+            if (startPage > 1) {
+                addItem('1', 1, false, currentPage === 1);
+                if (startPage > 2) {
+                    const li = document.createElement('li');
+                    li.className = 'page-item disabled';
+                    li.innerHTML = '<span class="page-link">…</span>';
+                    pagination.appendChild(li);
+                }
+            }
+            for (let p = startPage; p <= endPage; p++) {
+                addItem(String(p), p, false, p === currentPage);
+            }
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const li = document.createElement('li');
+                    li.className = 'page-item disabled';
+                    li.innerHTML = '<span class="page-link">…</span>';
+                    pagination.appendChild(li);
+                }
+                addItem(String(totalPages), totalPages, false, currentPage === totalPages);
+            }
+
+            addItem('›', currentPage + 1, currentPage === totalPages, false, 'Berikutnya');
         }
 
         function updateTotalAccounts() {
@@ -784,17 +903,7 @@
 
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#accountsTableBody tr');
-
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+            applyFilter(true);
         });
 
         // Load accounts on page load
