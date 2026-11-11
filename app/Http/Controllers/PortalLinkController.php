@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PortalLink;
+use App\Models\PortalSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\DataTables;
@@ -54,7 +55,11 @@ class PortalLinkController extends Controller
                 ->make(true);
         }
 
-        return view('settings.portal-links.index');
+        $externalPin = auth()->user()->hasRole('superadmin')
+            ? PortalSetting::getValue('external_pin', config('portal.external_pin', 'amalsholeh009'))
+            : null;
+
+        return view('settings.portal-links.index', compact('externalPin'));
     }
 
     /**
@@ -168,5 +173,23 @@ class PortalLinkController extends Controller
         $portalLink->delete();
 
         return response()->json(['success' => true, 'message' => 'Portal link berhasil dihapus']);
+    }
+
+    /**
+     * Update portal external PIN (superadmin only).
+     */
+    public function updatePin(Request $request)
+    {
+        if (! $request->user()->hasRole('superadmin')) {
+            abort(403);
+        }
+
+        $request->validate([
+            'external_pin' => 'required|string|min:4|max:50',
+        ]);
+
+        PortalSetting::setValue('external_pin', $request->external_pin);
+
+        return response()->json(['success' => true, 'message' => 'PIN portal berhasil diperbarui']);
     }
 }

@@ -1,6 +1,29 @@
 @extends('layouts.app', ['title' => 'Kelola Portal Links'])
 
 @section('content')
+    @if(auth()->user()->hasRole('superadmin'))
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-key mr-1"></i> PIN Akses Portal Internal
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="formPortalPin" class="form-inline flex-wrap" style="gap: 8px;">
+                    @csrf
+                    @method('PUT')
+                    <label for="external_pin" class="mr-2 mb-2 mb-sm-0">PIN</label>
+                    <input type="text" class="form-control mr-2 mb-2 mb-sm-0" id="external_pin" name="external_pin"
+                        value="{{ $externalPin }}" required minlength="4" maxlength="50" style="min-width: 220px;">
+                    <button type="submit" class="btn btn-primary mb-2 mb-sm-0" id="btnSimpanPin">
+                        <i class="fas fa-save mr-1"></i> Simpan PIN
+                    </button>
+                </form>
+                <small class="text-muted d-block mt-2">PIN ini digunakan untuk membuka tab Internal di halaman portal publik.</small>
+            </div>
+        </div>
+    @endif
+
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">
@@ -347,6 +370,38 @@
                                 Swal.fire('Error', 'Gagal menghapus data', 'error');
                             }
                         });
+                    }
+                });
+            });
+
+            // Update portal PIN (superadmin)
+            $('#formPortalPin').on('submit', function(e) {
+                e.preventDefault();
+                var btn = $('#btnSimpanPin');
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
+                $.ajax({
+                    url: "{{ route('settings.portal-link.pin.update') }}",
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire('Berhasil', res.message, 'success');
+                        }
+                    },
+                    error: function(xhr) {
+                        var errors = xhr.responseJSON?.errors;
+                        if (errors) {
+                            var msg = Object.values(errors).map(e => e[0]).join('<br>');
+                            Swal.fire('Validasi Gagal', msg, 'error');
+                        } else {
+                            Swal.fire('Error', xhr.responseJSON?.message || 'Terjadi kesalahan', 'error');
+                        }
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan PIN');
                     }
                 });
             });

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PortalLink;
+use App\Models\PortalSetting;
 use Illuminate\Http\Request;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -49,7 +50,7 @@ class PortalController extends Controller
     {
         $request->validate(['pin' => 'required|string']);
 
-        $correctPin = config('portal.external_pin', 'amalsholeh009');
+        $correctPin = PortalSetting::getValue('external_pin', config('portal.external_pin', 'amalsholeh009'));
 
         if ($request->pin === $correctPin) {
             session([

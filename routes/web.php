@@ -103,6 +103,7 @@ Route::middleware(['auth'])->group(function () {
         Route::controller(PortalLinkController::class)->prefix('/portal-links')->group(function () {
             Route::get('/', 'index')->name('portal-link.index');
             Route::post('/', 'store')->name('portal-link.store');
+            Route::put('/pin', 'updatePin')->name('portal-link.pin.update');
             Route::get('/{id}', 'edit')->name('portal-link.edit');
             Route::put('/{id}', 'update')->name('portal-link.update');
             Route::delete('/{id}', 'destroy')->name('portal-link.destroy');
