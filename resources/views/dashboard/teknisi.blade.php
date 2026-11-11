@@ -108,6 +108,32 @@
     <div class="col-md-6">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Total Durasi Downtime IT Per Bulan {{ date('Y') }}</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="grafikDowntime"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center mb-5">
+    <div class="col-md-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Penyebab Downtime IT {{ date('Y') }}</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="grafikPenyebabDowntime"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center mb-5">
+    <div class="col-md-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Jumlah Total Inventaris IT</h6>
             </div>
             <div class="card-body">
@@ -122,7 +148,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><button class="btn btn-info btn-sm">{{ $data['totalInventarisRusak'] }}</button></i>
+                                <td><button class="btn btn-info btn-sm">{{ $data['totalInventarisRusak'] }}</button>
                                 </td>
                                 <td><button
                                         class="btn btn-info btn-sm">{{ $data['totalInventarisKurangBaik'] }}</button>
@@ -226,6 +252,93 @@
                     }
                 }
             });
+
+            const grafikDowntime = @json($data['grafikDowntime'] ?? []);
+            const downtimeCtx = document.getElementById('grafikDowntime');
+            if (downtimeCtx) {
+                new Chart(downtimeCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: grafikDowntime.map(item => item.bulan),
+                        datasets: [{
+                            label: 'Total Durasi (jam)',
+                            data: grafikDowntime.map(item => item.total_jam),
+                            borderColor: 'rgba(15, 118, 110, 1)',
+                            backgroundColor: 'rgba(15, 118, 110, 0.15)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true,
+                            pointRadius: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Jam'
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const item = grafikDowntime[context.dataIndex] || {};
+                                        const jam = context.raw ?? 0;
+                                        const kejadian = item.total_kejadian ?? 0;
+                                        return `Durasi: ${jam} jam | Kejadian: ${kejadian}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            const penyebabDowntime = @json($data['penyebabDowntime'] ?? []);
+            const penyebabCtx = document.getElementById('grafikPenyebabDowntime');
+            if (penyebabCtx) {
+                new Chart(penyebabCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: penyebabDowntime.map(item => item.label),
+                        datasets: [{
+                            label: 'Jumlah Kejadian',
+                            data: penyebabDowntime.map(item => item.total),
+                            backgroundColor: 'rgba(180, 83, 9, 0.45)',
+                            borderColor: 'rgba(180, 83, 9, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Jumlah'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        }
+                    }
+                });
+            }
 
             // Initialize DataTable for detailKondisiByKategori
             $('#detailKondisiByKategori').DataTable({

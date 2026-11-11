@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ItDowntime;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -199,6 +201,41 @@ class DashboardController extends Controller
                     $bulanDalamSetahun[$item->bulan]['total'] = $item->total_ticket;
                 }
 
+                $bulanDowntime = [];
+                for ($i = 1; $i <= 12; $i++) {
+                    $bulanDowntime[$i] = [
+                        'bulan' => date('F', mktime(0, 0, 0, $i, 1)),
+                        'bulan_angka' => $i,
+                        'total_jam' => 0,
+                        'total_kejadian' => 0,
+                    ];
+                }
+
+                $downtimes = ItDowntime::whereYear('mulai_at', now()->year)->get();
+                $penyebabMap = [];
+                foreach ($downtimes as $downtime) {
+                    if (! $downtime->mulai_at) {
+                        continue;
+                    }
+                    $bulan = (int) $downtime->mulai_at->format('n');
+                    $end = $downtime->selesai_at ?: Carbon::now();
+                    $minutes = $downtime->mulai_at->diffInMinutes($end);
+                    $bulanDowntime[$bulan]['total_jam'] = round($bulanDowntime[$bulan]['total_jam'] + ($minutes / 60), 2);
+                    $bulanDowntime[$bulan]['total_kejadian']++;
+
+                    $penyebab = trim((string) $downtime->penyebab);
+                    if ($penyebab === '') {
+                        $penyebab = 'Tidak tercatat';
+                    }
+                    $penyebabMap[$penyebab] = ($penyebabMap[$penyebab] ?? 0) + 1;
+                }
+
+                arsort($penyebabMap);
+                $penyebabDowntime = collect($penyebabMap)
+                    ->map(fn ($total, $label) => ['label' => $label, 'total' => $total])
+                    ->values()
+                    ->all();
+
                 // Query untuk mendapatkan latest history inventaris untuk barang IT
                 $latestHistorySubquery = DB::table('history_inventaris')
                     ->join('inventories', 'history_inventaris.inventory_id', '=', 'inventories.id')
@@ -264,6 +301,8 @@ class DashboardController extends Controller
                     'totalInventarisBaik' => $inventoryStats->get('2', (object) ['total' => 0])->total,
 
                     'grafikKerusakan' => array_values($bulanDalamSetahun),
+                    'grafikDowntime' => array_values($bulanDowntime),
+                    'penyebabDowntime' => $penyebabDowntime,
                     'detailKondisiByKategori' => $detailKondisiByKategori,
                 ];
 
