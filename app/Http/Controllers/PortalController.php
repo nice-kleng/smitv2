@@ -14,7 +14,7 @@ class PortalController extends Controller
      */
     public function index()
     {
-        $links = PortalLink::active()
+        $links = PortalLink::with('unit')->active()
             ->orderBy('category')
             ->orderBy('order')
             ->orderBy('title')
@@ -23,7 +23,16 @@ class PortalController extends Controller
         $internalLinks = $links->where('category', 'internal');
         $externalLinks = $links->where('category', 'external');
 
-        return view('portal.index', compact('links', 'internalLinks', 'externalLinks'));
+        $groupByUnit = function ($collection) {
+            return $collection->groupBy(function ($link) {
+                return $link->unit->nama_unit ?? 'Lainnya';
+            })->sortKeys();
+        };
+
+        $internalGroups = $groupByUnit($internalLinks);
+        $externalGroups = $groupByUnit($externalLinks);
+
+        return view('portal.index', compact('links', 'internalLinks', 'externalLinks', 'internalGroups', 'externalGroups'));
     }
 
     /**

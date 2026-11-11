@@ -14,9 +14,15 @@ class PortalLink extends Model
         'icon',
         'image',
         'category',
+        'unit_id',
         'order',
         'is_active',
     ];
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
 
     protected $casts = [
         'is_active' => 'boolean',

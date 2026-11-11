@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PortalLink;
 use App\Models\PortalSetting;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\DataTables;
@@ -16,7 +17,7 @@ class PortalLinkController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = PortalLink::orderBy('category')->orderBy('order')->get();
+            $data = PortalLink::with('unit')->orderBy('category')->orderBy('order')->get();
 
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -29,6 +30,9 @@ class PortalLinkController extends Controller
                 })
                 ->addColumn('category_badge', function ($row) {
                     return '<span class="badge '.$row->category_badge.'">'.$row->category_label.'</span>';
+                })
+                ->addColumn('unit_name', function ($row) {
+                    return $row->unit->nama_unit ?? '-';
                 })
                 ->addColumn('status_badge', function ($row) {
                     if ($row->is_active) {
@@ -58,8 +62,9 @@ class PortalLinkController extends Controller
         $externalPin = auth()->user()->hasRole('superadmin')
             ? PortalSetting::getValue('external_pin', config('portal.external_pin', 'amalsholeh009'))
             : null;
+        $units = Unit::orderBy('nama_unit')->get();
 
-        return view('settings.portal-links.index', compact('externalPin'));
+        return view('settings.portal-links.index', compact('externalPin', 'units'));
     }
 
     /**
@@ -74,6 +79,7 @@ class PortalLinkController extends Controller
             'icon' => 'nullable|string|max:100',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'category' => 'required|in:internal,external',
+            'unit_id' => 'nullable|exists:units,id',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
@@ -109,6 +115,7 @@ class PortalLinkController extends Controller
                 'image' => $portalLink->image,
                 'image_url' => $portalLink->image_url,
                 'category' => $portalLink->category,
+                'unit_id' => $portalLink->unit_id,
                 'order' => $portalLink->order,
                 'is_active' => $portalLink->is_active,
             ],
@@ -129,6 +136,7 @@ class PortalLinkController extends Controller
             'icon' => 'nullable|string|max:100',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'category' => 'required|in:internal,external',
+            'unit_id' => 'nullable|exists:units,id',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);

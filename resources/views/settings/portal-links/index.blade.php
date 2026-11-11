@@ -43,6 +43,7 @@
                             <th>Judul</th>
                             <th>URL</th>
                             <th width="10%">Kategori</th>
+                            <th>Unit</th>
                             <th width="8%">Urutan</th>
                             <th width="8%">Status</th>
                             <th width="12%">Aksi</th>
@@ -95,6 +96,17 @@
                             <label for="url">URL Tujuan <span class="text-danger">*</span></label>
                             <input type="url" class="form-control" id="url" name="url" required
                                 placeholder="https://contoh.com/halaman">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="unit_id">Unit</label>
+                            <select class="form-control" id="unit_id" name="unit_id">
+                                <option value="">Tanpa Unit</option>
+                                @foreach($units as $unit)
+                                    <option value="{{ $unit->id }}">{{ $unit->nama_unit }}</option>
+                                @endforeach
+                            </select>
+                            <small class="form-text text-muted">Pilih unit untuk mengelompokkan link di portal.</small>
                         </div>
 
                         <div class="form-group">
@@ -184,6 +196,7 @@
                     { data: 'title', name: 'title' },
                     { data: 'short_url', name: 'url' },
                     { data: 'category_badge', name: 'category', className: 'text-center' },
+                    { data: 'unit_name', name: 'unit.nama_unit' },
                     { data: 'order', name: 'order', className: 'text-center' },
                     { data: 'status_badge', name: 'is_active', className: 'text-center' },
                     { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' },
@@ -204,6 +217,7 @@
                 $('#iconPreview i').attr('class', 'fas fa-link');
                 $('.custom-file-label').text('Pilih gambar...');
                 $('#is_active').prop('checked', true);
+                $('#unit_id').val('');
             }
 
             // Open modal for create
@@ -322,6 +336,7 @@
                         $('#description').val(data.description);
                         $('#icon').val(data.icon);
                         $('#category').val(data.category);
+                        $('#unit_id').val(data.unit_id || '');
                         $('#order').val(data.order);
                         $('#is_active').prop('checked', data.is_active);
 

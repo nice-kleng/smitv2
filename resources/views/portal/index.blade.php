@@ -363,6 +363,16 @@
             color: #fff;
         }
 
+        /* ===== GROUP TITLE ===== */
+        .portal-group-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #065f46;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.35rem;
+            border-bottom: 2px solid rgba(16, 185, 129, 0.2);
+        }
+
         /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
@@ -517,50 +527,57 @@
                     <p>Portal link belum tersedia saat ini.</p>
                 </div>
             @else
-                <div class="row" id="portalContainer">
-                    @foreach ($links as $link)
-                        <div class="col-lg-3 col-md-4 col-sm-6 mb-4 portal-item" data-category="{{ $link->category }}"
-                            data-title="{{ strtolower($link->title) }}">
-                            <div class="portal-card">
-                                {{-- Badge --}}
-                                <div>
-                                    <span class="portal-card-badge badge-{{ $link->category }}">
-                                        {{ $link->category_label }}
-                                    </span>
-                                </div>
+                <div id="portalContainer">
+                    @foreach (['internal' => $internalGroups, 'external' => $externalGroups] as $cat => $groups)
+                        @foreach ($groups as $unitName => $items)
+                            <div class="portal-group mb-4" data-category="{{ $cat }}">
+                                <h6 class="portal-group-title">
+                                    <i class="fas fa-sitemap mr-1"></i> {{ $unitName }}
+                                </h6>
+                                <div class="row">
+                                    @foreach ($items as $link)
+                                        <div class="col-lg-3 col-md-4 col-sm-6 mb-4 portal-item"
+                                            data-category="{{ $link->category }}"
+                                            data-title="{{ strtolower($link->title) }}">
+                                            <div class="portal-card">
+                                                <div>
+                                                    <span class="portal-card-badge badge-{{ $link->category }}">
+                                                        {{ $link->category_label }}
+                                                    </span>
+                                                </div>
 
-                                {{-- Icon / Image --}}
-                                <div class="portal-card-icon icon-{{ $link->category }}">
-                                    @if ($link->image)
-                                        <img src="{{ $link->image_url }}" alt="{{ $link->title }}">
-                                    @else
-                                        <i class="{{ $link->display_icon }}"></i>
-                                    @endif
-                                </div>
+                                                <div class="portal-card-icon icon-{{ $link->category }}">
+                                                    @if ($link->image)
+                                                        <img src="{{ $link->image_url }}" alt="{{ $link->title }}">
+                                                    @else
+                                                        <i class="{{ $link->display_icon }}"></i>
+                                                    @endif
+                                                </div>
 
-                                {{-- Title --}}
-                                <h5 class="portal-card-title">{{ $link->title }}</h5>
+                                                <h5 class="portal-card-title">{{ $link->title }}</h5>
 
-                                {{-- Description --}}
-                                @if ($link->description)
-                                    <p class="portal-card-desc">{{ $link->description }}</p>
-                                @else
-                                    <p class="portal-card-desc">&nbsp;</p>
-                                @endif
+                                                @if ($link->description)
+                                                    <p class="portal-card-desc">{{ $link->description }}</p>
+                                                @else
+                                                    <p class="portal-card-desc">&nbsp;</p>
+                                                @endif
 
-                                {{-- Actions --}}
-                                <div class="portal-card-actions">
-                                    <a href="{{ $link->url }}" target="_blank" class="btn btn-open-link">
-                                        <i class="fas fa-external-link-alt mr-1"></i> Buka
-                                    </a>
-                                    <button class="btn btn-qr" data-toggle="modal" data-target="#qrModal"
-                                        data-title="{{ $link->title }}" data-url="{{ $link->url }}"
-                                        data-qr-url="{{ route('portal.qr', $link->id) }}">
-                                        <i class="fas fa-qrcode mr-1"></i> QR
-                                    </button>
+                                                <div class="portal-card-actions">
+                                                    <a href="{{ $link->url }}" target="_blank" class="btn btn-open-link">
+                                                        <i class="fas fa-external-link-alt mr-1"></i> Buka
+                                                    </a>
+                                                    <button class="btn btn-qr" data-toggle="modal" data-target="#qrModal"
+                                                        data-title="{{ $link->title }}" data-url="{{ $link->url }}"
+                                                        data-qr-url="{{ route('portal.qr', $link->id) }}">
+                                                        <i class="fas fa-qrcode mr-1"></i> QR
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
-                        </div>
+                        @endforeach
                     @endforeach
                 </div>
             @endif
@@ -790,11 +807,13 @@
                     var categoryMatch = (itemCategory === category);
                     var searchMatch = !search || itemTitle.indexOf(search) !== -1;
 
-                    if (categoryMatch && searchMatch) {
-                        $(this).fadeIn(300);
-                    } else {
-                        $(this).fadeOut(200);
-                    }
+                    $(this).toggle(categoryMatch && searchMatch);
+                });
+
+                $('.portal-group').each(function() {
+                    var groupCategory = $(this).data('category');
+                    var hasVisible = $(this).find('.portal-item:visible').length > 0;
+                    $(this).toggle(groupCategory === category && hasVisible);
                 });
             }
         });
