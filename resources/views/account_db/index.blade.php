@@ -586,7 +586,7 @@
                     <td><code>${account.username || '-'}</code></td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <input type="password" value="${account.password || ''}" class="form-control form-control-sm border-0 bg-light" readonly style="max-width: 120px;" aria-label="Password">
+                            <input type="password" value="${account.password || ''}" class="form-control form-control-sm border-0 bg-light" readonly style="min-width: 160px; max-width: 240px;" aria-label="Password">
                             <button class="btn btn-sm btn-outline-secondary ml-2" type="button" onclick="togglePasswordVisibility(this)" aria-label="Tampilkan password">
                                 <i class="fas fa-eye" aria-hidden="true"></i>
                             </button>
