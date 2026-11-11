@@ -5,416 +5,336 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Hospital Account Manager</title>
+    <title>SIAkun - Manajemen Akun</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
     <style>
-        * {
-            font-family: 'Poppins', sans-serif;
+        :root {
+            --bg: #f3f5f7;
+            --surface: #ffffff;
+            --border: #e3e8ee;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --accent: #0f766e;
+            --accent-hover: #115e59;
+            --accent-soft: #e6f4f1;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --warn: #b45309;
+            --warn-hover: #92400e;
+            --radius: 8px;
+            --focus: 0 0 0 3px rgba(15, 118, 110, 0.25);
         }
 
-        .btn-logout {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            border-radius: 20px;
-            padding: 8px 20px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .btn-logout:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .user-info {
-            text-align: right;
-            opacity: 0.9;
-        }
-
-        .user-info small {
-            font-size: 0.8rem;
-        }
+        * { box-sizing: border-box; }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px 0;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.5;
         }
 
-        .main-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            overflow: hidden;
+        button, a, .btn, summary, select, label[for], [role="button"] { cursor: pointer; }
+        button:disabled, .btn:disabled, [aria-disabled="true"] { cursor: not-allowed; }
+
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 16px 40px;
         }
 
-        .header-section {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white;
-            padding: 30px;
-            position: relative;
-            overflow: hidden;
-        }
+        .main-container { background: transparent; }
 
-        .header-section::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            animation: float 20s infinite linear;
-        }
-
-        @keyframes float {
-            0% {
-                transform: translate(-50%, -50%) rotate(0deg);
-            }
-
-            100% {
-                transform: translate(-50%, -50%) rotate(360deg);
-            }
-        }
-
-        .header-content {
-            position: relative;
-            z-index: 2;
-        }
-
-        .hospital-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            opacity: 0.9;
-        }
-
-        .card-custom {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            background: white;
-            overflow: hidden;
-        }
-
-        .card-custom:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .card-header-custom {
-            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
-            color: white;
-            border: none;
-            padding: 20px;
-            position: relative;
-        }
-
-        .card-header-custom::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #00b894, #00a085, #55a3ff);
-        }
-
-        .btn-custom {
-            border-radius: 25px;
-            padding: 10px 25px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.3s ease;
-            border: none;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-custom::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn-custom:hover::before {
-            left: 100%;
-        }
-
-        .btn-primary-custom {
-            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
-            color: white;
-        }
-
-        .btn-primary-custom:hover {
-            background: linear-gradient(135deg, #00a085 0%, #00b894 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 184, 148, 0.3);
-        }
-
-        .btn-danger-custom {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-        }
-
-        .btn-danger-custom:hover {
-            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
-        }
-
-        .btn-warning-custom {
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            color: white;
-        }
-
-        .btn-warning-custom:hover {
-            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);
-        }
-
-        .table-custom {
-            border-collapse: separate;
-            border-spacing: 0;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .table-custom thead th {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            border: none;
-            padding: 15px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .table-custom tbody tr {
-            transition: all 0.3s ease;
-        }
-
-        .table-custom tbody tr:hover {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            transform: scale(1.01);
-        }
-
-        .table-custom tbody td {
-            padding: 15px;
-            border: none;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .form-control-custom {
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            padding: 12px 15px;
-            transition: all 0.3s ease;
-        }
-
-        .form-control-custom:focus {
-            border-color: #74b9ff;
-            box-shadow: 0 0 0 3px rgba(116, 185, 255, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .modal-custom .modal-content {
-            border-radius: 20px;
-            border: none;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        .modal-custom .modal-header {
-            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
-            color: white;
-            border: none;
-            border-radius: 20px 20px 0 0;
-        }
-
-        .app-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #74b9ff, #0984e3);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            margin-right: 10px;
-        }
-
-        .stats-card {
-            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 20px;
+        .page-header {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
             margin-bottom: 20px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
         }
 
-        .stats-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100px;
-            height: 100px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
+        .page-title {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
         }
 
-        @keyframes pulse {
-            0% {
-                transform: scale(0.8);
-                opacity: 1;
-            }
+        .page-subtitle {
+            margin: 2px 0 0;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
 
-            100% {
-                transform: scale(1.2);
-                opacity: 0;
-            }
+        .user-meta { color: var(--muted); font-size: 0.9rem; }
+        .user-meta strong { color: var(--text); }
+
+        .stat {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .stat-label { font-size: 0.85rem; font-weight: 500; color: var(--accent-hover); }
+        .stat-value { font-size: 1.1rem; }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
         }
 
         .search-box {
             position: relative;
-            margin-bottom: 20px;
-        }
-
-        .search-box input {
-            padding-left: 50px;
+            flex: 1 1 280px;
+            max-width: 420px;
         }
 
         .search-box .fa-search {
             position: absolute;
-            left: 15px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: #74b9ff;
-            z-index: 5;
+            color: var(--muted);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .form-control-custom {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 0.95rem;
+            color: var(--text);
+            background: var(--surface);
+        }
+
+        .search-box .form-control-custom {
+            padding-left: 36px;
+        }
+
+        .form-control-custom:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: var(--focus);
+        }
+
+        .btn {
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 9px 14px;
+            border: 1px solid transparent;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .btn:focus { outline: none; box-shadow: var(--focus); }
+
+        .btn-primary-custom, .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .btn-primary-custom:hover, .btn-primary:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            color: #fff;
+        }
+
+        .btn-outline-secondary {
+            color: var(--text);
+            border-color: var(--border);
+            background: #fff;
+        }
+        .btn-outline-secondary:hover { background: #f8fafc; color: var(--text); }
+
+        .btn-danger-custom {
+            background: #fff;
+            border-color: #fecaca;
+            color: var(--danger);
+        }
+        .btn-danger-custom:hover { background: #fef2f2; color: var(--danger-hover); border-color: #fca5a5; }
+
+        .btn-warning-custom {
+            background: #fff;
+            border-color: #fde68a;
+            color: var(--warn);
+        }
+        .btn-warning-custom:hover { background: #fffbeb; color: var(--warn-hover); border-color: #fcd34d; }
+
+        .btn-logout {
+            background: #fff;
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-weight: 600;
+        }
+        .btn-logout:hover { background: #f8fafc; color: var(--text); }
+
+        .card-custom {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .card-header-custom {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+        .card-header-custom h5 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text); }
+
+        .table-custom { margin: 0; color: var(--text); font-size: 0.92rem; }
+        .table-custom thead th {
+            background: #f8fafc;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid var(--border);
+            border-top: 0;
+            padding: 12px 14px;
+            white-space: nowrap;
+        }
+        .table-custom tbody td {
+            padding: 12px 14px;
+            border-top: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        .table-custom tbody tr:hover { background: #f9fafb; }
+
+        .app-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-right: 10px;
+            flex: 0 0 32px;
+        }
+
+        .app-cell { display: flex; align-items: center; }
+        .text-link { color: var(--accent); }
+        .text-link:hover { color: var(--accent-hover); text-decoration: underline; }
+
+        .modal-content { border: 1px solid var(--border); border-radius: 10px; }
+        .modal-header { border-bottom: 1px solid var(--border); background: #fff; }
+        .modal-footer { border-top: 1px solid var(--border); }
+        .modal-title { font-weight: 600; font-size: 1.05rem; }
+        .modal-body .form-group label { font-weight: 600; font-size: 0.9rem; color: var(--text); margin-bottom: 6px; }
+        .modal-body .form-control { border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; }
+        .modal-body .form-control:focus { border-color: var(--accent); box-shadow: var(--focus); }
+        .modal-body .input-group .form-control { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+        .modal-body .input-group-append .btn { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+
+        .btn-sm { padding: 6px 10px; font-size: 0.85rem; }
+
+        .empty-state { text-align: center; color: var(--muted); padding: 32px 16px; }
+
+        @media (max-width: 768px) {
+            .page { padding: 16px 12px 32px; }
+            .page-header { padding: 16px; }
+            .header-actions { margin-top: 12px; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .search-box { max-width: none; }
+            .toolbar .btn { width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
         }
     </style>
 </head>
 
 <body>
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-12 col-xl-11">
-                <div class="main-container">
-                    <!-- Header Section -->
-                    <div class="header-section">
-                        <div class="header-content">
-                            <div class="row align-items-center">
-                                <div class="col-md-8">
-                                    <div class="hospital-icon">
-                                        <i class="fas fa-hospital"></i>
-                                    </div>
-                                    <h1 class="mb-2">SIAkun</h1>
-                                    <p class="mb-0 opacity-75">Sistem Informasi Manajemen Akun
-                                    </p>
-                                </div>
-                                <div class="col-md-4 text-md-right">
-                                    <div class="d-flex justify-content-end align-items-center mb-3">
-                                        <div class="user-info mr-3">
-                                            <small class="text-white-50">Selamat datang,</small><br>
-                                            <strong>{{ auth()->user()->name }}</strong>
-                                        </div>
-                                        @if (auth()->user()->roles->count() > 1 || auth()->user()->can('view-account-db'))
-                                            <a href="{{ route('dashboard') }}"
-                                                class="btn btn-outline-light btn-sm btn-logout"
-                                                title="Kembali ke Dashboard">
-                                                <i class="fas fa-arrow-left mr-1"></i>Kembali ke Dashboard
-                                            </a>
-                                        @elseif (auth()->user()->roles->count() === 1 && auth()->user()->hasRole('umum'))
-                                            <button class="btn btn-outline-light btn-sm btn-logout" onclick="logout()"
-                                                title="Logout">
-                                                <i class="fas fa-sign-out-alt mr-1"></i>Logout
-                                            </button>
-                                        @endif
-                                    </div>
-                                    <div class="stats-card">
-                                        <h3 class="mb-1" id="totalAccounts">0</h3>
-                                        <small>Total Akun Tersimpan</small>
-                                    </div>
-                                </div>
-                            </div>
+    <div class="page">
+        <div class="main-container">
+            <header class="page-header">
+                <div class="d-flex flex-wrap justify-content-between align-items-start">
+                    <div>
+                        <h1 class="page-title">SIAkun</h1>
+                        <p class="page-subtitle">Sistem Informasi Manajemen Akun</p>
+                        <div class="mt-3 stat" aria-label="Total akun tersimpan">
+                            <span class="stat-value" id="totalAccounts">0</span>
+                            <span class="stat-label">akun tersimpan</span>
                         </div>
                     </div>
+                    <div class="header-actions text-md-right mt-3 mt-md-0">
+                        <div class="user-meta mb-2">Masuk sebagai <strong>{{ auth()->user()->name }}</strong></div>
+                        @if (auth()->user()->roles->count() > 1 || auth()->user()->can('view-account-db'))
+                            <a href="{{ route('dashboard') }}" class="btn btn-logout btn-logout-header" title="Kembali ke Dashboard">
+                                <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>Kembali ke Dashboard
+                            </a>
+                        @elseif (auth()->user()->roles->count() === 1 && auth()->user()->hasRole('umum'))
+                            <button type="button" class="btn btn-logout btn-logout-header" onclick="logout()" title="Logout">
+                                <i class="fas fa-sign-out-alt mr-1" aria-hidden="true"></i>Logout
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </header>
 
-                    <!-- Main Content -->
-                    <div class="p-4">
-                        <!-- Action Buttons -->
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="search-box">
-                                    <i class="fas fa-search"></i>
-                                    <input type="text" class="form-control form-control-custom" id="searchInput"
-                                        placeholder="Cari aplikasi atau username...">
-                                </div>
-                            </div>
-                            <div class="col-md-6 text-md-right">
-                                <button class="btn btn-primary-custom btn-custom" data-toggle="modal"
-                                    data-target="#addAccountModal">
-                                    <i class="fas fa-plus mr-2"></i>Tambah Akun Baru
-                                </button>
-                            </div>
-                        </div>
+            <main class="p-0">
+                <div class="toolbar">
+                    <div class="search-box">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <label for="searchInput" class="sr-only">Cari akun</label>
+                        <input type="text" class="form-control form-control-custom" id="searchInput"
+                            placeholder="Cari aplikasi, username, atau penyedia...">
+                    </div>
+                    <button type="button" class="btn btn-primary-custom" data-toggle="modal" data-target="#addAccountModal">
+                        <i class="fas fa-plus mr-1" aria-hidden="true"></i>Tambah Akun
+                    </button>
+                </div>
 
-                        <!-- Accounts Table -->
-                        <div class="card card-custom">
-                            <div class="card-header card-header-custom">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-list mr-2"></i>Daftar Akun Aplikasi
-                                </h5>
-                            </div>
-                            <div class="card-body p-0">
-                                <div class="table-responsive">
-                                    <table class="table table-custom mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Aplikasi</th>
-                                                <th>URL</th>
-                                                @if (auth()->user()->hasRole('superadmin'))
-                                                    <th>Penanggung Jawab</th>
-                                                @endif
-                                                <th>Penyedia</th>
-                                                <th>Email</th>
-                                                <th>Username</th>
-                                                <th>Password</th>
-                                                <th>Tanggal Dibuat</th>
-                                                <th>Aksi</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="accountsTableBody">
-                                            <!-- Data akan diisi oleh JavaScript -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                <div class="card card-custom">
+                    <div class="card-header card-header-custom">
+                        <h5>Daftar Akun Aplikasi</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Aplikasi</th>
+                                        <th>URL</th>
+                                        @if (auth()->user()->hasRole('superadmin'))
+                                            <th>Penanggung Jawab</th>
+                                        @endif
+                                        <th>Penyedia</th>
+                                        <th>Email</th>
+                                        <th>Username</th>
+                                        <th>Password</th>
+                                        <th>Tanggal Dibuat</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accountsTableBody">
+                                    <!-- Data akan diisi oleh JavaScript -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     </div>
 
@@ -423,11 +343,9 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-plus mr-2"></i>Tambah Akun Baru
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">
-                        <span>&times;</span>
+                    <h5 class="modal-title">Tambah Akun Baru</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                        <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
@@ -505,11 +423,9 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-edit mr-2"></i>Edit Akun
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">
-                        <span>&times;</span>
+                    <h5 class="modal-title">Edit Akun</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                        <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
@@ -594,43 +510,47 @@
                 const tbody = document.getElementById('accountsTableBody');
                 tbody.innerHTML = '';
                 const isSuperadmin = {{ auth()->user()->hasRole('superadmin') ? 'true' : 'false' }};
+                const colCount = isSuperadmin ? 9 : 8;
+                if (!accounts.length) {
+                    tbody.innerHTML = `<tr><td colspan="${colCount}" class="empty-state">Belum ada akun tersimpan. Tambah akun pertama untuk mulai.</td></tr>`;
+                    updateTotalAccounts();
+                    return;
+                }
                 accounts.forEach(account => {
                     let pemilikTd = '';
                     if (isSuperadmin) {
-                        pemilikTd = `<td>${account.user.name ?? '-'}</td>`;
+                        pemilikTd = `<td>${(account.user && account.user.name) ? account.user.name : '-'}</td>`;
                     }
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>
-                            <div class="d-flex align-items-center">
-                                <div class="app-icon">
-                                    ${account.app_name.charAt(0).toUpperCase()}
-                                </div>
-                                <strong>${account.app_name}</strong>
+                            <div class="app-cell">
+                                <div class="app-icon">${(account.app_name || '?').charAt(0).toUpperCase()}</div>
+                                <strong>${account.app_name || '-'}</strong>
                             </div>
                         </td>
                         <td>
-                            ${account.app_url ? `<a href="${account.app_url}" target="_blank" class="text-primary"><i class="fas fa-external-link-alt mr-1"></i>${account.app_url}</a>` : '-'}
+                            ${account.app_url ? `<a href="${account.app_url}" target="_blank" rel="noopener" class="text-link"><i class="fas fa-external-link-alt mr-1" aria-hidden="true"></i>Buka</a>` : '-'}
                         </td>
                         ${pemilikTd}
-                        <td><code>${account.penyedia}</code></td>
-                        <td><code>${account.email}</code></td>
-                        <td><code>${account.username}</code></td>
+                        <td>${account.penyedia || '-'}</td>
+                        <td>${account.email || '-'}</td>
+                        <td><code>${account.username || '-'}</code></td>
                         <td>
                             <div class="d-flex align-items-center">
-                                <input type="password" value="${account.password}" class="form-control form-control-sm border-0 bg-light" readonly style="max-width: 120px;">
-                                <button class="btn btn-sm btn-outline-secondary ml-2" onclick="togglePasswordVisibility(this)">
-                                    <i class="fas fa-eye"></i>
+                                <input type="password" value="${account.password || ''}" class="form-control form-control-sm border-0 bg-light" readonly style="max-width: 120px;" aria-label="Password">
+                                <button class="btn btn-sm btn-outline-secondary ml-2" type="button" onclick="togglePasswordVisibility(this)" aria-label="Tampilkan password">
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
                                 </button>
                             </div>
                         </td>
                         <td><small class="text-muted">${formatDate(account.created_at)}</small></td>
                         <td>
-                            <button class="btn btn-sm btn-warning-custom btn-custom mr-1" onclick="editAccount(${account.id})">
-                                <i class="fas fa-edit"></i>
+                            <button class="btn btn-sm btn-warning-custom mr-1" type="button" onclick="editAccount(${account.id})" aria-label="Edit akun">
+                                <i class="fas fa-edit" aria-hidden="true"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger-custom btn-custom" onclick="deleteAccount(${account.id})">
-                                <i class="fas fa-trash"></i>
+                            <button class="btn btn-sm btn-danger-custom" type="button" onclick="deleteAccount(${account.id})" aria-label="Hapus akun">
+                                <i class="fas fa-trash" aria-hidden="true"></i>
                             </button>
                         </td>
                     `;
