@@ -30,7 +30,7 @@ class AccountDBController extends Controller
     public function list(Request $request)
     {
         $query = AccountDB::with('user')->orderBy('created_at', 'desc');
-        if (! auth()->user()->hasRole('superadmin', 'direktur')) {
+        if (! auth()->user()->hasAnyRole(['superadmin', 'direktur'])) {
             $query->where('user_id', auth()->user()->id);
         }
         $accounts = $query->get();
@@ -105,7 +105,7 @@ class AccountDBController extends Controller
     {
         $account = AccountDB::findOrFail($id);
         // Cek kepemilikan data
-        if (! auth()->user()->hasRole('superadmin') || $account->user_id !== auth()->user()->id) {
+        if (! auth()->user()->hasRole('superadmin') && $account->user_id !== auth()->user()->id) {
             return response()->json(['message' => 'Anda tidak berhak menghapus data ini.'], 403);
         }
         $account->delete();
