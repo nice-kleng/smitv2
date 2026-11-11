@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountDBController;
 use App\Http\Controllers\AuthenticateController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ItDowntimeController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\KategoriBarangController;
 use App\Http\Controllers\LogBookController;
@@ -148,6 +149,15 @@ Route::middleware(['auth'])->group(function () {
     Route::put('account-db/{id}', [AccountDBController::class, 'update'])->name('account-db.update');
     Route::delete('account-db/{id}', [AccountDBController::class, 'destroy'])->name('account-db.destroy');
     Route::get('account-db/{id}', [AccountDBController::class, 'show'])->name('account-db.show');
+
+    Route::controller(ItDowntimeController::class)->prefix('it-downtime')->name('it-downtime.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{id}', 'edit')->name('edit');
+        Route::put('/{id}', 'update')->name('update');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+    });
+
     Route::resource('log-book', LogBookController::class);
 
     // Route::resource('jadwal', JadwalController::class)->except(['show']);
